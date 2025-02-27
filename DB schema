@@ -7,7 +7,7 @@
 | status          |       | cv_text         |       | skills          |
 | postDate        |       | created_at      |       | experience_years|
 | job_id(PK)      |       +-----------------+       | feedback        |
-+-----------------+                                 | full_nam        |
++-----------------+                                 | full_name       |
                                                     +-----------------+
 +---------------------+       +-------------------+       +-----------------+
 |  Interviews         |       | ScreeningResults  |       |  Notifications  |
