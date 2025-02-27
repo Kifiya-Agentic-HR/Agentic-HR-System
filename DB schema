@@ -1,14 +1,14 @@
 +-----------------+       +-----------------+       +-----------------+
 |     Jobs        |       |  Applications   |       |  Candidates     |
 +-----------------+       +-----------------+       +-----------------+
-| _id             |<------| _id             |       | _id (PK)        |
-| title           |       | job_id (FK)     |------>| user_id (FK)    |
+| _id             |<------| _id             |       | _id             |
+| title           |       | job_id (FK)     |------>| user_id (PK)    |
 | description(dict)|      | candidate_id(FK)|       | email           |
 | status          |       | cv_text         |       | skills          |
 | postDate        |       | created_at      |       | experience_years|
 | job_id(PK)      |       +-----------------+       | feedback        |
-+-----------------+                                 +-----------------+
-
++-----------------+                                 | full_nam        |
+                                                    +-----------------+
 +---------------------+       +-------------------+       +-----------------+
 |  Interviews         |       | ScreeningResults  |       |  Notifications  |
 +---------------------+       +-------------------+       +-----------------+
