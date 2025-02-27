@@ -4,7 +4,7 @@
 | _id             |<------| _id             |       | _id             |
 | title           |       | job_id (FK)     |------>| email           |
 | description(dict)|      | candidate_id(FK)|       | phone_number    |
-| status          |       | cv_text         |       | gender          |
+| status          |       | parsed_cv       |       | gender          |
 | postDate        |       | created_at      |       | experience_years|
 +-----------------+       +-----------------+       | feedback        |
                                                     | full_name       |
