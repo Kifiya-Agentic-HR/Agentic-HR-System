@@ -1,12 +1,12 @@
 import asyncio
 import json
 import logging
-from app.config_local import Config
-from app.service.screening_service import scoreResume
-from app.models import ResultDocument, JobDocument
+from src.service.screening_service import scoreResume
+from src.config_local import Config
+from src.models import ResultDocument, JobDocument
 import aio_pika
 from concurrent.futures import ThreadPoolExecutor
-from app.service.skill_analysis_service import analyse_job_skills
+from src.service.skill_analysis_service import analyse_job_skills
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -74,6 +74,7 @@ async def consume_messages():
 
 if __name__ == "__main__":
     try:
+        logging.info("CONSUMER RUNNING")
         asyncio.run(consume_messages())
     except KeyboardInterrupt:
         logging.info("Shutting down consumer...")
