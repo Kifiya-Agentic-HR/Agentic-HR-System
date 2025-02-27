@@ -20,11 +20,14 @@
 | status              |       +-------------------+       +-----------------+
 | skill_assessment    |       
 | conversation_history|
+| hiring_decision     |
+| interview_reasoning |
 +---------------------+
 
 
 Description = {
+summary:"",
 type:"inperson/remote",
 qualification_level: "beginner/intermediate/Expert",
-requirement: ""
+skills_requirement: ""
 }
