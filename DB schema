@@ -6,8 +6,8 @@
 | description(dict)|      | candidate_id(FK)|       | email           |
 | status          |       | cv_text         |       | skills          |
 | postDate        |       | created_at      |       | experience_years|
-| job_id(PK)      |       +-----------------+       | feedback        |
-+-----------------+                                 | full_name       |
++-----------------+       +-----------------+       | feedback        |
+                                                    | full_name       |
                                                     +-----------------+
 +---------------------+       +-------------------+       +-----------------+
 |  Interviews         |       | ScreeningResults  |       |  Notifications  |
@@ -24,10 +24,19 @@
 | interview_reasoning |
 +---------------------+
 
++---------------------+ 
+|       Users         |
++---------------------+ 
+|  _id                |
+|  role               |
++---------------------+ 
+
+
 
 Description = {
 summary:"",
 type:"inperson/remote",
+commitment:"full_time/part_time/internship",
 qualification_level: "beginner/intermediate/Expert",
 skills_requirement: ""
 }
