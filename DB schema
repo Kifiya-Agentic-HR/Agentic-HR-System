@@ -7,7 +7,7 @@
 | job_status      |       | cv_link         |       | gender          |
 | postDate        |       | created_at      |       | experience_years|
 | skills          |       | status          |       | feedback        |
-+-----------------+       +-----------------+        | full_name       |
++-----------------+       +-----------------+       | full_name       |
                                                     | disability      |
                                                     | skills(arr)     |
                                                     +-----------------+
