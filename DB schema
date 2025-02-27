@@ -6,8 +6,8 @@
 | description(dict)|      | candidate_id(FK)|       | phone_number    |
 | status          |       | cv_link         |       | gender          |
 | postDate        |       | created_at      |       | experience_years|
-+-----------------+       | status          |       | feedback        |
-                          +-----------------+        | full_name       |
+| skills          |       | status          |       | feedback        |
++-----------------+       +-----------------+        | full_name       |
                                                     | disability      |
                                                     | skills(arr)     |
                                                     +-----------------+
