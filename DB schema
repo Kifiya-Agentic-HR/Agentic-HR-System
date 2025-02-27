@@ -13,20 +13,22 @@
                                                     +-----------------+
 
 
-+---------------------+       +-------------------+       +-----------------+
-|  Interviews         |       | ScreeningResults  |       |  Notifications  |
-+---------------------+       +-------------------+       +-----------------+
-| _id (PK)            |<------| application_id(FK)|       | _id (PK)        |
-| application_id (FK) |<------| _id (PK)          |       | candidate_id (FK|
-| candidate_id (FK)   |       | parsed_cv         |       | type            |
-| interview_date      |       | score             |       | status          |
-| score               |       | reasoning         |       | sent_at         |
-| status              |       +-------------------+       +-----------------+
-| skill_assessment(dict)|       
-| conversation_history|
-| hiring_decision     |
-| interview_reasoning |
-+---------------------+
++----------------------------+       +-------------------+       +-----------------+
+|  Interviews                |       | ScreeningResults  |       |  Notifications  |
++----------------------------+       +-------------------+       +-----------------+
+| _id (PK)                   |<------| application_id(FK)|       | _id (PK)        |
+| application_id (FK)        |<------| _id (PK)          |       | candidate_id (FK|
+| candidate_id (FK)          |       | parsed_cv         |       | type            |
+| interview_date             |       | score             |       | status          |
+| score                      |       | reasoning         |       | sent_at         |
+| job_status                 |       +-------------------+       +-----------------+
+| skill_assessment(dict)     |       
+| conversation_history       |
+| hiring_decision            |
+| interview_reasoning        |
+| technical_assessment       |
+| technical_assessment_result|
++----------------------------+
 
 +---------------------+ 
 |       Users         |
