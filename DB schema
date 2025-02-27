@@ -1,27 +1,27 @@
-+-----------------+       +-----------------+       +-----------------+
-|     Jobs        |       |  Applications   |       |  Candidates     |
-+-----------------+       +-----------------+       +-----------------+
-| _id(PK)         |<------| _id(PK)         |       | _id(PK)         |
-| title           |       | job_id (FK)     |------>| email           |
-| description(dict)|      | candidate_id(FK)|       | phone_number    |
-| job_status      |       | cv_link         |       | gender          |
-| post_date       |       | created_at      |       | experience_years|
-| skills          |       | status          |       | feedback        |
-+-----------------+       +-----------------+       | full_name       |
-                                                    | disability      |
-                                                    | skills(arr)     |
-                                                    +-----------------+
++-----------------+       +-------------------+       +-----------------+
+|     Jobs        |       |  Applications     |       |  Candidates     |
++-----------------+       +-------------------+       +-----------------+
+| _id(PK)         |<------| _id(PK)           |       | _id(PK)         |
+| title           |       | job_id (FK)       |------>| email           |
+|description(dict)|       | candidate_id(FK)  |       | phone_number    |
+| job_status      |       | cv_link           |       | gender          |
+| post_date       |       | created_at        |       | experience_years|
+| skills          |       | application_status|       | feedback        |
++-----------------+       +-------------------+       | full_name       |
+                                                      | disability      |
+                                                      | skills(arr)     |
+                                                      +-----------------+
 
 
-+----------------------------+       +-------------------+       +-----------------+
-|  Interviews                |       | ScreeningResults  |       |  Notifications  |
-+----------------------------+       +-------------------+       +-----------------+
-| _id (PK)                   |<------| application_id(FK)|       | _id (PK)        |
-| application_id (FK)        |<------| _id (PK)          |       | candidate_id (FK|
-| candidate_id (FK)          |       | parsed_cv         |       | type            |
-| interview_date             |       | score             |       | status          |
-| score                      |       | reasoning         |       | sent_at         |
-| status                     |       +-------------------+       +-----------------+
++----------------------------+       +-------------------+       +---------------------+
+|  Interviews                |       | ScreeningResults  |       |  Notifications      |
++----------------------------+       +-------------------+       +---------------------+
+| _id (PK)                   |<------| application_id(FK)|       | _id (PK)            |
+| application_id (FK)        |<------| _id (PK)          |       | candidate_id (FK)   |
+| candidate_id (FK)          |       | parsed_cv         |       | type                |
+| interview_date             |       | score             |       | notification_status |
+| score                      |       | reasoning         |       | sent_at             |
+| interview_status           |       +-------------------+       +---------------------+
 | skill_assessment(dict)     |       
 | conversation_history       |
 | hiring_decision            |
