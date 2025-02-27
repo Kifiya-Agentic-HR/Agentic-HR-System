@@ -97,14 +97,17 @@ services:
       - app_network
 
   screening_consumer:
-    build: ./services/screening/screener
-    command: python rabbitMQ/consumer.py
+    build:
+      context: ./services/screening/screener/
+      dockerfile: Dockerfile.consumer
     container_name: ScreeningConsumer
     env_file: .env
     environment:
       RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
       MONGODB_URI: "mongodb://mongo:27017/hr_db"
       GEMINI_API_KEY: "${GEMINI_API_KEY}"
+      PYTHONPATH: "/app"
+
     volumes:
       - shared_volume:/shared_volume
     # restart: unless-stopped

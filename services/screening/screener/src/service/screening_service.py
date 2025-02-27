@@ -3,9 +3,9 @@ import os
 import re
 from dotenv import load_dotenv
 import google.generativeai as genai
-from app.service.job_requirement_service import analyze_job_requirements
-from app.utils.file_reader import extract_text_from_file
-from app.utils.vector_keyword_similarity import calculate_scores
+from src.service.job_requirement_service import analyze_job_requirements
+from src.utils.file_reader import extract_text_from_file
+from src.utils.vector_keyword_similarity import calculate_scores
 
 load_dotenv()
 

@@ -3,7 +3,7 @@ import os
 import re
 from dotenv import load_dotenv
 import google.generativeai as genai
-from app.service.screening_service import balance_braces
+from src.service.screening_service import balance_braces
 
 load_dotenv()
 
