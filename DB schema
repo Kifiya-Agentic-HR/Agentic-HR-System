@@ -1,7 +1,7 @@
 +-----------------+       +-----------------+       +-----------------+
 |     Jobs        |       |  Applications   |       |  Candidates     |
 +-----------------+       +-----------------+       +-----------------+
-| _id             |<------| _id             |       | _id             |
+| _id(PK)         |<------| _id(PK)         |       | _id(PK)         |
 | title           |       | job_id (FK)     |------>| email           |
 | description(dict)|      | candidate_id(FK)|       | phone_number    |
 | status          |       | parsed_cv       |       | gender          |
@@ -50,4 +50,8 @@ qualification_level: "beginner/intermediate/Expert",
 skills_requirement: ""
 }
 
+
+## job_id = job._id
+## candidate_id = candidate._id
+## application_id = applications._id
 
