@@ -4,7 +4,7 @@
 | _id(PK)         |<------| _id(PK)         |       | _id(PK)         |
 | title           |       | job_id (FK)     |------>| email           |
 | description(dict)|      | candidate_id(FK)|       | phone_number    |
-| status          |       | cv_link         |       | gender          |
+| job_status      |       | cv_link         |       | gender          |
 | postDate        |       | created_at      |       | experience_years|
 | skills          |       | status          |       | feedback        |
 +-----------------+       +-----------------+        | full_name       |
@@ -21,7 +21,7 @@
 | candidate_id (FK)          |       | parsed_cv         |       | type            |
 | interview_date             |       | score             |       | status          |
 | score                      |       | reasoning         |       | sent_at         |
-| job_status                 |       +-------------------+       +-----------------+
+| status                     |       +-------------------+       +-----------------+
 | skill_assessment(dict)     |       
 | conversation_history       |
 | hiring_decision            |
