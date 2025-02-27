@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 import google.generativeai as genai
 
-from ..utils.file_reader import extract_text_from_file
+from src.utils.file_reader import extract_text_from_file
 
 
 load_dotenv()

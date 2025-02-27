@@ -1,10 +1,10 @@
-from app.config_local import Config
+from src.config_local import Config
 from fastapi import FastAPI, Form, UploadFile, File, HTTPException, status
 from pydantic import BaseModel
 import uuid
 import os
-from app.rabbitMQ.producer import publish_application
-from app.models import JobDocument, ApplicationDocument
+from src.rabbitMQ.producer import publish_application
+from src.models import JobDocument, ApplicationDocument
 import aiofiles
 import logging
 from bson import ObjectId
@@ -17,9 +17,10 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Email notification service
-email_server = os.getenv("NOTIFICATION_SERVICE_URL")
+email_server = os.getenv("NOTIFICATION_SERVICE_URL", "")
 
-if email_server is None:
+
+if not email_server:
     logger.error("NOTIFICATION_SERVICE_URL environment variable not set")
 
 BASE_URL = email_server.rstrip("/") + "/notify/email"
