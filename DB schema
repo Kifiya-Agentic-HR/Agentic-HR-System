@@ -1,0 +1,30 @@
++-----------------+       +-----------------+       +-----------------+
+|     Jobs        |       |  Applications   |       |  Candidates     |
++-----------------+       +-----------------+       +-----------------+
+| _id             |<------| _id             |       | _id (PK)        |
+| title           |       | job_id (FK)     |------>| user_id (FK)    |
+| description(dict)|      | candidate_id(FK)|       | email           |
+| status          |       | cv_text         |       | skills          |
+| postDate        |       | created_at      |       | experience_years|
+| job_id(PK)      |       +-----------------+       | feedback        |
++-----------------+                                 +-----------------+
+
++---------------------+       +-------------------+       +-----------------+
+|  Interviews         |       | ScreeningResults  |       |  Notifications  |
++---------------------+       +-------------------+       +-----------------+
+| _id (PK)            |<------| application_id(FK)|       | _id (PK)        |
+| application_id (FK) |<------| _id (PK)          |       | candidate_id (FK|
+| candidate_id (FK)   |       | parsed_cv         |       | type            |
+| interview_date      |       | score             |       | status          |
+| score               |       | reasoning         |       | sent_at         |
+| status              |       +-------------------+       +-----------------+
+| skill_assessment    |       
+| conversation_history|
++---------------------+
+
+
+Description = {
+type:"inperson/remote",
+qualification_level: "beginner/intermediate/Expert",
+requirement: ""
+}
