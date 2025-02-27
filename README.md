@@ -10,8 +10,6 @@ Welcome to the frontend of **Agentic HR System**, a user-friendly AI-driven recr
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Getting Started](#getting-started)
-- [Contributing](#contributing)
-- [License](#license)
 
 ## Overview
 The Agentic HR System leverages cutting-edge Multi AI Agent to automate and optimize recruitment.
