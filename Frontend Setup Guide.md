@@ -29,6 +29,7 @@ RGB: (255, 138, 0)
 Usage: Highlights, links, secondary buttons.
 
 ## Company Logo
-We use our company logo to reinforce brand identity.  
-https://github.com/your-username/your-repo/raw/main/assets/company-logo.png
+We use our company logo to reinforce brand identity. 
+![image](https://github.com/user-attachments/assets/9ac2f632-1c44-4303-9e08-870d0b93c5e8)
+ 
 Alt Text: "Company Logo"
