@@ -2,13 +2,17 @@
 |     Jobs        |       |  Applications   |       |  Candidates     |
 +-----------------+       +-----------------+       +-----------------+
 | _id             |<------| _id             |       | _id             |
-| title           |       | job_id (FK)     |------>| user_id (PK)    |
-| description(dict)|      | candidate_id(FK)|       | email           |
-| status          |       | cv_text         |       | skills          |
+| title           |       | job_id (FK)     |------>| email           |
+| description(dict)|      | candidate_id(FK)|       | phone_number    |
+| status          |       | cv_text         |       | gender          |
 | postDate        |       | created_at      |       | experience_years|
 +-----------------+       +-----------------+       | feedback        |
                                                     | full_name       |
+                                                    | disability      |
+                                                    | skills(arr)     |
                                                     +-----------------+
+
+
 +---------------------+       +-------------------+       +-----------------+
 |  Interviews         |       | ScreeningResults  |       |  Notifications  |
 +---------------------+       +-------------------+       +-----------------+
@@ -29,6 +33,11 @@
 +---------------------+ 
 |  _id                |
 |  role               |
+|  first_name         |
+|  last_name          |
+| created_at          | 
+| password            | 
+| email               |
 +---------------------+ 
 
 
@@ -40,3 +49,5 @@ commitment:"full_time/part_time/internship",
 qualification_level: "beginner/intermediate/Expert",
 skills_requirement: ""
 }
+
+
