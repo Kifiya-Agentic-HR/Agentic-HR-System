@@ -5,7 +5,7 @@
 | title           |       | job_id (FK)     |------>| email           |
 | description(dict)|      | candidate_id(FK)|       | phone_number    |
 | job_status      |       | cv_link         |       | gender          |
-| post_date        |       | created_at      |       | experience_years|
+| post_date       |       | created_at      |       | experience_years|
 | skills          |       | status          |       | feedback        |
 +-----------------+       +-----------------+       | full_name       |
                                                     | disability      |
