@@ -22,7 +22,7 @@
 | interview_date      |       | score             |       | status          |
 | score               |       | reasoning         |       | sent_at         |
 | status              |       +-------------------+       +-----------------+
-| skill_assessment    |       
+| skill_assessment(dict)|       
 | conversation_history|
 | hiring_decision     |
 | interview_reasoning |
