@@ -14,7 +14,7 @@
 
 
 +----------------------------+       +-------------------+       +---------------------+
-|  Interviews                |       | ScreeningResults  |       |  Notifications      |
+|  Interviews                |       | Screening_Results |       |  Notifications      |
 +----------------------------+       +-------------------+       +---------------------+
 | _id (PK)                   |<------| application_id(FK)|       | _id (PK)            |
 | application_id (FK)        |<------| _id (PK)          |       | candidate_id (FK)   |
@@ -26,22 +26,19 @@
 | conversation_history       |
 | hiring_decision            |
 | interview_reasoning        |
-| technical_assessment       |
-| technical_assessment_result|
 +----------------------------+
 
++---------------------+                    +----------------------+ 
+|       Users         |                    | technical_assessment |
++---------------------+                    +----------------------+ 
+|  _id                |                    |  _id                 |
+|  role               |                    |  assessment_result   |
+|  first_name         |                    |  application_id      |                   
+|  last_name          |                    |  level               | //easy, medium, hard
+|  created_at         |                    |  no_of_questions     | //defaulting to 2,
+|  password           |                    |  assessment_reasoning|
+|  email              |                    +----------------------+
 +---------------------+ 
-|       Users         |
-+---------------------+ 
-|  _id                |
-|  role               |
-|  first_name         |
-|  last_name          |
-|  created_at         | 
-|  password           | 
-|  email              |
-+---------------------+ 
-
 
 
 Description = {
