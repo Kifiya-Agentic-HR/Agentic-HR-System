@@ -53,25 +53,6 @@ async def schedule_interview(
             response.status_code = status.HTTP_400_BAD_REQUEST
             return {"success": False, "error": "Candidate not found", "interview_id": None}
 
-        # Fetch parsed CV
-        cv = await mongo_db.screeningresults.find_one({"application_id": ObjectId(schedule_request.application_id)})
-
-        # Transform job skills
-        transformed_skills = {}
-        for skill_name, details in job.get("skills", {}).items():
-            required_level = details.get("required_level", "").lower()
-            if required_level == "advanced":
-                required_level = "expert"
-            if required_level not in ["expert", "intermediate", "beginner"]:
-                return {"success": False, "error": f"Invalid skill level for {skill_name}", "interview_id": None}
-            
-            transformed_skills[skill_name] = {
-                "required_level": required_level,
-                "rating": 0,
-                "questions_asked": 0,
-                "weight": 10
-            }
-
         # creating interview record
         interview_data = {
             "application_id": ObjectId(schedule_request.application_id),
@@ -89,29 +70,9 @@ async def schedule_interview(
         interview_result = await mongo_db.interviews.insert_one(interview_data)
         interview_id = str(interview_result.inserted_id)
 
-        # Create session data
-        session_data = SessionData(
-            interview_id=interview_id,
-            candidate_id=str(candidate_id),
-            job_id=str(job_id),
-            user_info=cv.get("parsed_cv", ""),
-            user_email=candidate.get("email", ""),
-            name=candidate.get("full_name", ""),
-            job_title=job.get("title", ""),
-            role_info= f"Overview: {job.get('description', {}).get('summary', '')},\n\nResponsibilities: {job.get('description', {}).get('skills_requirement', '')}",
-            skills=transformed_skills
-        )
-
-        # Store in Redis (1 day TTL)
-        redis_client.setex(
-            interview_id,
-            86400,
-            session_data.model_dump_json()
-        )
-
         # Send confirmation email
         try:
-            interview_link = f"{settings.FRONTEND_BASE_URL}/interview/{interview_id}"
+            interview_link = f"{settings.FRONTEND_BASE_URL}/interview/session/{interview_id}"
             send_email_notification(
                 to=candidate["email"],
                 type="interview_scheduled",
