@@ -35,7 +35,7 @@
 |  role               |                    |  assessment_result   |
 |  first_name         |                    |  application_id      |                   
 |  last_name          |                    |  level               | //easy, medium, hard
-|  created_at         |                    |  no_of_questions     | //defaulting to 2,
+|  created_at         |                    |  no_of_questions     | //defaulting to 2
 |  password           |                    |  assessment_reasoning|
 |  email              |                    +----------------------+
 +---------------------+ 
