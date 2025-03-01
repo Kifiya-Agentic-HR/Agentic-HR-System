@@ -1,59 +1,64 @@
+// components/ChatInterface.tsx
 'use client';
 
-import { useState, useRef, forwardRef } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useState, useRef, useEffect } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Send, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
-import { apiRequest } from "@/lib/queryClient";
-import type { ChatMessage } from "@/lib/schema";
-import { useFaceDetection } from "@/hooks/useFaceDetection";
 import { motion, AnimatePresence } from "framer-motion";
-import dynamic from "next/dynamic";
-import { VideoComponent } from "./VideoComponent";
-
+import { useFaceDetection } from "@/hooks/useFaceDetection";
+import { sendChatMessage } from "@/lib/api";
+import type { ChatMessage } from "@/lib/schema";
 
 interface ChatInterfaceProps {
   sessionId: string;
+  initialMessages: ChatMessage[];
   onComplete: () => void;
+  onStart: () => void;
 }
 
-export function ChatInterface({ sessionId, onComplete }: ChatInterfaceProps) {
+export function ChatInterface({ 
+  sessionId,
+  initialMessages,
+  onComplete,
+  onStart
+}: ChatInterfaceProps) {
   const [message, setMessage] = useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { lookingAway, multipleFaces, confidenceScore } = useFaceDetection(videoRef);
 
-  const { data: initialMessage } = useQuery({
-    queryKey: ["/api/chat", sessionId],
-    queryFn: async () => {
-      const res = await apiRequest("POST", "/api/chat", {
-        session_id: sessionId,
-        user_answer: ""
-      });
-      return res.json();
+  const chatMutation = useMutation({
+    mutationFn: (message: string) => sendChatMessage(sessionId, message),
+    onSuccess: (response) => {
+      if (response.success) {
+        setMessages(prev => [
+          ...prev,
+          { text: response.text, role: 'user' },
+          { text: response.text, role: 'interviewer' }
+        ]);
+        
+        if (response.state === 'completed') {
+          onComplete();
+        }
+        
+        if (!messages.length) onStart();
+      }
     }
   });
 
-  const chatMutation = useMutation({
-    mutationFn: async (message: string) => {
-      const res = await apiRequest("POST", "/api/chat", {
-        session_id: sessionId,
-        user_answer: message
-      });
-      return res.json();
+  useEffect(() => {
+    if (!messages.length && initialMessages.length === 0) {
+      chatMutation.mutate("");
     }
-  });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim()) return;
-
-    if (message.trim().toUpperCase() === "END") {
-      onComplete();
-      return;
-    }
 
     chatMutation.mutate(message);
     setMessage("");
@@ -74,7 +79,7 @@ export function ChatInterface({ sessionId, onComplete }: ChatInterfaceProps) {
             {multipleFaces ? (
               <div className="flex items-center justify-center gap-2">
                 <AlertTriangle className="h-4 w-4" />
-                <span>Multiple faces detected! This will be reported.</span>
+                <span>Multiple faces detected! Please ensure you are alone in the room.</span>
               </div>
             ) : lookingAway ? (
               <span>Please face the camera to continue</span>
@@ -85,21 +90,19 @@ export function ChatInterface({ sessionId, onComplete }: ChatInterfaceProps) {
         )}
       </AnimatePresence>
 
-      <VideoComponent ref={videoRef} />
-
       <ScrollArea className="flex-1 p-4">
-        {initialMessage && (
-          <div className="mb-4">
-            <div className="bg-primary/10 rounded-lg p-3">
-              <p className="text-sm">{initialMessage.text}</p>
+        {messages.map((msg, index) => (
+          <div key={index} className="mb-4">
+            <div className={`${
+              msg.role === 'user' ? 'bg-blue-100' : 'bg-primary/10'
+            } rounded-lg p-3`}>
+              <p className="text-sm">{msg.text}</p>
             </div>
           </div>
-        )}
-        {chatMutation.data && (
-          <div className="mb-4">
-            <div className="bg-primary/10 rounded-lg p-3">
-              <p className="text-sm">{chatMutation.data.text}</p>
-            </div>
+        ))}
+        {chatMutation.isPending && (
+          <div className="mb-4 animate-pulse">
+            <div className="bg-gray-100 rounded-lg p-3 w-3/4 h-12" />
           </div>
         )}
       </ScrollArea>
@@ -109,7 +112,7 @@ export function ChatInterface({ sessionId, onComplete }: ChatInterfaceProps) {
           <Input
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Type your response... (type 'END' to finish)"
+            placeholder="You: "
             disabled={chatMutation.isPending}
           />
           <Button 

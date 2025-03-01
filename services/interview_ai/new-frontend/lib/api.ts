@@ -125,12 +125,6 @@ interface InterviewResponse {
   }
 
 export async function getInterview(interviewId: string): Promise<InterviewResponse> {
-  
-  
-  return {
-    success: true,
-    status: 'scheduled',
-  };
   try {
     const response = await fetch(`/interview/${interviewId}`, {
       method: 'GET',
@@ -157,5 +151,33 @@ export async function getInterview(interviewId: string): Promise<InterviewRespon
       status: 'expired',
       error: error instanceof Error ? error.message : 'Unknown error occurred',
     };
+  }
+}
+
+// Save session ID to localStorage
+export function saveSessionId(sessionId: string): void {
+  try {
+    localStorage.setItem('interviewSessionId', sessionId);
+  } catch (error) {
+    console.error('Error saving session ID:', error);
+  }
+}
+
+// Get session ID from localStorage
+export function getSessionId(): string | null {
+  try {
+    return localStorage.getItem('interviewSessionId');
+  } catch (error) {
+    console.error('Error retrieving session ID:', error);
+    return null;
+  }
+}
+
+// Remove session ID from localStorage
+export function clearSessionId(): void {
+  try {
+    localStorage.removeItem('interviewSessionId');
+  } catch (error) {
+    console.error('Error clearing session ID:', error);
   }
 }
