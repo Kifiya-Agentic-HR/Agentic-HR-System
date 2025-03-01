@@ -55,7 +55,7 @@ interface InterviewResponse {
   
   export async function createSession(interviewId: string): Promise<SessionResponse> {
     try {
-      const response = await fetch(`/interview/session/${interviewId}`, {
+      const response = await fetch(`${BASE_URL}/interview/session/${interviewId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ interface InterviewResponse {
     userAnswer: string
   ): Promise<ChatResponse> {
     try {
-      const response = await fetch('/interview/chat', {
+      const response = await fetch(`${BASE_URL}/interview/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -126,7 +126,7 @@ interface InterviewResponse {
 
 export async function getInterview(interviewId: string): Promise<InterviewResponse> {
   try {
-    const response = await fetch(`/interview/${interviewId}`, {
+    const response = await fetch(`${BASE_URL}/interview/${interviewId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -154,6 +154,41 @@ export async function getInterview(interviewId: string): Promise<InterviewRespon
   }
 }
 
+export async function flagInterview(
+  interviewId: string,
+  violations: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const response = await fetch(`${BASE_URL}/interview/flag`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        interview_id: interviewId,
+        violations 
+      }),
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok || !data.success) {
+      throw new Error(data.error || 'Failed to flag interview');
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Flagging error:', error);
+    return { 
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    };
+  }
+}
+
+
+
+// SESSION MANAGEMNET
 // Save session ID to localStorage
 export function saveSessionId(sessionId: string): void {
   try {

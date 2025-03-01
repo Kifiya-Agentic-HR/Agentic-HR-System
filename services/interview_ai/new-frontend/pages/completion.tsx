@@ -1,23 +1,48 @@
+// components/Completion.tsx
+import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
-import type { ViolationState } from "@/hooks/useAntiCheat";
+import { flagInterview, getSessionId, clearSessionId } from "@/lib/api";
+import { Violation } from "@/hooks/useAntiCheat";
 
 interface CompletionProps {
-  violations: ViolationState;
   completed: boolean;
+  violations: Violation[];
 }
 
-export default function Completion({ violations, completed }: CompletionProps) {
+export default function Completion({ completed, violations }: CompletionProps) {
   const [, setLocation] = useLocation();
 
-  const handleFinish = () => {
-    setLocation("/");
-  };
+  useEffect(() => {
+    if (!completed) {
+      const sessionId = getSessionId();
+      if (!sessionId) return;
 
-  const hasMajorViolations = violations.totalWeight >= 5;
+      const formattedViolations = violations.map(v => 
+        `${v.type}: ${v.description}`
+      ).join('\n');
+      
+      flagInterview(sessionId, formattedViolations).catch(error => {
+        console.error('Failed to flag interview:', error);
+      });
+    }
+  }, [completed, violations]);
+
+  const handleFinish = () => {
+    // Clear session data
+    clearSessionId();
+    
+    try {
+      // Attempt to close the window
+      window.close();
+    } catch (e) {
+      // Fallback to home redirect if window can't be closed
+      setLocation("/");
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -27,71 +52,51 @@ export default function Completion({ violations, completed }: CompletionProps) {
         transition={{ duration: 0.5 }}
         className="w-full max-w-2xl"
       >
-        <Card>
-          <CardHeader className="text-center">
+        <Card className="rounded-xl shadow-lg">
+          <CardHeader className="text-center space-y-4">
             <img 
               src="https://kifiya.com/wp-content/uploads/2022/12/Logo.svg" 
               alt="Kifiya Logo" 
               className="h-12 mb-6 mx-auto"
             />
-            {completed && !hasMajorViolations ? (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 200, damping: 20 }}
-              >
-                <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-green-700">Interview Completed Successfully</h2>
-              </motion.div>
-            ) : (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 200, damping: 20 }}
-              >
-                <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-red-700">Interview Flagged</h2>
-              </motion.div>
-            )}
+            
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 200, damping: 20 }}
+            >
+              {completed ? (
+                <>
+                  <CheckCircle2 className="h-20 w-20 text-green-500 mx-auto mb-4" />
+                  <h2 className="text-3xl font-bold text-green-700 mb-2">
+                    Interview Completed
+                  </h2>
+                  <p className="text-muted-foreground">
+                    Thank you for participating in the interview
+                  </p>
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="h-20 w-20 text-red-500 mx-auto mb-4" />
+                  <h2 className="text-3xl font-bold text-red-700 mb-2">
+                    Session Flagged
+                  </h2>
+                  <p className="text-muted-foreground">
+                    Our team will review the session details
+                  </p>
+                </>
+              )}
+            </motion.div>
           </CardHeader>
 
-          <CardContent className="space-y-6">
-            {violations.violations.length > 0 && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Detected Violations:</h3>
-                <div className="space-y-2">
-                  {violations.violations.map((violation, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className={`p-3 rounded-lg ${
-                        violation.type === "MAJOR" ? "bg-red-100" : "bg-yellow-100"
-                      }`}
-                    >
-                      <p className="text-sm">
-                        <span className="font-medium">
-                          {violation.type === "MAJOR" ? "Major Violation" : "Minor Violation"}:
-                        </span>{" "}
-                        {violation.description}
-                      </p>
-                    </motion.div>
-                  ))}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Total Violation Weight: {violations.totalWeight.toFixed(1)}
-                </p>
-              </div>
-            )}
-
-            <div className="flex justify-center pt-4">
+          <CardContent>
+            <div className="flex justify-center pt-6">
               <Button
                 onClick={handleFinish}
-                className="px-8"
-                variant={completed && !hasMajorViolations ? "default" : "destructive"}
+                className="px-8 py-6 text-lg rounded-full transition-transform hover:scale-105"
+                variant={completed ? "default" : "destructive"}
               >
-                Return to Home
+                {completed ? "Finish Session" : "Close Window"}
               </Button>
             </div>
           </CardContent>
