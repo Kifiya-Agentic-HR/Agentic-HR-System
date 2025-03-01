@@ -3,8 +3,10 @@
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Code2, Shield, ClipboardCheck } from "lucide-react";
-import { useState } from "react";
+import { Code2, Shield, ClipboardCheck, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { getInterview } from "@/lib/api";
 
 const container = {
   hidden: { opacity: 0 },
@@ -21,14 +23,155 @@ const item = {
   show: { opacity: 1, y: 0 },
 };
 
+interface StatusConfig {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  color: string;
+}
+
+const statusConfig: Record<string, StatusConfig> = {
+  completed: {
+    title: "Interview Completed",
+    description: "This interview session has been successfully completed. Please check your email for further updates.",
+    icon: <CheckCircle2 className="h-12 w-12 text-green-600" />,
+    color: "bg-green-100",
+  },
+  expired: {
+    title: "Interview Expired",
+    description: "This interview link has expired. Please contact your recruiter for a new interview invitation.",
+    icon: <Clock className="h-12 w-12 text-orange-600" />,
+    color: "bg-orange-100",
+  },
+  flagged: {
+    title: "Interview Flagged",
+    description: "This interview has been flagged for review. Please contact HR department for further assistance.",
+    icon: <AlertCircle className="h-12 w-12 text-red-600" />,
+    color: "bg-red-100",
+  },
+  scheduled: {
+    title: "Ready to Begin?",
+    description: "",
+    icon: null,
+    color: "",
+  },
+};
+
 export default function Home() {
-  const [loading, setLoading] = useState(false);
+  const params = useParams();
+  const interviewId = params?.interview_id as string ?? "";
+  const [loading, setLoading] = useState(true);
+  const [interviewStatus, setInterviewStatus] = useState<"scheduled" | "completed" | "expired" | "flagged">("scheduled");
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkInterviewStatus = async () => {
+      try {
+        const response = await getInterview(interviewId);
+        if (!response.success) throw new Error(response.error);
+        setInterviewStatus(response.status);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to fetch interview status");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkInterviewStatus();
+  }, [interviewId]);
 
   const handleStart = () => {
-    // setLocation(`/interview/123`);
+    // setLocation(`/interview/${interviewId}`);
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex flex-col items-center space-y-4"
+        >
+          <div className="h-12 w-12 border-4 border-[#364957] border-t-transparent rounded-full animate-spin" />
+          <p className="text-muted-foreground">Checking interview status...</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="text-center mb-8"
+        >
+          <div className="h-20 mb-8 mx-auto flex items-center justify-center">
+            <AlertCircle className="h-16 w-16 text-red-600" />
+          </div>
+          <h1 className="text-4xl font-bold mb-2">Error Loading Interview</h1>
+          <p className="text-muted-foreground">{error}</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (interviewStatus !== "scheduled") {
+    const config = statusConfig[interviewStatus];
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="text-center mb-8"
+        >
+          <img
+            src="https://kifiya.com/wp-content/uploads/2022/12/Logo.svg"
+            alt="Kifiya Logo"
+            className="h-20 mb-8 mx-auto"
+          />
+          <h1 className="text-4xl font-bold mb-2">Kifiya AI-Interview Platform</h1>
+        </motion.div>
+
+        <Card className="w-full max-w-2xl">
+          <CardHeader>
+            <motion.h2
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-2xl font-semibold text-center"
+            >
+              {config.title}
+            </motion.h2>
+          </CardHeader>
+          <CardContent>
+            <motion.div
+              variants={container}
+              initial="hidden"
+              animate="show"
+              className="flex flex-col items-center space-y-6"
+            >
+              <motion.div
+                variants={item}
+                className={`h-24 w-24 rounded-full ${config.color} flex items-center justify-center mb-4`}
+              >
+                {config.icon}
+              </motion.div>
+              <motion.p
+                variants={item}
+                className="text-muted-foreground text-center"
+              >
+                {config.description}
+              </motion.p>
+            </motion.div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
+    // Your existing scheduled interview UI
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
       <motion.div
         initial={{ y: -20, opacity: 0 }}
@@ -50,7 +193,7 @@ export default function Home() {
         </p>
       </motion.div>
 
-      <Card className="w-full max-w-2xl">
+      <Card className="w-full max-w-3xl">
         <CardHeader>
           <motion.h2
             initial={{ opacity: 0 }}
@@ -124,6 +267,7 @@ export default function Home() {
               </p>
             </motion.div>
           </motion.div>
+
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
