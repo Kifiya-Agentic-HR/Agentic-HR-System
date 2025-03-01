@@ -1,11 +1,13 @@
 import requests
-from src.api.config import settings
+from src.api.core.config import get_settings
 from typing import Dict, Any
-from src.api.schemas import EmailType
+from src.api.models.enums import EmailType
 import logging
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+settings = get_settings()
 
 BASE_URL = settings.NOTIFICATION_SERVICE_URL.rstrip("/") + "/notify/email"
 
