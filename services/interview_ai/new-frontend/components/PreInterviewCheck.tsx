@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, forwardRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
@@ -9,16 +9,18 @@ import { Progress } from "@/components/ui/progress";
 import { Camera, AlertCircle } from "lucide-react";
 import { useFaceDetection } from "@/hooks/useFaceDetection";
 import { useToast } from "@/hooks/use-toast";
-import dynamic from "next/dynamic";
 import Image from "next/image";
 import { VideoComponent } from "@/components/VideoComponent";
 import { MicrophoneTest } from "@/components/MicrophoneTest";
+import { useLocation } from "wouter"; 
 
 interface PreInterviewCheckProps {
   onComplete: () => void;
+  interviewId: string;
 }
 
-export function PreInterviewCheck({ onComplete }: PreInterviewCheckProps) {
+export function PreInterviewCheck({ onComplete, interviewId }: PreInterviewCheckProps) {
+  const [location, navigate] = useLocation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
   const [checks, setChecks] = useState({
@@ -88,6 +90,11 @@ export function PreInterviewCheck({ onComplete }: PreInterviewCheckProps) {
                     (fallbackMode || (!isModelLoading && isFacePresent && !multipleFaces && confidenceScore > 0.6 && !lookingAway));
 
   const faceStatus = getFaceDetectionStatus();
+
+  const handleComplete = () => {
+    onComplete();
+    navigate(`/interview/${interviewId}`);
+  };
 
   return (
     <motion.div
@@ -214,7 +221,7 @@ export function PreInterviewCheck({ onComplete }: PreInterviewCheckProps) {
           >
             <Button
               className="w-full bg-[#364957] hover:bg-[#364957]/90 text-white"
-              onClick={onComplete}
+              onClick={handleComplete}
               disabled={!isComplete}
             >
               {isModelLoading && !fallbackMode ? 
