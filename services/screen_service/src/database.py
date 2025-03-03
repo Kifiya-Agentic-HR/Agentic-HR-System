@@ -4,7 +4,9 @@ import os
 class Database:
     def __init__(self):
         # Connect to the MongoDB instance (defaults to a local instance if no URI is provided)
-        mongo_uri = os.getenv("MONGODB_URI", "mongodb://localhost:27017/hr_db")
+        mongo_uri = os.getenv("MONGODB_URI", None)
+        if not mongo_uri:
+            raise ValueError("Failed!")
         self.client = MongoClient(mongo_uri)
         self.db = self.client.hr_db
         

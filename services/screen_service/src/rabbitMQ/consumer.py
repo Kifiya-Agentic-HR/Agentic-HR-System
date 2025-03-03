@@ -37,7 +37,7 @@ async def process_message(message: aio_pika.IncomingMessage):
             final_score = (llm_output["overall_score"] * 0.6) + kw_score + vec_score
 
             result = {
-                "app_id": data.get("app_id"),
+                "application_id": data.get("app_id"),
                 "score": round(final_score, 1),
                 "reasoning": llm_output.get("score_breakdown", {}),
                 "skills": skill_fetch,

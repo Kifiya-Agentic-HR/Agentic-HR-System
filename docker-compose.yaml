@@ -91,8 +91,10 @@ services:
       - shared_volume:/shared_volume
     restart: unless-stopped
     depends_on:
-      - rabbitmq
-      - mongo
+      mongo:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
     networks:
       - app_network
 
@@ -126,7 +128,7 @@ services:
     container_name: Mongo
     restart: always
     ports:
-      - "27017:27017"
+      - "27027:27017"
     volumes:
       - ./data/mongo:/data/db
     environment:

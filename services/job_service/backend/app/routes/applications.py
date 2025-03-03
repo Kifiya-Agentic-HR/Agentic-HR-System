@@ -70,3 +70,13 @@ async def get_applications():
         return list(applications)
     except Exception as e:
         logger.error(f"Error fetching applications: {str(e)}")
+
+@router.get("/{application_id}", response_model=dict)
+async def get_application(application_id: str):
+    try:
+        application = ApplicationDocument.get_application_by_id(application_id)
+        if not application:
+            raise HTTPException(status_code=404, detail="application not found")
+        return {"success": True, "application": application}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving application: {e}")

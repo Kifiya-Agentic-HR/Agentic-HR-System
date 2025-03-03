@@ -7,7 +7,9 @@ logger = logging.getLogger(__name__)
 
 class Database:
     def __init__(self):
-        mongo_uri = os.getenv("MONGODB_URI", "mongodb://localhost:27017/hr_db")
+        mongo_uri = os.getenv("MONGODB_URI", None)
+        if not mongo_uri:
+            raise ValueError("Database String Initialization Failed.")
         retry_attempts = 5
         attempt = 0
 
