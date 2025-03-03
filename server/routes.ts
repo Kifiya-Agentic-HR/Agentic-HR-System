@@ -5,12 +5,12 @@ import { setupAuth } from "./auth";
 import { z } from "zod";
 import { insertJobSchema } from "@shared/schema";
 
-export async function registerRoutes(app: Express): Server {
+export function registerRoutes(app: Express): Server {
   setupAuth(app);
 
   // Job Routes
   app.post("/api/jobs", async (req, res) => {
-    if (req.user?.role !== "HR") {
+    if (!req.user || req.user.role !== "HR") {
       return res.status(403).send("Only HR can post jobs");
     }
 
@@ -24,7 +24,7 @@ export async function registerRoutes(app: Express): Server {
   });
 
   app.get("/api/jobs", async (req, res) => {
-    if (req.user?.role !== "HR") {
+    if (!req.user || req.user.role !== "HR") {
       return res.status(403).send("Only HR can view jobs");
     }
     const jobs = await storage.getJobsByHR(req.user.id);
@@ -32,7 +32,7 @@ export async function registerRoutes(app: Express): Server {
   });
 
   app.get("/api/jobs/:id/applications", async (req, res) => {
-    if (req.user?.role !== "HR") {
+    if (!req.user || req.user.role !== "HR") {
       return res.status(403).send("Only HR can view applications");
     }
     const applications = await storage.getApplicationsByJob(parseInt(req.params.id));
@@ -41,7 +41,7 @@ export async function registerRoutes(app: Express): Server {
 
   // HR Management Routes (Admin only)
   app.get("/api/users/hr", async (req, res) => {
-    if (req.user?.role !== "ADMIN") {
+    if (!req.user || req.user.role !== "ADMIN") {
       return res.status(403).send("Only admin can view HR accounts");
     }
     const hrUsers = await storage.getHRUsers();
@@ -49,7 +49,7 @@ export async function registerRoutes(app: Express): Server {
   });
 
   app.post("/api/users/hr", async (req, res) => {
-    if (req.user?.role !== "ADMIN") {
+    if (!req.user || req.user.role !== "ADMIN") {
       return res.status(403).send("Only admin can create HR accounts");
     }
     try {
@@ -64,7 +64,7 @@ export async function registerRoutes(app: Express): Server {
   });
 
   app.delete("/api/users/hr/:id", async (req, res) => {
-    if (req.user?.role !== "ADMIN") {
+    if (!req.user || req.user.role !== "ADMIN") {
       return res.status(403).send("Only admin can delete HR accounts");
     }
     await storage.deleteUser(parseInt(req.params.id));
@@ -73,6 +73,10 @@ export async function registerRoutes(app: Express): Server {
 
   // User Profile Routes
   app.patch("/api/user", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Authentication required");
+    }
+
     const updateSchema = z.object({
       name: z.string().optional(),
       dateOfBirth: z.string().optional(),
@@ -80,7 +84,7 @@ export async function registerRoutes(app: Express): Server {
 
     try {
       const data = updateSchema.parse(req.body);
-      const user = await storage.updateUser(req.user!.id, data);
+      const user = await storage.updateUser(req.user.id, data);
       res.json(user);
     } catch (error) {
       res.status(400).json({ error: "Invalid user data" });
@@ -89,7 +93,7 @@ export async function registerRoutes(app: Express): Server {
 
   // Admin Settings Routes
   app.patch("/api/settings/prompt", async (req, res) => {
-    if (req.user?.role !== "ADMIN") {
+    if (!req.user || req.user.role !== "ADMIN") {
       return res.status(403).send("Only admin can update prompt");
     }
     try {
@@ -102,7 +106,7 @@ export async function registerRoutes(app: Express): Server {
 
   // Statistics Route for Admin Dashboard
   app.get("/api/stats", async (req, res) => {
-    if (req.user?.role !== "ADMIN") {
+    if (!req.user || req.user.role !== "ADMIN") {
       return res.status(403).send("Only admin can view statistics");
     }
 
