@@ -1,9 +1,9 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth } from "./auth";
+import { setupAuth, hashPassword } from "./auth";
 import { z } from "zod";
-import { insertJobSchema } from "@shared/schema";
+import { insertJobSchema, insertUserSchema } from "@shared/schema";
 
 export function registerRoutes(app: Express): Server {
   setupAuth(app);
@@ -53,10 +53,20 @@ export function registerRoutes(app: Express): Server {
       return res.status(403).send("Only admin can create HR accounts");
     }
     try {
-      const user = await storage.createUser({
+      // Validate the input data
+      const data = insertUserSchema.parse({
         ...req.body,
         role: "HR"
       });
+
+      // Hash the password before storing
+      const hashedPassword = await hashPassword(data.password);
+
+      const user = await storage.createUser({
+        ...data,
+        password: hashedPassword,
+      });
+
       res.status(201).json(user);
     } catch (error) {
       res.status(400).json({ error: "Invalid user data" });
