@@ -1,6 +1,8 @@
 from pymongo import MongoClient, errors
 import os
 import logging
+
+logger = logging.getLogger(__name__)
 class Database:
     def __init__(self):
         mongo_uri = os.getenv("MONGODB_URI", "mongodb://localhost:27017/hr_db")
@@ -8,8 +10,8 @@ class Database:
             self.client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
             # Force a connection to check for errors
             self.client.server_info()
-            logging.debug('the data base connected successfully')
-            print("database connected")
+            logger.info('the data base connected successfully')
+            
         except errors.ServerSelectionTimeoutError as err:
             raise Exception(f"Could not connect to MongoDB: {err}")
         self.db = self.client.hr_db

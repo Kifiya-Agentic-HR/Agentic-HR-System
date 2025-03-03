@@ -3,6 +3,8 @@ import logging
 from ..utils.cloud_storage import upload_file
 from ..database.models import  ApplicationDocument, CandidateDocument
 
+
+logger = logging.getLogger(__name__)
 router = APIRouter()
 @router.post("/", response_model=dict, status_code=status.HTTP_201_CREATED)
 async def create_application(
@@ -59,3 +61,12 @@ async def create_application(
     except Exception as e:
         logging.error(f"Error creating application: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
+    
+
+@router.get("/", status_code=status.HTTP_200_OK)
+async def get_applications():
+    try:
+        applications = ApplicationDocument.get_applications()
+        return list(applications)
+    except Exception as e:
+        logger.error(f"Error fetching applications: {str(e)}")

@@ -102,16 +102,32 @@ class ApplicationDocument(BaseDocument):
             if application:
                 application["_id"] = str(application["_id"])
                 application["job_id"] = str(application["job_id"])
+                print("application found")
+            print("no application found")
             return application
         except errors.PyMongoError as e:
+        
             raise Exception(f"Error fetching application by id: {e}")
+    @classmethod
+    def get_applications(cls):
+        try:
+            applications = cls.get_collection().find()
+            
+            applications = list(applications)
+            for app in applications:
+                app["_id"] = str(app["_id"])
+                app["job_id"] = str(app["job_id"])
+            return applications
+        except errors.PyMongoError as e:
+        
+            raise Exception(f"Error fetching applications: {e}")
 
     @classmethod
     def get_applications_by_job(cls, job_id):
         try:
             # Convert the provided job_id to an ObjectId for querying.
             job_obj_id = ObjectId(job_id)
-            applications_cursor = cls.get_collection().find({"job_id": job_obj_id})
+            applications_cursor = cls.get_collection().find({"job_id": job_id})
             applications = list(applications_cursor)
             for app in applications:
                 app["_id"] = str(app["_id"])
@@ -124,11 +140,6 @@ class CandidateDocument(BaseDocument):
 
     @classmethod
     def create_candidate(cls, candidate_data):
-        
-        
-            
-
-        
         try:
             result = cls.get_collection().insert_one(candidate_data)
             new_candidate = cls.get_collection().find_one({"_id": result.inserted_id})
@@ -139,4 +150,4 @@ class CandidateDocument(BaseDocument):
                 print(new_candidate)
             return new_candidate["_id"]
         except errors.PyMongoError as e:
-            raise Exception(f"Error creating application: {e}")
+            raise Exception(f"Error creating candidate: {e}")
