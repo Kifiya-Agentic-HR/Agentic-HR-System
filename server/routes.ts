@@ -59,6 +59,12 @@ export function registerRoutes(app: Express): Server {
         role: "HR"
       });
 
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(data.username);
+      if (existingUser) {
+        return res.status(400).json({ error: "Username already exists" });
+      }
+
       // Hash the password before storing
       const hashedPassword = await hashPassword(data.password);
 
@@ -67,8 +73,10 @@ export function registerRoutes(app: Express): Server {
         password: hashedPassword,
       });
 
+      console.log(`Created HR account: ${user.username}`); // Add logging
       res.status(201).json(user);
     } catch (error) {
+      console.error('Error creating HR account:', error); // Add logging
       res.status(400).json({ error: "Invalid user data" });
     }
   });
