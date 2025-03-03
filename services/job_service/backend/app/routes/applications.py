@@ -1,7 +1,8 @@
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 import logging
-from ..utils.cloud_storage import upload_file
-from ..database.models import  ApplicationDocument, CandidateDocument
+from app.utils.publisher import publish_application
+from app.utils.cloud_storage import upload_file
+from app.database.models import  ApplicationDocument, CandidateDocument
 
 
 logger = logging.getLogger(__name__)
@@ -52,11 +53,10 @@ async def create_application(
         new_application = ApplicationDocument.create_application(application_data)
         if not new_application:
             raise HTTPException(status_code=400, detail="Application creation failed")
-        # await publish_application({
-        #     "app_id": application_id,
-        #     "resume_path": resume_path,
-        #     "job_id": job_id
-        # })
+        await publish_application({
+            "app_id": new_application,
+            "resume_path": file_path,
+        })
         return {"success": True, "application": new_application}
     except Exception as e:
         logging.error(f"Error creating application: {str(e)}")

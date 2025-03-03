@@ -1,4 +1,4 @@
-from .database import database
+from app.database import database
 from datetime import datetime
 from bson import ObjectId
 from pymongo import ReturnDocument, errors
@@ -91,7 +91,7 @@ class ApplicationDocument(BaseDocument):
                 new_application["_id"] = str(new_application["_id"])
                 new_application["job_id"] = str(new_application["job_id"])
                 print(new_application)
-            return new_application
+            return new_application["_id"]
         except errors.PyMongoError as e:
             raise Exception(f"Error creating application: {e}")
 

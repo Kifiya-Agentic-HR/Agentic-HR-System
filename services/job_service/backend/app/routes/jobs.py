@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 from schemas import JobCreate, JobUpdate
-from ..database.models import JobDocument, ApplicationDocument
+from app.database.models import JobDocument, ApplicationDocument
 from datetime import datetime
 
 router = APIRouter()

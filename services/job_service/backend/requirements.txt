@@ -1,0 +1,35 @@
+
+python-multipart
+pytesseract
+pdf2image
+python-dotenv
+pillow
+python-magic
+scikit-learn
+nltk
+fastapi
+uvicorn
+python-dotenv
+flask 
+flask-sqlalchemy
+
+aio_pika
+
+tenacity
+aiofiles
+pymongo
+
+python-multipart
+python-dotenv
+
+# AI and Processing
+google-generativeai
+PyPDF2
+docx2txt
+pytesseract
+pdf2image
+config
+# Development
+pytest
+pytest-asyncio
+httpx
