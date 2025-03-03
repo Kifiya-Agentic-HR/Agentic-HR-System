@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import RoleNav from "@/components/ui/role-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
   BarChart,
   Bar,
@@ -17,7 +16,7 @@ import {
 } from "recharts";
 import { Loader2 } from "lucide-react";
 
-const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))'];
+const BORDER_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 export default function AdminDashboard() {
   const { data: stats, isLoading } = useQuery({
@@ -36,13 +35,10 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="flex min-h-screen dark:bg-background">
+    <div className="flex min-h-screen">
       <RoleNav />
       <main className="flex-1 p-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Statistics Dashboard</h1>
-          <ThemeToggle />
-        </div>
+        <h1 className="text-3xl font-bold mb-8">Statistics Dashboard</h1>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="shadow-lg">
@@ -56,18 +52,32 @@ export default function AdminDashboard() {
                     data={stats?.genderStats}
                     cx="50%"
                     cy="50%"
-                    labelLine={false}
+                    labelLine={true}
                     outerRadius={150}
-                    fill="#8884d8"
+                    fill="transparent"
+                    stroke="none"
                     dataKey="value"
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                   >
                     {stats?.genderStats.map((entry: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={`${BORDER_COLORS[index % BORDER_COLORS.length]}20`}
+                        stroke={BORDER_COLORS[index % BORDER_COLORS.length]}
+                        strokeWidth={2}
+                      />
                     ))}
                   </Pie>
-                  <Tooltip />
-                  <Legend />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                      border: 'none',
+                      borderRadius: '8px'
+                    }} 
+                  />
+                  <Legend 
+                    formatter={(value) => <span className="text-sm">{value}</span>}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </CardContent>
@@ -80,12 +90,24 @@ export default function AdminDashboard() {
             <CardContent className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stats?.screeningStats}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 0, 0, 0.1)" />
+                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip
+                    contentStyle={{ 
+                      backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                      border: 'none',
+                      borderRadius: '8px'
+                    }}
+                  />
                   <Legend />
-                  <Bar dataKey="value" fill={COLORS[0]} />
+                  <Bar 
+                    dataKey="value" 
+                    fill="rgba(0, 136, 254, 0.1)"
+                    stroke="#0088FE"
+                    strokeWidth={2}
+                    radius={[4, 4, 0, 0]}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -98,12 +120,24 @@ export default function AdminDashboard() {
             <CardContent className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stats?.interviewStats}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 0, 0, 0.1)" />
+                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip
+                    contentStyle={{ 
+                      backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                      border: 'none',
+                      borderRadius: '8px'
+                    }}
+                  />
                   <Legend />
-                  <Bar dataKey="value" fill={COLORS[1]} />
+                  <Bar 
+                    dataKey="value" 
+                    fill="rgba(0, 196, 159, 0.1)"
+                    stroke="#00C49F"
+                    strokeWidth={2}
+                    radius={[4, 4, 0, 0]}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
