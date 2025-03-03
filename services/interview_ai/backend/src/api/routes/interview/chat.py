@@ -37,10 +37,10 @@ async def process_chat(
 
         session_data = SessionData.model_validate_json(session_json)
 
-        # Update conversation history
         if chat_request.user_answer:
             session_data.conversation_history.append(f"User: {chat_request.user_answer}")
-            session_data.user_answer = chat_request.user_answer
+    
+        session_data.user_answer = chat_request.user_answer
 
         # Process interview step
         interviewer_result = unified_interface.kickoff(
@@ -48,9 +48,14 @@ async def process_chat(
             max_conversation_history=settings.MAX_CONVERSATION_HISTORY
         )
 
+        if interviewer_result.get("error", None) is not None:
+            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            return {"success": False, "error": interviewer_result.get("error") }
+
+
         # Update conversation
         interviewer_text = interviewer_result.get("text", "")
-        state = interviewer_result.get("state", "ongoing")
+        state = interviewer_result.get("state", None)
         session_data.conversation_history.append(f"Interviewer: {interviewer_text}")
 
         # Handle interview completion
@@ -80,7 +85,7 @@ async def process_chat(
                 logger.error(f"Completion error: {str(e)}")
 
         elif state == "ongoing":
-            session_data.skills = interviewer_result.get("skills", {})
+            session_data.skills = interviewer_result.get("skills", session_data.skills)
 
         # Update session data
         redis_client.setex(

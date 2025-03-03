@@ -15,7 +15,7 @@ class UnifiedInterface:
     def validate_keys(self, input_data, required_keys):
         return [
             key for key in required_keys
-            if key not in input_data or input_data[key] is None or (isinstance(input_data[key], str) and not input_data[key].strip())
+            if key not in input_data
         ]
 
     def _error(self, message):
@@ -31,6 +31,7 @@ class UnifiedInterface:
             return self._error(f"{crew_name} error: {e}")
 
     def kickoff(self, input_data, max_conversation_history=5):
+        print("Input data: ", input_data)
         if not isinstance(input_data, dict):
             return self._error("Input must be a dictionary.")
         try:
@@ -65,12 +66,15 @@ class UnifiedInterface:
             return self._error(f"Unrecognized stage: {stage}")
 
         missing = self.validate_keys(input_data, config[stage]["required"])
-        if missing:
-            return self._error(f"Missing keys for '{stage}' stage: {', '.join(missing)}")
+        
         if stage == "ongoing":
             if len(input_data["conversation_history"]) > max_conversation_history:
                 input_data["conversation_history"] = input_data["conversation_history"][-max_conversation_history:]
                 # keep only recent
+
+        if missing:
+            return self._error(f"Missing keys for '{stage}' stage: {', '.join(missing)}")
+       
         result = self._call_crew(config[stage]["crew"], input_data, config[stage]["crew_name"])
         logger.info(f"Result [CREW KICKOFF]: {result}")
         return result

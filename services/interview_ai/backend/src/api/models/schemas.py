@@ -14,25 +14,20 @@ class SessionData(BaseModel):
     role_info: str
     skills: Dict[str, dict]
     conversation_history: List[str] = Field(default_factory=list)
-    user_answer: Optional[str] = None
+    user_answer: Optional[str] = ""
 
 class ChatRequest(BaseModel):
     session_id: str
     user_answer: Optional[str] = ""
 
 class ChatResponse(BaseModel):
-    state: ChatState
+    state: ChatState | None
     text: str
     success: bool
-    error: str = None
+    error: str | None = None
 
 class ScheduleRequest(BaseModel):
-    name: str
-    user_info: str
-    user_email: EmailStr
-    role_info: str
-    job_title: str
-    skills: Dict[str, dict]
+    application_id: str
 
 class ScheduleResponse(BaseModel):
     success: bool
@@ -41,6 +36,7 @@ class ScheduleResponse(BaseModel):
 
 class SessionResponse(BaseModel):
     interview_id: str
+    session_id: str
     chat_history: Optional[List[str]] = []
     success: bool
     error: Optional[str]

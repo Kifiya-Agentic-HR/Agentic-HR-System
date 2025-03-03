@@ -111,16 +111,28 @@ async def manage_session(
                 }
 
             cv = await mongo_db.screening_results.find_one({"application_id": ObjectId(interview_data["application_id"])})
+            parsed_cv = ""
+            if not cv:
+                parsed_cv = ""
+            else:
+                parsed_cv = cv.get("parsed_cv", "")
 
             # Transform skills
             transformed_skills = transform_skills(job.get("skills", {}))
+
+            print("------ PRINT EVERYTHING ---------")
+            print("CANDIDATE:",candidate)
+            print("job:",job)
+            print("parsed_cv",parsed_cv)
+            print("Skills", transformed_skills)
+            print("------ PRINT EVERYTHING ---------")
 
             # Create session data
             session = SessionData(
                 interview_id=interview_id,
                 candidate_id=str(interview_data["candidate_id"]),
                 job_id=str(interview_data["job_id"]),
-                user_info=cv.get("parsed_cv", ""),
+                user_info=parsed_cv,
                 user_email=candidate.get("email", ""),
                 name=candidate.get("full_name", ""),
                 job_title=job.get("title", ""),
@@ -151,7 +163,7 @@ async def manage_session(
             }
 
         except Exception as e:
-            logger.error(f"Session creation failed: {str(e)}")
+            logger.error(f"Session creation failed: {e.with_traceback()}")
             return {
                 "success": False,
                 "error": str(e),

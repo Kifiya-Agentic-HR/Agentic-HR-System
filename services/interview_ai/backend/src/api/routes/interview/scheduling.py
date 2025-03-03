@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Request, Response, status
 from bson import ObjectId
+from src.api.models.enums import EmailType
 from typing import Dict
 from datetime import datetime
 import logging
@@ -7,6 +8,8 @@ from src.api.models.schemas import ScheduleRequest, ScheduleResponse, SessionDat
 from src.api.db.dependencies import get_mongo_db, get_redis_client
 from src.api.core.config import get_settings
 from src.api.services.email import send_email_notification
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 router = APIRouter(prefix="/schedule", tags=["scheduling"])
 logger = logging.getLogger(__name__)
@@ -58,8 +61,8 @@ async def schedule_interview(
             "application_id": ObjectId(schedule_request.application_id),
             "candidate_id": ObjectId(candidate_id),
             "job_id": ObjectId(job_id),
-            "interview_date": datetime.now(datetime.timezone.utc),
-            "interview_status": "scheduled", # completed | scheduled | expired
+            "interview_date": datetime.now(ZoneInfo("Etc/GMT-3")),
+            "interview_status": "scheduled", # completed | scheduled | expired | flagged | started
             "skill_assessment": {},
             "score": 0,
             "conversation_history": [],
@@ -75,7 +78,7 @@ async def schedule_interview(
             interview_link = f"{settings.FRONTEND_BASE_URL}/interview/session/{interview_id}"
             send_email_notification(
                 to=candidate["email"],
-                type="interview_scheduled",
+                type=EmailType.interview_scheduled,
                 subject="Interview Scheduled",
                 interview_link=interview_link,
                 name=candidate.get("full_name", "User"),

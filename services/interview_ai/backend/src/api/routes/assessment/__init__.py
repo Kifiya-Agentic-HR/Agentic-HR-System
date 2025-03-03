@@ -8,14 +8,14 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/interview", tags=["interview"])
+router = APIRouter(prefix="/assessment", tags=["interview"])
 router.include_router(scheduling_router)
 router.include_router(sessions_router)
 router.include_router(chat_router)
 
 # add  a get request
-@router.get("/{interview_id}")
-async def get_interview(interview_id: str,
+@router.get("/{assessment_id}")
+async def get_interview(assessment_id: str,
                         response: Response,
                         mongo_db=Depends(get_mongo_db),
                             ):

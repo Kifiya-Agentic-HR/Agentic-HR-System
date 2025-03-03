@@ -15,6 +15,8 @@ def create_app():
     )
     
     setup_dependencies(app)
+    # set base /api/v1
+    app.include_router(interview_router, prefix="/api/v1")
     app.include_router(interview_router)
     
     return app

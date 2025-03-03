@@ -108,6 +108,21 @@ class InterviewQACrew:
             config=self.agents_config['question_generator'],
         )
 
+    @agent
+    def output_formatter(self) -> Agent:
+        """Output Formatter agent config."""
+        return Agent(
+            config=self.agents_config['output_formatter'],
+        )
+    
+    @task
+    def output_formatter_task(self) -> Task:
+        """Task for formatting the output."""
+        return Task(
+            config=self.tasks_config['output_formatter_task'],
+            context=[self.question_generation_task()]
+        )
+
     @task
     def answer_evaluation_task(self) -> Task:
         """Task for evaluating the answer."""
@@ -133,7 +148,7 @@ class InterviewQACrew:
         """
         return Crew(
             agents=[self.answer_evaluator(), self.question_generator()],
-            tasks=[self.answer_evaluation_task(), self.question_generation_task()],
+            tasks=[self.answer_evaluation_task(), self.question_generation_task(), self.output_formatter_task()],
             # verbose=True,
             output_log_file='logs/qa_crew.log'
         )
