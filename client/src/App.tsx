@@ -12,6 +12,7 @@ import HRJobPost from "@/pages/hr/job-post";
 import HRSettings from "@/pages/hr/settings";
 import AdminDashboard from "@/pages/admin/dashboard";
 import AdminSettings from "@/pages/admin/settings";
+import HRJobApplications from "@/pages/hr/HRJobApplications"; // Import the new component
 
 function Router() {
   return (
@@ -22,6 +23,11 @@ function Router() {
       <ProtectedRoute path="/hr/settings" component={HRSettings} />
       <ProtectedRoute path="/admin/dashboard" component={AdminDashboard} />
       <ProtectedRoute path="/admin/settings" component={AdminSettings} />
+      <ProtectedRoute
+        path="/hr/jobs/:jobId/applications"
+        component={HRJobApplications}
+      />{" "}
+      {/* Add the new route */}
       <Route path="/" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
@@ -31,7 +37,7 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="system" storageKey="hr-dashboard-theme">
+      <ThemeProvider defaultTheme="light" storageKey="hr-dashboard-theme">
         <AuthProvider>
           <Router />
           <Toaster />

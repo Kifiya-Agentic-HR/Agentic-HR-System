@@ -2,13 +2,15 @@ import { useQuery } from "@tanstack/react-query";
 import RoleNav from "@/components/ui/role-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { Job } from "@shared/schema";
+import { Job } from "@/api/types"; // Update import path
 import { Link } from "wouter";
 import { Loader2 } from "lucide-react";
+import { fetchJobs } from "@/api/jobs";
 
 export default function HRDashboard() {
   const { data: jobs, isLoading } = useQuery<Job[]>({
-    queryKey: ["/api/jobs"],
+    queryKey: ["jobs"],
+    queryFn: fetchJobs,
   });
 
   return (
@@ -27,18 +29,20 @@ export default function HRDashboard() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {jobs?.map((job) => (
-              <Link key={job.id} href={`/hr/jobs/${job.id}`}>
+              <Link key={job.id} href={`/hr/jobs/${job.id}/applications`}>
                 <Card className="cursor-pointer hover:shadow-lg transition-shadow">
                   <CardHeader>
                     <CardTitle>{job.title}</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground mb-2">{job.summary}</p>
-                    <div className="flex gap-2">
-                      <span className="inline-flex items-center rounded-full bg-green-50 dark:bg-green-900/20 px-2 py-1 text-xs font-medium text-green-700 dark:text-green-300 ring-1 ring-inset ring-green-600/20">
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-muted-foreground line-clamp-3">
+                      {job.summary}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
                         {job.status}
                       </span>
-                      <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-900/20 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-300 ring-1 ring-inset ring-blue-600/20">
+                      <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
                         {job.type}
                       </span>
                     </div>
