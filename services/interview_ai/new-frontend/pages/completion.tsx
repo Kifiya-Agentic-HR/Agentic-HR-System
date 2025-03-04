@@ -93,7 +93,7 @@ export default function Completion({ completed, violations }: CompletionProps) {
             <div className="flex justify-center pt-6">
               <Button
                 onClick={handleFinish}
-                className="px-8 py-6 text-lg rounded-full transition-transform hover:scale-105"
+                className="px-8 py-6 text-lg rounded-full transition-transform hover:scale-105 text-white"
                 variant={completed ? "default" : "destructive"}
               >
                 {completed ? "Finish Session" : "Close Window"}

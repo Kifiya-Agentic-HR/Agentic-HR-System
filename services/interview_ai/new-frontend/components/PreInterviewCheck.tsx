@@ -10,9 +10,9 @@ import { Camera, AlertCircle } from "lucide-react";
 import { useFaceDetection } from "@/hooks/useFaceDetection";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
-import { VideoComponent } from "@/components/VideoComponent";
+import { VideoComponent } from "@/components/VideoComponent"
 import { MicrophoneTest } from "@/components/MicrophoneTest";
-import { useLocation } from "wouter"; 
+import { useRouter } from "next/router";
 
 interface PreInterviewCheckProps {
   onComplete: () => void;
@@ -20,7 +20,6 @@ interface PreInterviewCheckProps {
 }
 
 export function PreInterviewCheck({ onComplete, interviewId }: PreInterviewCheckProps) {
-  const [location, navigate] = useLocation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
   const [checks, setChecks] = useState({
@@ -86,14 +85,15 @@ export function PreInterviewCheck({ onComplete, interviewId }: PreInterviewCheck
 
   const isComplete = checks.camera && 
                     checks.microphone && 
-                    checks.consent && 
-                    (fallbackMode || (!isModelLoading && isFacePresent && !multipleFaces && confidenceScore > 0.6 && !lookingAway));
+                    checks.consent
+                    //  && 
+                    // (fallbackMode || (!isModelLoading && isFacePresent && !multipleFaces && confidenceScore > 0.6 && !lookingAway));
 
   const faceStatus = getFaceDetectionStatus();
 
   const handleComplete = () => {
     onComplete();
-    navigate(`/interview/${interviewId}`);
+    
   };
 
   return (

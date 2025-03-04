@@ -31,13 +31,13 @@ export function useFaceDetection(videoRef: RefObject<HTMLVideoElement | null>) {
     const loadModels = async () => {
       try {
         if (typeof window === "undefined") return;
+        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@latest/model/';
 
         // Dynamically import face-api.js only on client side
         faceapiRef.current = await import("face-api.js");
         
-        const MODEL_URL = '/models/face-api'; // Consider hosting models locally
-        const modelProgress = [0, 25, 50, 75, 100];
-        
+        // Simulate model loading progress
+        const modelProgress = [0, 15, 25, 30, 50, 60, 75, 80, 100];
         for (const progress of modelProgress) {
           setState(prev => ({ ...prev, loadingProgress: progress }));
           await new Promise(resolve => setTimeout(resolve, 500));
@@ -45,8 +45,9 @@ export function useFaceDetection(videoRef: RefObject<HTMLVideoElement | null>) {
 
         if (!faceapiRef.current) return;
 
+        // Load the more robust SSD model along with landmark and recognition nets
         await Promise.all([
-          faceapiRef.current.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+          faceapiRef.current.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
           faceapiRef.current.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
           faceapiRef.current.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
         ]);
@@ -72,8 +73,9 @@ export function useFaceDetection(videoRef: RefObject<HTMLVideoElement | null>) {
       }
 
       try {
+        // Use SSD Mobilenet V1 for improved accuracy with a minConfidence threshold of 0.5
         const detections = await faceapiRef.current
-          .detectAllFaces(video, new faceapiRef.current.TinyFaceDetectorOptions({ scoreThreshold: 0.6 }))
+          .detectAllFaces(video, new faceapiRef.current.SsdMobilenetv1Options({ minConfidence: 0.5 }))
           .withFaceLandmarks();
 
         const confidenceScore = detections[0]?.detection?.score || 0;
@@ -81,7 +83,7 @@ export function useFaceDetection(videoRef: RefObject<HTMLVideoElement | null>) {
 
         setState(prev => ({
           ...prev,
-          isFacePresent: detections.length > 0 && confidenceScore > 0.6,
+          isFacePresent: detections.length > 0 && confidenceScore >= 0.5,
           multipleFaces: detections.length > 1,
           lookingAway: detections.length === 0,
           confidenceScore,

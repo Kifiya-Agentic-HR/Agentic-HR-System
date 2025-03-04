@@ -1,7 +1,7 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1";
 
 export async function startInterview(interviewId: string): Promise<{ session_id: string }> {
-  const response = await fetch(`${API_BASE_URL}/start_interview/${interviewId}`, {
+  const response = await fetch(`${API_BASE_URL}/interview/session/${interviewId}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -15,7 +15,7 @@ export async function startInterview(interviewId: string): Promise<{ session_id:
 }
 
 export async function sendChat(sessionId: string, userAnswer: string): Promise<{ state: string; text: string }> {
-  const response = await fetch(`${API_BASE_URL}/chat`, {
+  const response = await fetch(`${API_BASE_URL}/interview/chat`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"

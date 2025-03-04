@@ -123,6 +123,7 @@ services:
   # Shared Infrastructure Services
   mongo:
     image: mongo:latest
+    command: mongod --quiet --logpath /dev/null
     container_name: Mongo
     restart: always
     ports:
@@ -133,8 +134,6 @@ services:
       MONGO_INITDB_DATABASE: hr_db
     networks:
       - app_network
-    logging:
-      driver: "none"
 
   redis:
     image: redis:latest
@@ -149,6 +148,8 @@ services:
       options:
         max-size: "200k"
         max-file: "10"
+    volumes:
+      - redis-data:/data
 
   notification:
     build: ./services/notification
@@ -210,3 +211,4 @@ networks:
 volumes:
   shared_volume:
   rabbitmq_data:
+  redis-data:

@@ -55,11 +55,14 @@ interface InterviewResponse {
   
   export async function createSession(interviewId: string): Promise<SessionResponse> {
     try {
-      const response = await fetch(`${BASE_URL}/interview/session/${interviewId}`, {
+      const response = await fetch(`${BASE_URL}/interview/session/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ // Or use FormData for form data
+          interview_id: interviewId,
+        }),
       });
   
       const data = await response.json();

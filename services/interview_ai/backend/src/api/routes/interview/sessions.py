@@ -4,7 +4,7 @@ from bson import ObjectId
 from datetime import datetime
 import logging
 from typing import Dict
-from src.api.models.schemas import SessionResponse, SessionData
+from src.api.models.schemas import SessionRequest, SessionResponse, SessionData
 from src.api.db.dependencies import get_mongo_db, get_redis_client
 from src.api.core.config import get_settings
 
@@ -26,14 +26,27 @@ def transform_skills(job_skills: dict) -> dict:
         }
     return transformed
 
-@router.post("/{interview_id}", response_model=SessionResponse)
+@router.post("/", response_model=SessionResponse)
 async def manage_session(
     request: Request,
     response: Response,
-    interview_id: str,
+    session_request: SessionRequest,
     mongo_db=Depends(get_mongo_db),
     redis_client=Depends(get_redis_client)
 ) -> Dict:
+    
+    interview_id = session_request.interview_id
+
+    if not interview_id or not isinstance(interview_id, str):
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return {
+            "success": False,
+            "error": "Invalid interview ID",
+            "interview_id": interview_id,
+            "session_id": None,
+            "chat_history": []
+        }
+
     try:
         # Try to get existing session first
         existing_session_id = redis_client.get(f"interview:{interview_id}")
@@ -42,6 +55,7 @@ async def manage_session(
             if session_data:
                 try:
                     parsed_data = SessionData.model_validate_json(session_data)
+                    response.status_code = status.HTTP_200_OK
                     return {
                         "success": True,
                         "interview_id": interview_id,
@@ -70,7 +84,6 @@ async def manage_session(
 
         # Fetch interview data
         interview_data = await mongo_db.interviews.find_one({"_id": interview_obj_id})
-        response.status_code = status.HTTP_400_BAD_REQUEST
         if not interview_data:
             return {
                 "success": False,
@@ -111,16 +124,28 @@ async def manage_session(
                 }
 
             cv = await mongo_db.screening_results.find_one({"application_id": ObjectId(interview_data["application_id"])})
+            parsed_cv = ""
+            if not cv:
+                parsed_cv = ""
+            else:
+                parsed_cv = cv.get("parsed_cv", "")
 
             # Transform skills
             transformed_skills = transform_skills(job.get("skills", {}))
+
+            print("------ PRINT EVERYTHING ---------")
+            print("CANDIDATE:",candidate)
+            print("job:",job)
+            print("parsed_cv",parsed_cv)
+            print("Skills", transformed_skills)
+            print("------ PRINT EVERYTHING ---------")
 
             # Create session data
             session = SessionData(
                 interview_id=interview_id,
                 candidate_id=str(interview_data["candidate_id"]),
                 job_id=str(interview_data["job_id"]),
-                user_info=cv.get("parsed_cv", ""),
+                user_info=parsed_cv,
                 user_email=candidate.get("email", ""),
                 name=candidate.get("full_name", ""),
                 job_title=job.get("title", ""),
@@ -141,7 +166,7 @@ async def manage_session(
                 86400,
                 session_id
             )
-
+            response.status_code = status.HTTP_200_OK
             return {
                 "success": True,
                 "interview_id": interview_id,
@@ -151,7 +176,7 @@ async def manage_session(
             }
 
         except Exception as e:
-            logger.error(f"Session creation failed: {str(e)}")
+            logger.error(f"Session creation failed: {e.with_traceback()}")
             return {
                 "success": False,
                 "error": str(e),
