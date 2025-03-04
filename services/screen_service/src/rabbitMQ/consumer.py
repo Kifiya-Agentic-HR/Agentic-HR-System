@@ -2,21 +2,20 @@ import asyncio
 import json
 import logging
 from src.service.screening_service import scoreResume
-from services.job_service.backend.config_local import Config
-from src.models import ResultDocument, JobDocument
+from config_local import Config
 import aio_pika
 from concurrent.futures import ThreadPoolExecutor
-from src.service.skill_analysis_service import analyse_job_skills
-
+from src.service.skill_analysis_service import analyze_job_skills
+from src.models import JobDocument , ScreeningResultDocument
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
 # ThreadPool for running synchronous operations asynchronously
 executor = ThreadPoolExecutor()
-
 async def process_message(message: aio_pika.IncomingMessage):
     async with message.process():
-        try:
+        try: 
+
             logging.info("Processing message...")
             data = json.loads(message.body.decode())
 
@@ -28,7 +27,7 @@ async def process_message(message: aio_pika.IncomingMessage):
                 return
 
             job_text = job_fetch.get("description", "")
-            skill_fetch = analyse_job_skills(job_text)
+            # skill_fetch = analyze_job_skills(job_text)
 
             # Score resume
             llm_output, kw_score, vec_score, parsed_resume = scoreResume(
@@ -40,13 +39,12 @@ async def process_message(message: aio_pika.IncomingMessage):
                 "application_id": data.get("app_id"),
                 "score": round(final_score, 1),
                 "reasoning": llm_output.get("score_breakdown", {}),
-                "skills": skill_fetch,
                 "parsed_cv": parsed_resume,
             }
 
             # Save result to MongoDB asynchronously
             await asyncio.get_running_loop().run_in_executor(
-                executor, ResultDocument.create, result
+                executor, ScreeningResultDocument.create, result
             )
 
             logging.info(f"Successfully processed application {data.get('app_id')}")
