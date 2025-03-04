@@ -20,11 +20,12 @@ interface ApplyFormProps {
 
 export default function ApplyForm({ jobId }: ApplyFormProps) {
   const [formData, setFormData] = useState({
-    name: '',
+    full_name: '',
     email: '',
+    phone_number: '',
     gender: '',
     disability: '',
-    experience: '',
+    experience_years: '',
     resume: null as File | null,
   });
 
@@ -43,22 +44,22 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
     },
   });
 
-  const triggerConfetti = () => {
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: [PRIMARY_COLOR, SECONDARY_COLOR, '#ffffff'],
-    });
+  const isValidEmail = (email: string) => {
+    return /^\S+@\S+\.\S+$/.test(email);
+  };
+
+  const isValidPhoneNumber = (phone: string) => {
+    return /^\+?[0-9]{10,15}$/.test(phone);
   };
 
   const isFormValid = () => {
     return (
-      formData.name &&
-      formData.email &&
+      formData.full_name &&
+      isValidEmail(formData.email) &&
+      isValidPhoneNumber(formData.phone_number) &&
       formData.gender &&
       formData.disability &&
-      formData.experience &&
+      formData.experience_years &&
       formData.resume
     );
   };
@@ -68,7 +69,7 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
     setError('');
 
     if (!isFormValid()) {
-      setError('Please fill out all required fields.');
+      setError('Please fill out all required fields with valid values.');
       return;
     }
 
@@ -76,15 +77,16 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
 
     try {
       const formPayload = new FormData();
-      formPayload.append('name', formData.name);
+      formPayload.append('full_name', formData.full_name);
       formPayload.append('email', formData.email);
+      formPayload.append('phone_number', formData.phone_number);
       formPayload.append('gender', formData.gender);
       formPayload.append('disability', formData.disability);
-      formPayload.append('experience', formData.experience);
+      formPayload.append('experience_years', formData.experience_years);
       if (formData.resume !== null) {
         formPayload.append('resume', formData.resume, formData.resume.name);
       }
-        //  api to store the application
+
       const response = await fetch(`http://localhost:9000/jobs/${jobId}/apply`, {
         method: 'POST',
         body: formPayload,
@@ -93,7 +95,12 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
       if (!response.ok) throw new Error('Application failed');
 
       setIsSubmitted(true);
-      triggerConfetti();
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: [PRIMARY_COLOR, SECONDARY_COLOR, '#ffffff'],
+      });
 
       setTimeout(() => {
         window.location.href = `/`;
@@ -128,8 +135,8 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                 <Label className="text-primary">Full Name</Label>
                 <Input
                   required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  value={formData.full_name}
+                  onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                 />
               </div>
 
@@ -141,9 +148,30 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className={!isValidEmail(formData.email) ? 'border-red-500' : ''}
                 />
+                {!isValidEmail(formData.email) && formData.email && (
+                  <p className="text-sm text-red-500">Invalid email format.</p>
+                )}
               </div>
 
+              {/* Phone Number */}
+              <div>
+                <Label className="text-primary">Phone Number</Label>
+                <Input
+                  required
+                  value={formData.phone_number}
+                  onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                  className={!isValidPhoneNumber(formData.phone_number) ? 'border-red-500' : ''}
+                />
+                {!isValidPhoneNumber(formData.phone_number) && formData.phone_number && (
+                  <p className="text-sm text-red-500">
+                    Invalid phone number (must be 10-15 digits).
+                  </p>
+                )}
+              </div>
+
+              {/* Gender */}
               <div>
                 <Label className="text-primary">Gender</Label>
                 <select
@@ -160,6 +188,7 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                 </select>
               </div>
 
+              {/* Disability */}
               <div>
                 <Label className="text-primary">Do you have a disability?</Label>
                 <select
@@ -176,12 +205,13 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                 </select>
               </div>
 
+              {/* Years of Experience */}
               <div>
                 <Label className="text-primary">Years of Experience</Label>
                 <select
                   className="w-full border border-primary/30 rounded-md px-3 py-2 bg-white text-primary/80"
-                  value={formData.experience}
-                  onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+                  value={formData.experience_years}
+                  onChange={(e) => setFormData({ ...formData, experience_years: e.target.value })}
                   required
                 >
                   <option value="" disabled className="text-gray-400">
@@ -193,21 +223,6 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                   <option value="6+">6+ years</option>
                 </select>
               </div>
-
-              <div>
-                <Label className="text-primary">Resume (PDF or DOCX only)</Label>
-                <div
-                  {...getRootProps()}
-                  className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors"
-                >
-                  <input {...getInputProps()} required />
-                  <p className="text-primary/80">
-                    {formData.resume ? formData.resume.name : "Drag & drop or click to upload"}
-                  </p>
-                </div>
-              </div>
-
-              {error && <p className="text-sm text-red-500">{error}</p>}
 
               <Button
                 type="submit"

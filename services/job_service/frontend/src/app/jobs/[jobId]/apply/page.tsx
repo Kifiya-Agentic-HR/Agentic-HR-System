@@ -99,7 +99,7 @@ export default function JobApplicationPage({ params }: JobApplicationPageProps) 
                   </div>
                   <div className="flex items-center gap-2 text-primary/80">
                     <Clock className="w-5 h-5" />
-                    <span>Full-time</span>
+                    <span>{job.description.commitment}</span>
                   </div>
                 </div>
               </div>
@@ -110,13 +110,10 @@ export default function JobApplicationPage({ params }: JobApplicationPageProps) 
                 <p className="text-primary/80">{job.description.summary}</p>
 
                 <h3 className="text-xl font-semibold text-[#364957] mt-8 mb-4">Requirements</h3>
-                <ul className="space-y-2 text-primary/80">
-                  {job.description.responsibilities.map((responsibilities, index) => (
-                    <li key={index}>• {responsibilities}</li>
-                  ))}
-                </ul>
+                <p className="text-primary/80">{job.description.responsibilities}</p>
 
-                {/* Skills Section */}
+
+                {/* Skills Section
                 <h3 className="text-xl font-semibold text-[#364957] mt-8 mb-4">Skills Required</h3>
                 <ul className="flex flex-wrap gap-2 text-primary/80">
                   {Array.isArray(job.skills) && job.skills.length > 0 ? (
@@ -128,7 +125,7 @@ export default function JobApplicationPage({ params }: JobApplicationPageProps) 
                   ) : (
                     <p className="text-primary/60">No specific skills mentioned.</p>
                   )}
-                </ul>
+                </ul> */}
               </div>
             </div>
 

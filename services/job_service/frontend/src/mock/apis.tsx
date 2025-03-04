@@ -6,7 +6,8 @@ export type Job = {
   description: {
     type: string;
     summary: string;
-    responsibilities: string[];
+    responsibilities: string;
+    commitment: string
   };
   status: string; 
   skills: string[]; 
@@ -18,14 +19,14 @@ const mockJobs: Job[] = [
     _id: 1,
     title: "Software Engineer",
     description: {
-      type: "Addis Ababa, Ethiopia",
+      type: 'inperson',
       summary: "Design and develop backend services, APIs, and scalable infrastructure.",
-      responsibilities: [
-        "Bachelor’s degree in Computer Science or related field.",
-        "3+ years of experience in backend development.",
-        "Proficiency in JavaScript, Node.js, or Python.",
-        "Experience with cloud platforms (AWS, GCP, or Azure)."
-      ]
+      responsibilities: 
+        `Bachelor’s degree in Computer Science or related field,
+3+ years of experience in backend development,
+Proficiency in JavaScript, Node.js, or Python,
+Experience with cloud platforms (AWS, GCP, or Azure).`,
+      commitment: "full_time"
     },
     status: "Open",
     skills: ["JavaScript", "Node.js", "Python", "AWS"],
@@ -37,12 +38,12 @@ const mockJobs: Job[] = [
     description: {
       type: "Remote",
       summary: "Work closely with designers and backend developers to build intuitive and responsive user interfaces.",
-      responsibilities: [
-        "Bachelor’s degree in Computer Science or related field.",
-        "Experience with React, Next.js, or Vue.js.",
-        "Strong understanding of UI/UX principles.",
-        "Ability to write clean, maintainable CSS and JavaScript."
-      ]
+      responsibilities: 
+        `Bachelor’s degree in Computer Science or related field.
+        Experience with React, Next.js, or Vue.js.
+        Strong understanding of UI/UX principles.
+        Ability to write clean, maintainable CSS and JavaScript.`,
+       commitment: "internship"
     },
     status: "Open",
     skills: ["React", "Next.js", "CSS", "JavaScript"],
@@ -52,14 +53,14 @@ const mockJobs: Job[] = [
     _id: 3,
     title: "Data Scientist",
     description: {
-      type: "Nairobi, Kenya",
+      type: "hybrid",
       summary: "Analyze complex datasets to extract valuable insights and drive business decisions. ",
-      responsibilities: [
-        "Master’s degree in Data Science, Statistics, or a related field.",
-        "Strong proficiency in Python and SQL.",
-        "Experience with machine learning frameworks (TensorFlow, PyTorch).",
-        "Familiarity with big data technologies like Spark and Hadoop."
-      ]
+      responsibilities: 
+        `Master’s degree in Data Science, Statistics, or a related field.
+        Strong proficiency in Python and SQL.
+        Experience with machine learning frameworks (TensorFlow, PyTorch).
+        Familiarity with big data technologies like Spark and Hadoop.`,
+       commitment: "part_time"
     },
     status: "Closed",
     skills: ["Python", "SQL", "Machine Learning", "TensorFlow"],
