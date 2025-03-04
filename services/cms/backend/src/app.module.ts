@@ -1,34 +1,21 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
-
-import { JobsModule } from './modules/jobs/jobs.module';
-import { ApplicationsModule } from './modules/applications/applications.module';
-import { CandidatesModule } from './modules/candidates/candidates.module';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { ApplicationsListModule } from './modules/applications_list/applications_list.module';
-import { InterviewResultsModule } from './modules/interview-results/interview-results.module';
-import { ScreeningResultsModule } from './modules/screening-results/screening-results.module';
-import { InterviewsModule } from './modules/interviews/interviews.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { UsersModule } from './users/users.module';
+import { JobsModule } from './jobs/jobs.module';
+import { AuthModule } from './auth/auth.module';
+import { InterviewsModule } from './interviews/interviews.module';
+import { ApplicationsModule } from './applications/applications.module';
 
 @Module({
   imports: [
-    // Loads .env variables
     ConfigModule.forRoot({ isGlobal: true }),
-    
-    // TypeORM config
     MongooseModule.forRoot(process.env.MONGO_URI),
-    
+    AuthModule,
+    UsersModule,
     JobsModule,
-    ApplicationsModule,
-    CandidatesModule,
-    ApplicationsListModule,
-    InterviewResultsModule,
-    ScreeningResultsModule,
     InterviewsModule,
+    ApplicationsModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
