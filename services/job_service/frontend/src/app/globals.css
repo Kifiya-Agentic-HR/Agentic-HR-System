@@ -139,3 +139,15 @@ html *{
   font-style: normal;
 
 }
+
+input:focus, select:focus {
+  background-color: transparent !important;
+}
+.custom-select {
+  color: white;
+}
+
+.custom-select option {
+  background-color: #364957; /* Change this to your desired color */
+  color: white;
+}

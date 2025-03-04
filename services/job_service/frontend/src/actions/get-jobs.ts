@@ -1,36 +1,15 @@
-import { Job, mockFetchJobs, mockFetchJob } from "@/mock/apis"; 
-
-export async function getJobs(): Promise<Job[]> {
-  return await mockFetchJobs();
-}
+import { Job, mockFetchJobs, mockFetchJob } from "@/mock/apis";
 
 export async function getJob(jobId: number): Promise<Job | null> {
   return await mockFetchJob(jobId);
 }
 
-
-// export async function getJobs(): Promise<Job[]> {
-//   try {
-//     const response = await fetch("api_here"); // API URL
-//     if (!response.ok) {
-//       throw new Error(`Error fetching jobs: ${response.statusText}`);
-//     }
-//     return await response.json();
-//   } catch (error) {
-//     console.error("Failed to fetch jobs:", error);
-//     return []; // Return an empty array in case of failure
-//   }
-// }
-
-// export async function getJob(jobId: number): Promise<Job | null> {
-//   try {
-//     const response = await fetch(`api_here`); // API URL
-//     if (!response.ok) {
-//       throw new Error(`Error fetching job: ${response.statusText}`);
-//     }
-//     return await response.json();
-//   } catch (error) {
-//     console.error(`Failed to fetch job ${jobId}:`, error);
-//     return null; // Return null if the job is not found or an error occurs
-//   }
-// }
+export async function getJobs({ search, type, skills }: { search?: string; type?: string; skills?: string }): Promise<Job[]> {
+  const jobs = await mockFetchJobs();
+  return jobs.filter(job => {
+    const matchesSearch = search ? job.title.toLowerCase().includes(search.toLowerCase()) || job.description.summary.toLowerCase().includes(search.toLowerCase()) : true;
+    const matchesType = type ? job.description.type.toLowerCase() === type.toLowerCase() : true;
+    const matchesSkills = skills ? skills.toLowerCase().split(',').every(skill => job.skills.map(s => s.toLowerCase()).includes(skill.trim().toLowerCase())) : true;
+    return matchesSearch && matchesType && matchesSkills;
+  });
+}

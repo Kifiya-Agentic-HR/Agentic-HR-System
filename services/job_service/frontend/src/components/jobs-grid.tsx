@@ -1,16 +1,24 @@
-// src/components/jobs-grid.tsx
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { formatDate } from "@/lib/utils";
+import { getJobs } from "@/actions/get-jobs";
+import { ArrowUpRight } from "lucide-react";
+import { Job } from "@/mock/apis"; //replace this when using the actual api
 
-import Link from 'next/link';
-import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
-import { formatDate } from '@/lib/utils';
-import { getJobs } from '@/actions/get-jobs';
-import { ArrowUpRight } from 'lucide-react';
-import { Job } from '@/mock/apis'; //replace this when using the actual api
+interface JobsGridProps {
+  search?: string;
+  type?: string;
+  skills?: string;
+}
 
-export default async function JobsGrid() {
+export default async function JobsGrid({
+  search,
+  type,
+  skills,
+}: JobsGridProps) {
   try {
-    const jobs: Job[] = await getJobs(); 
+    const jobs: Job[] = await getJobs({ search, type, skills });
 
     if (!jobs?.length) {
       return (
@@ -30,7 +38,7 @@ export default async function JobsGrid() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {jobs.map((job: Job) => (
           <Link
-            key={job._id} 
+            key={job._id}
             href={`/jobs/${job._id}/apply`}
             className="group transition-all"
           >
@@ -39,11 +47,14 @@ export default async function JobsGrid() {
                 <div>
                   {/* Job Header */}
                   <div className="flex items-center gap-2 mb-4">
-                    <Badge variant="outline" className="border-secondary/30 text-[#FF8A00]">
-                      {job.status} 
+                    <Badge
+                      variant="outline"
+                      className="border-secondary/30 text-[#FF8A00]"
+                    >
+                      {job.status}
                     </Badge>
                     <span className="text-sm text-primary/60">
-                      {job.description.type} 
+                      {job.description.type}
                     </span>
                   </div>
 
@@ -54,21 +65,23 @@ export default async function JobsGrid() {
 
                   {/* Job Role Description */}
                   <p className="text-primary/60 line-clamp-3 mb-4">
-                    {job.description.summary} 
+                    {job.description.summary}
                   </p>
                 </div>
 
-                {/*Skills */}
+                {/* Skills */}
                 <div className="flex flex-wrap gap-2 mb-4">
                   {job.skills.slice(0, 3).map((skill, index) => (
-                    <Badge key={index} variant="secondary">{skill}</Badge>
+                    <Badge key={index} variant="secondary">
+                      {skill}
+                    </Badge>
                   ))}
                 </div>
 
                 {/* Post Date & Apply Now */}
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-primary/50">
-                    Posted {formatDate(job.postDate)} 
+                    Posted {formatDate(job.postDate)}
                   </span>
                   <span className="inline-flex items-center gap-1 text-sm text-[#FF8A00] font-medium">
                     Apply Now
@@ -83,7 +96,7 @@ export default async function JobsGrid() {
     );
   } catch (error: any) {
     console.error(error);
-  
+
     return (
       <div className="border-2 border-dashed border-red-100 bg-red-50 rounded-xl p-8 text-center">
         <div className="text-2xl text-red-400 mb-4">⚠️</div>
@@ -91,9 +104,9 @@ export default async function JobsGrid() {
           Failed to load jobs
         </h3>
         <p className="text-red-500/80">
-          {error || JSON.stringify(error) || 'An unknown error occurred'}
+          {error || JSON.stringify(error) || "An unknown error occurred"}
         </p>
       </div>
     );
-  }  
+  }
 }
