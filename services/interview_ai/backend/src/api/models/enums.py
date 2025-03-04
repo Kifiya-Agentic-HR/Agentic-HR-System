@@ -8,3 +8,4 @@ class ChatState(str, Enum):
 class EmailType(str, Enum):
     interview_scheduled = "interview_scheduled"
     interview_completed = "interview_completed"
+    interview_flagged = "interview_flagged"

@@ -16,6 +16,9 @@ class SessionData(BaseModel):
     conversation_history: List[str] = Field(default_factory=list)
     user_answer: Optional[str] = ""
 
+class SessionRequest(BaseModel):
+    interview_id: str
+
 class ChatRequest(BaseModel):
     session_id: str
     user_answer: Optional[str] = ""
@@ -38,5 +41,13 @@ class SessionResponse(BaseModel):
     interview_id: str
     session_id: str
     chat_history: Optional[List[str]] = []
+    success: bool
+    error: Optional[str]
+
+class FlagRequest(BaseModel):
+    interview_id: str
+    violations: bool
+
+class FlagResponse(BaseModel):
     success: bool
     error: Optional[str]
