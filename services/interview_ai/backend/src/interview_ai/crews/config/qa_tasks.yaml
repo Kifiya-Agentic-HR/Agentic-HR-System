@@ -1,23 +1,47 @@
 question_generation_task:
   description: >
-    Generate a warm, friendly, and personalized response that includes one new question for the candidate. 
-    Use the candidate’s user info and role info to tailor your language naturally, avoiding generic phrasing or abrupt transitions. 
-    Acknowledge the candidate’s previous answer briefly if needed, but do not over-reference it or repeat details extensively. 
-    Choose a single skill from the provided skills dictionary that has fewer than 3 questions asked so far. If more than one skill meets this criterion, select the skill with the fewest questions asked. 
-    Formulate one direct, conversational question about that skill. 
-    Above all, sound human and relevant without being awkward or too formal.
+      "You are an interview question generator. Your task is to continue the interview by either addressing the candidate's question or posing a new question, based on the following rules:
+      **Rules:**
 
-    IMPORTANT:
-    - Return the received skills dictionary exactly as it is (verbatim) from the Answer Evaluation Task. 
-    - DO NOT modify skill names, remove, or add any fields to the skills dictionary in your output.
+      1.  **Candidate Question Handling:**
+          * If the candidate's last message is a question, assess its relevance to the interview.
+              * If the question is relevant and appropriate, address their question with a concise, informative response then generate a new question.
+          * If the question is irrelevant or inappropriate, provide a concise response that redirects the candidate back to the interview focus. Output this response in the "text" field of the JSON.
 
-    Reference for you:
-      User Info:
-        {user_info}
-      Job Title:
-        {role_info}
-      Recent Conversation History:
-        {conversation_history}
+      2.  **New Question Generation:**
+          * If the candidate's last message is not a question, or if their question was relevant, generate a new interview question.
+          * Tailor the language to the candidate's profile and the job role, avoiding generic or abrupt phrasing.
+          * Ask specific questions related to the candidate's skills and experience.
+          * Briefly acknowledge the candidate's previous answer if necessary, but avoid excessive repetition.
+          * Select a skill from the `skills` dictionary that has been asked the least amount of questions, and less than 3 questions.
+          * Ensure the question is relevant to the job role and the candidate's profile, the selected skill and follows the flow of the previous conversation.
+
+      **Formatting and Constraints:**
+
+      * **Direct and Concise:** Use clear, simple language and get straight to the point.
+      * **Genuine Curiosity:** Frame questions to express genuine interest in the candidate's experience.
+      * **Skills Dictionary Integrity:** Return the `skills` dictionary exactly as received, without any modifications.
+      * **JSON Output:** Provide your response in JSON format, with the question or redirect response in the "text" field, and the unmodified skills dictionary.
+
+      **Input Data:**
+
+      * **User Info:** `{user_info}`
+      * **Job Title:** `{role_info}`
+      * **Recent Conversation History:** `{conversation_history}`
+      * **Skills Dictionary:** `{skills}`"
+
+      **Key Improvements:**
+
+      * **Clear Role and Task:** The role and task are clearly defined at the beginning.
+      * **Logical Rule Structure:** The rules are organized into logical sections (candidate question handling, new question generation).
+      * **Concise Language:** Redundant phrases and unnecessary words have been removed.
+      * **Emphasis on Relevance and Specificity:** The prompt emphasizes the importance of relevance and specificity in question generation.
+      * **Clear Formatting Instructions:** The formatting and constraints are clearly stated, including the requirement to preserve the skills dictionary.
+      * **Direct Language:** uses direct language such as "Your task is" and "Rules:"
+      * **Improved Flow:** the prompt flows better, making it easier for the LLM to understand and follow the instructions.
+
+      STRICT RULE: NEVER CHANGE THE SKILLS DICTIONARY.
+
 
   expected_output: >
     An "ongoing" state response containing a personalized question for the candidate.
@@ -41,6 +65,8 @@ question_generation_task:
 
 answer_evaluation_task:
   description: >
+    **NOTE:** If what the user written is irrelevant to any of the skills in the skill dictionary, return the skills dictionary as is, otherwise:
+
     Read the user's most recent answer and evaluate how well it addresses each relevant skill. 
     Update the skills dictionary by adjusting the score for any skill that the user’s answer pertains to. 
     Use the following scoring criteria:
@@ -105,3 +131,25 @@ answer_evaluation_task:
     }
 
   agent: answer_evaluator
+
+output_formatter_task:
+  description: >
+    You are a conversational editor. Your task is to revise the 'text' field of a given JSON output to sound more human and engaging.
+
+    Specific Instructions:
+
+      - Humanize the response: Make it sound like a natural, friendly conversation.
+      - Avoid robotic language: Eliminate overly formal or scripted phrases.
+      - Maintain professionalism: Keep the content relevant and appropriate for a professional context.
+      - Use first-person perspective: Rewrite the response as if you are speaking directly to the candidate.
+      - Remove unnecessary pleasantries: Avoid phrases like "please," "thank you," or "kindly."
+      - Refine awkward phrasing: Smooth out any clunky or unnatural sentences.
+      - Incorporate conversation history: Where relevant, use the previous conversation to create a more natural flow.
+      - Prioritize clarity and conciseness.
+      - Rewrite robotic sentences to be more natural.
+
+  expected_output: >
+    Exactly the same JSON structure as the input, but with a more engaging and humanistic tone in the "text" field.
+    Ensure that the response remains professional and relevant to the context.
+  
+  agent: output_formatter

@@ -1,40 +1,40 @@
 services:
 
-  cms_backend:
-    build: ./services/cms/backend
-    container_name: CMSBackend
-    ports:
-      - "${CMS_BACKEND_PORT}:3000"
-    depends_on:
-      - mongo
-      - redis
-      - notification
-    env_file: .env
-    environment:
-      PORT: 3000
-      MONGO_URI: "mongodb://mongo:27017/hr_db"
-      MONGO_DB: "hr_db"
-      MONGO_INITDB_DATABASE: "hr_db"
-      REDIS_URI: "redis://redis:6379"
-      NOTIFICATION_SERVICE_URL: "http://notification:${NOTIFICATION_PORT}/api/v1/"
-      FRONTEND_BASE_URL: "http://localhost:${CMS_FRONTEND_PORT}"
-    networks:
-      - app_network
+  # cms_backend:
+  #   build: ./services/cms/backend
+  #   container_name: CMSBackend
+  #   ports:
+  #     - "${CMS_BACKEND_PORT}:3000"
+  #   depends_on:
+  #     - mongo
+  #     - redis
+  #     - notification
+  #   env_file: .env
+  #   environment:
+  #     PORT: 3000
+  #     MONGO_URI: "mongodb://mongo:27017/hr_db"
+  #     MONGO_DB: "hr_db"
+  #     MONGO_INITDB_DATABASE: "hr_db"
+  #     REDIS_URI: "redis://redis:6379"
+  #     NOTIFICATION_SERVICE_URL: "http://notification:${NOTIFICATION_PORT}/api/v1/"
+  #     FRONTEND_BASE_URL: "http://localhost:${CMS_FRONTEND_PORT}"
+  #   networks:
+  #     - app_network
     
-  cms_frontend:
-    build: ./services/cms/frontend
-    container_name: CMSFrontend
-    ports:
-      - "${CMS_FRONTEND_PORT}:3000"
-    depends_on:
-      - cms_backend
-    env_file: .env
-    environment:
-      NEXT_PUBLIC_API_BASE_URL: "http://localhost:${CMS_BACKEND_PORT}"
-    networks:
-      - app_network
-    volumes:
-      - shared_volume:/shared_volume  # Added shared volume
+  # cms_frontend:
+  #   build: ./services/cms/frontend
+  #   container_name: CMSFrontend
+  #   ports:
+  #     - "${CMS_FRONTEND_PORT}:3000"
+  #   depends_on:
+  #     - cms_backend
+  #   env_file: .env
+  #   environment:
+  #     NEXT_PUBLIC_API_BASE_URL: "http://localhost:${CMS_BACKEND_PORT}"
+  #   networks:
+  #     - app_network
+  #   volumes:
+  #     - shared_volume:/shared_volume  # Added shared volume
 
     
   interview_backend:
@@ -75,9 +75,9 @@ services:
       - app_network
 
   # Screening Microservice
-  screening_api:
-    build: ./services/screening/screener
-    container_name: ScreeningAPI
+  job_service_backend:
+    build: ./services/job_service/backend
+    container_name: job_service_backend
     ports:
       - "${JOB_APPLICATION_PORT}:9000"
     env_file: .env
@@ -87,26 +87,35 @@ services:
       GEMINI_API_KEY: "${GEMINI_API_KEY}"  # Consider moving to .env
       UPLOAD_DIR: "/shared_volume"
       NOTIFICATION_SERVICE_URL: "http://notification:${NOTIFICATION_PORT}/api/v1/"
+      MINIO_ROOT_USER: "${MINIO_ROOT_USER}"
+      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
+      MINIO_URL: "http://s3-server:9000"
+
     volumes:
       - shared_volume:/shared_volume
     restart: unless-stopped
     depends_on:
-      - rabbitmq
-      - mongo
+      mongo:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      s3-server:
+        condition: service_healthy
+  
     networks:
       - app_network
 
   screening_consumer:
     build:
-      context: ./services/screening/screener/
+      context: ./services/screen_service/
       dockerfile: Dockerfile.consumer
     container_name: ScreeningConsumer
     env_file: .env
     environment:
       RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
-      MONGODB_URI: "mongodb://mongo:27017/hr_db"
+      MONGODB_URI: "mongodb://mongo:27027/hr_db"
       GEMINI_API_KEY: "${GEMINI_API_KEY}"
-      PYTHONPATH: "/app"
+      PYTHONPATH: "/src"
 
     volumes:
       - shared_volume:/shared_volume
@@ -123,18 +132,17 @@ services:
   # Shared Infrastructure Services
   mongo:
     image: mongo:latest
+    command: mongod --quiet --logpath /dev/null
     container_name: Mongo
     restart: always
     ports:
-      - "27017:27017"
+      - "27027:27017"
     volumes:
       - ./data/mongo:/data/db
     environment:
       MONGO_INITDB_DATABASE: hr_db
     networks:
       - app_network
-    logging:
-      driver: "none"
 
   redis:
     image: redis:latest
@@ -149,6 +157,8 @@ services:
       options:
         max-size: "200k"
         max-file: "10"
+    volumes:
+      - redis-data:/data
 
   notification:
     build: ./services/notification
@@ -185,23 +195,64 @@ services:
       retries: 5
       start_period: 10s
 
-
-  job_portal:
-    build: ./services/screening/job-portal
-    env_file: .env
+  # job_portal:
+  #   build: ./services/screening/job-portal
+  #   env_file: .env
+  #   ports:
+  #     - "${JOB_PORTAL_PORT}:3000"
+  #   environment:
+  #     BASE_API_URL: "http://screening_api:${JOB_APPLICATION_PORT}"
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+  #   depends_on:
+  #     - screening_api
+  #   networks:
+  #     - app_network
+  #   restart: unless-stopped
+  
+  s3-server:
+    image: minio/minio:latest
+    container_name: UploadServer
     ports:
-      - "${JOB_PORTAL_PORT}:3000"
-    environment:
-      BASE_API_URL: "http://screening_api:${JOB_APPLICATION_PORT}"
+      - "${S3_API_PORT}:9000" # S3 API Port
+      - "${S3_WEB_PORT}:9001" # Web UI
+    env_file:
+      - .env
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    depends_on:
-      - screening_api
+      - s3-data:/data
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     networks:
       - app_network
-    restart: unless-stopped
 
+  mc:
+    image: minio/mc
+    container_name: mc-init
+    depends_on:
+      s3-server:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+        # Wait until MinIO is available
+        # Set alias (using the same credentials as your .env)
+        mc alias set myminio http://s3-server:9000 $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD;
+        # Create bucket if it doesn't exist; ignore error if already exists
+        mc mb --ignore-existing myminio/$CV_BUCKET;
+        # Set bucket policy to public (allows s3:GetObject to everyone)
+        mc policy set public myminio/$CV_BUCKET;
+        echo 'Bucket policy set to public for bucket $CV_BUCKET';
+        exit 0;
+      "
+    env_file:
+      - .env
+    networks:
+      - app_network
 
 networks:
   app_network:
@@ -210,3 +261,5 @@ networks:
 volumes:
   shared_volume:
   rabbitmq_data:
+  redis-data:
+  s3-data:
