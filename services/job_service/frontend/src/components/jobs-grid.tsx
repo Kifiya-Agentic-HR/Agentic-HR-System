@@ -39,7 +39,7 @@ export default async function JobsGrid() {
                 <div>
                   {/* Job Header */}
                   <div className="flex items-center gap-2 mb-4">
-                    <Badge variant="outline" className="border-secondary/30 text-secondary">
+                    <Badge variant="outline" className="border-secondary/30 text-[#FF8A00]">
                       {job.status} 
                     </Badge>
                     <span className="text-sm text-primary/60">
@@ -70,7 +70,7 @@ export default async function JobsGrid() {
                   <span className="text-sm text-primary/50">
                     Posted {formatDate(job.postDate)} 
                   </span>
-                  <span className="inline-flex items-center gap-1 text-sm text-secondary font-medium">
+                  <span className="inline-flex items-center gap-1 text-sm text-[#FF8A00] font-medium">
                     Apply Now
                     <ArrowUpRight className="w-4 h-4" />
                   </span>
