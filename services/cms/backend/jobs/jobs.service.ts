@@ -7,13 +7,9 @@ export class JobsService {
   private readonly baseUrl: string;
 
   constructor(private readonly httpService: HttpService) {
-    // e.g. "http://localhost:9000" from .env
     this.baseUrl = process.env.JOBS_MICROSERVICE_URL || 'http://localhost:9000';
   }
 
-  /**
-   * GET /jobs
-   */
   async findAll() {
     try {
       const response = await firstValueFrom(
@@ -25,9 +21,6 @@ export class JobsService {
     }
   }
 
-  /**
-   * GET /jobs/:id
-   */
   async findOne(id: string) {
     try {
       const response = await firstValueFrom(
@@ -39,9 +32,6 @@ export class JobsService {
     }
   }
 
-  /**
-   * POST /jobs
-   */
   async create(jobData: any) {
     try {
       const response = await firstValueFrom(
@@ -53,9 +43,6 @@ export class JobsService {
     }
   }
 
-  /**
-   * PUT /jobs/:id 
-   */
   async update(id: string, jobData: any) {
     try {
       const response = await firstValueFrom(
@@ -67,9 +54,6 @@ export class JobsService {
     }
   }
 
-  /**
-   * DELETE /jobs/:id
-   */
   async remove(id: string) {
     try {
       const response = await firstValueFrom(
@@ -81,9 +65,6 @@ export class JobsService {
     }
   }
 
-  /**
-   * GET /jobs/:id/applications
-   */
   async findApplicationsByJob(jobId: string) {
     try {
       const response = await firstValueFrom(

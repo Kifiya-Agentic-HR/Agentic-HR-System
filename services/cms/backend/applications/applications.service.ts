@@ -1,26 +1,45 @@
 import { Injectable } from '@nestjs/common';
-import { CreateApplicationDto } from './dto/create-application.dto';
-import { UpdateApplicationDto } from './dto/update-application.dto';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class ApplicationsService {
-  create(createApplicationDto: CreateApplicationDto) {
-    return 'This action adds a new application';
+  private readonly baseUrl: string;
+
+  constructor(private readonly httpService: HttpService) {
+    this.baseUrl = process.env.APPLICATIONS_MICROSERVICE_URL || 'http://localhost:9000';
   }
 
-  findAll() {
-    return `This action returns all applications`;
+  async findAll() {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(`${this.baseUrl}/applications`),
+      );
+      return response.data;
+    } catch (error) {
+      return { success: false, error: 'Error fetching applications' };
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} application`;
+  async findOne(id: string) {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(`${this.baseUrl}/applications/${id}`),
+      );
+      return response.data;
+    } catch (error) {
+      return { success: false, error: `Error fetching application ${id}` };
+    }
   }
 
-  update(id: number, updateApplicationDto: UpdateApplicationDto) {
-    return `This action updates a #${id} application`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} application`;
+  async create(appData: any) {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/applications`, appData),
+      );
+      return response.data;
+    } catch (error) {
+      return { success: false, error: 'Error creating application' };
+    }
   }
 }
