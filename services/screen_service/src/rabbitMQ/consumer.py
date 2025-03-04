@@ -37,7 +37,7 @@ async def process_message(message: aio_pika.IncomingMessage):
 
             # Save result to MongoDB asynchronously
             await asyncio.get_running_loop().run_in_executor(
-                executor, ScreeningResultDocument.create, result
+                executor, ScreeningResultDocument.create_result, result
             )
 
             logging.info(f"Successfully processed application {data.get('app_id')}")
