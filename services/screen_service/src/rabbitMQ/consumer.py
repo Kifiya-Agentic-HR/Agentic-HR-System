@@ -20,18 +20,11 @@ async def process_message(message: aio_pika.IncomingMessage):
             data = json.loads(message.body.decode())
 
             # Extract job details
-            job_id = data.get("job_id")
-            job_fetch = JobDocument.get_job_by_id(job_id)
-            if not job_fetch:
-                logging.error(f"Job with ID {job_id} not found.")
-                return
+            job_data = data.get("job")
+            
 
-            job_text = job_fetch.get("description", "")
-            # skill_fetch = analyze_job_skills(job_text)
-
-            # Score resume
             llm_output, kw_score, vec_score, parsed_resume = scoreResume(
-                job_text, data.get("resume_path")
+                job_data, data.get("resume_path")
             )
             final_score = (llm_output["overall_score"] * 0.6) + kw_score + vec_score
 
