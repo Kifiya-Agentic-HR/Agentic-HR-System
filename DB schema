@@ -1,45 +1,44 @@
-+-----------------+       +-----------------+       +-----------------+
-|     Jobs        |       |  Applications   |       |  Candidates     |
-+-----------------+       +-----------------+       +-----------------+
-| _id(PK)         |<------| _id(PK)         |       | _id(PK)         |
-| title           |       | job_id (FK)     |------>| email           |
-| description(dict)|      | candidate_id(FK)|       | phone_number    |
-| status          |       | cv_link         |       | gender          |
-| postDate        |       | created_at      |       | experience_years|
-| skills          |       | status          |       | feedback        |
-+-----------------+       +-----------------+        | full_name       |
-                                                    | disability      |
-                                                    | skills(arr)     |
-                                                    +-----------------+
++-----------------+       +-------------------+       +-----------------+
+|     Jobs        |       |  Applications     |       |  Candidates     |
++-----------------+       +-------------------+       +-----------------+
+| _id(PK)         |<------| _id(PK)           |       | _id(PK)         |
+| title           |       | job_id (FK)       |------>| email           |
+|description(dict)|       | candidate_id(FK)  |       | phone_number    |
+| job_status      |       | cv_link           |       | gender          |
+| post_date       |       | created_at        |       | experience_years|
+| skills          |       | application_status|       | feedback        |
++-----------------+       +-------------------+       | full_name       |
+                                                      | disability      |
+                                                      | skills(arr)     |
+                                                      +-----------------+
 
 
-+---------------------+       +-------------------+       +-----------------+
-|  Interviews         |       | ScreeningResults  |       |  Notifications  |
-+---------------------+       +-------------------+       +-----------------+
-| _id (PK)            |<------| application_id(FK)|       | _id (PK)        |
-| application_id (FK) |<------| _id (PK)          |       | candidate_id (FK|
-| candidate_id (FK)   |       | parsed_cv         |       | type            |
-| interview_date      |       | score             |       | status          |
-| score               |       | reasoning         |       | sent_at         |
-| status              |       +-------------------+       +-----------------+
-| skill_assessment(dict)|       
-| conversation_history|
-| hiring_decision     |
-| interview_reasoning |
-+---------------------+
++----------------------------+       +-------------------+       +---------------------+
+|  Interviews                |       | Screening_Results |       |  Notifications      |
++----------------------------+       +-------------------+       +---------------------+
+| _id (PK)                   |<------| application_id(FK)|       | _id (PK)            |
+| application_id (FK)        |<------| _id (PK)          |       | candidate_id (FK)   |
+| candidate_id (FK)          |       | parsed_cv         |       | type                |
+| interview_date             |       | score             |       | notification_status |
+| score                      |       | reasoning         |       | sent_at             |
+| interview_status           |       +-------------------+       +---------------------+
+| skill_assessment(dict)     |       
+| conversation_history       |
+| hiring_decision            |
+| interview_reasoning        |
++----------------------------+
 
++---------------------+                    +----------------------+ 
+|       Users         |                    | technical_assessment |
++---------------------+                    +----------------------+ 
+|  _id                |                    |  _id                 |
+|  role               |                    |  assessment_result   |
+|  first_name         |                    |  application_id      |                   
+|  last_name          |                    |  level               | //easy, medium, hard
+|  created_at         |                    |  no_of_questions     | //defaulting to 2
+|  password           |                    |  assessment_reasoning|
+|  email              |                    +----------------------+
 +---------------------+ 
-|       Users         |
-+---------------------+ 
-|  _id                |
-|  role               |
-|  first_name         |
-|  last_name          |
-|  created_at         | 
-|  password           | 
-|  email              |
-+---------------------+ 
-
 
 
 Description = {
@@ -47,7 +46,8 @@ summary:"",
 type:"inperson/remote",
 commitment:"full_time/part_time/internship",
 qualification_level: "beginner/intermediate/Expert",
-skills_requirement: ""
+responsibilities: "", // html
+location: ""
 }
 
 

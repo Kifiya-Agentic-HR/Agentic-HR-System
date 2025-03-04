@@ -2,3 +2,4 @@
 node_modules/
 mongo/
 __pycache__/
+.next/

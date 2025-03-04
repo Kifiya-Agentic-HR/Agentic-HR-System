@@ -125,6 +125,7 @@ services:
   # Shared Infrastructure Services
   mongo:
     image: mongo:latest
+    command: mongod --quiet --logpath /dev/null
     container_name: Mongo
     restart: always
     ports:
@@ -135,8 +136,6 @@ services:
       MONGO_INITDB_DATABASE: hr_db
     networks:
       - app_network
-    logging:
-      driver: "none"
 
   redis:
     image: redis:latest
@@ -151,6 +150,8 @@ services:
       options:
         max-size: "200k"
         max-file: "10"
+    volumes:
+      - redis-data:/data
 
   notification:
     build: ./services/notification
@@ -186,8 +187,7 @@ services:
       timeout: 10s
       retries: 5
       start_period: 10s
-
-
+      
   # job_portal:
   #   build: ./services/screening/job-portal
   #   env_file: .env
@@ -203,7 +203,24 @@ services:
   #   networks:
   #     - app_network
   #   restart: unless-stopped
-
+  
+  s3_server:
+    image: minio/minio:latest
+    container_name: S3Server
+    ports:
+      - "${S3_API_PORT}:9000" # S3 API Port
+      - "${S3_WEB_PORT}:9001" # Web UI
+    env_file:
+      - .env
+    volumes:
+      - s3-data:/data
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 networks:
   app_network:
@@ -212,3 +229,5 @@ networks:
 volumes:
   shared_volume:
   rabbitmq_data:
+  redis-data:
+  s3-data:

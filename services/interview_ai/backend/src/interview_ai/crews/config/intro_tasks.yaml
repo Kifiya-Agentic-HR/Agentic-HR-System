@@ -7,11 +7,13 @@ welcome_task:
       - At the end, ask the usual tell me about yourself question
 
     Note:
-      - The message is meant for a live interview interface, not as an email.
       - The provided candidate info and job title will be inserted where indicated.
       - Don't feel obligated to use all the provided information in the message.
       - Make sure it sounds like a friendly, human greeting, not a robotic message.
       - The message should be concise and to the point.
+
+
+    NOTE: Avoid overly formal language. Speak as if you're having a casual yet professional conversation.
     
     User Info:
       {user_info}
@@ -24,9 +26,11 @@ welcome_task:
     
     {
       "state": "welcome",
-      "text": "Personalized welcome message."
+      "text": "Personalized concise welcome message."
     }
     
     without the "```json" tag at the beginning and end.
+
+    NOTE: Avoid overly formal language. Speak as if you're having a casual yet professional conversation.
 
   agent: welcome_agent
