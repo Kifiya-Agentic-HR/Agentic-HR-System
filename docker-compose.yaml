@@ -87,6 +87,10 @@ services:
       GEMINI_API_KEY: "${GEMINI_API_KEY}"  # Consider moving to .env
       UPLOAD_DIR: "/shared_volume"
       NOTIFICATION_SERVICE_URL: "http://notification:${NOTIFICATION_PORT}/api/v1/"
+      MINIO_ROOT_USER: "${MINIO_ROOT_USER}"
+      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
+      MINIO_URL: "http://s3-server:9000"
+
     volumes:
       - shared_volume:/shared_volume
     restart: unless-stopped
@@ -95,6 +99,9 @@ services:
         condition: service_started
       rabbitmq:
         condition: service_healthy
+      s3-server:
+        condition: service_healthy
+  
     networks:
       - app_network
 
@@ -187,7 +194,7 @@ services:
       timeout: 10s
       retries: 5
       start_period: 10s
-      
+
   # job_portal:
   #   build: ./services/screening/job-portal
   #   env_file: .env
@@ -204,9 +211,9 @@ services:
   #     - app_network
   #   restart: unless-stopped
   
-  s3_server:
+  s3-server:
     image: minio/minio:latest
-    container_name: S3Server
+    container_name: UploadServer
     ports:
       - "${S3_API_PORT}:9000" # S3 API Port
       - "${S3_WEB_PORT}:9001" # Web UI
@@ -221,6 +228,31 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - app_network
+
+  mc:
+    image: minio/mc
+    container_name: mc-init
+    depends_on:
+      s3-server:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+        # Wait until MinIO is available
+        # Set alias (using the same credentials as your .env)
+        mc alias set myminio http://s3-server:9000 $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD;
+        # Create bucket if it doesn't exist; ignore error if already exists
+        mc mb --ignore-existing myminio/$CV_BUCKET;
+        # Set bucket policy to public (allows s3:GetObject to everyone)
+        mc policy set public myminio/$CV_BUCKET;
+        echo 'Bucket policy set to public for bucket $CV_BUCKET';
+        exit 0;
+      "
+    env_file:
+      - .env
+    networks:
+      - app_network
 
 networks:
   app_network:
