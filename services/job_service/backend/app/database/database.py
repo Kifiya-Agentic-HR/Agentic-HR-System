@@ -2,12 +2,13 @@ from pymongo import MongoClient, errors
 import os
 import logging
 import time
+from config_local import Config
 
 logger = logging.getLogger(__name__)
 
 class Database:
     def __init__(self):
-        mongo_uri = os.getenv("MONGODB_URI", None)
+        mongo_uri = Config.MONGODB_URL
         if not mongo_uri:
             raise ValueError("Database String Initialization Failed.")
         retry_attempts = 5

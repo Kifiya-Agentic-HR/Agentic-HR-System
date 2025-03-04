@@ -33,3 +33,6 @@ config
 pytest
 pytest-asyncio
 httpx
+
+
+boto3
