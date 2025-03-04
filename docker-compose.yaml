@@ -101,6 +101,8 @@ services:
         condition: service_healthy
       s3-server:
         condition: service_healthy
+      mc:
+        condition: service_started
   
     networks:
       - app_network
@@ -237,7 +239,7 @@ services:
     depends_on:
       s3-server:
         condition: service_healthy
-    entrypoint: >
+    entrypoint: > 
       /bin/sh -c "
         # Wait until MinIO is available
         # Set alias (using the same credentials as your .env)
@@ -245,7 +247,7 @@ services:
         # Create bucket if it doesn't exist; ignore error if already exists
         mc mb --ignore-existing myminio/$CV_BUCKET;
         # Set bucket policy to public (allows s3:GetObject to everyone)
-        mc policy set public myminio/$CV_BUCKET;
+        mc anonymous set download myminio/$CV_BUCKET;
         echo 'Bucket policy set to public for bucket $CV_BUCKET';
         exit 0;
       "

@@ -5,6 +5,7 @@ from fastapi import HTTPException, UploadFile
 from botocore.client import Config
 import botocore.exceptions
 from config_local import Config as config
+import json
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -38,10 +39,29 @@ except botocore.exceptions.ClientError:
     try:
         s3_client.create_bucket(Bucket=CV_BUCKET)
         logger.info("Bucket '%s' created.", CV_BUCKET)
+        
+        # Set bucket policy to allow public read
+        bucket_policy = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": "*",
+                    "Action": "s3:GetObject",
+                    "Resource": f"arn:aws:s3:::{CV_BUCKET}/*"
+                }
+            ]
+        }
+        s3_client.put_bucket_policy(
+            Bucket=CV_BUCKET,
+            Policy=json.dumps(bucket_policy)
+        )
+        logger.info("Public read access policy set for bucket '%s'.", CV_BUCKET)
     except Exception as e:
+        logger.error("Failed to configure bucket: %s", e)
         logger.error("Failed to create bucket '%s': %s", CV_BUCKET, e)
         raise Exception(f"Bucket {CV_BUCKET} not found and could not be created.")
-
+   
 async def upload_file(file: UploadFile) -> str:
     """
     Uploads an incoming file to the S3-compatible object store and returns
