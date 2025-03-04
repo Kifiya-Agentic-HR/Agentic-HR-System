@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Response
 from schemas import JobCreate, JobUpdate
 from app.database.models import JobDocument, ApplicationDocument
 from datetime import datetime
@@ -17,21 +17,26 @@ async def get_jobs():
 async def create_job(job: JobCreate):
     try:
         job_data = job.dict()
-        if not job_data.get("postDate"):
-            job_data["postDate"] = datetime.utcnow()
+        if not job_data.get("post_date"):
+            job_data["post_date"] = datetime.utcnow()
         new_job = JobDocument.create_job(job_data)
         if new_job is None:
             raise Exception("Job creation failed")
-        return {"success": True, "job_id": str(new_job["_id"])}
+        new_job['_id'] = str(new_job['_id'])
+        return {"success": True, "job": new_job}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error creating job: {e}")
 
 @router.get("/{job_id}", response_model=dict)
-async def get_job(job_id: str):
+async def get_job(response: Response,job_id: str):
     try:
         job = JobDocument.get_job_by_id(job_id)
         if not job:
-            raise HTTPException(status_code=404, detail="Job not found")
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {
+                "sucess": False,
+                "error": f"job application with id {job_id} not found"
+            }
         return {"success": True, "job": job}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving job: {e}")
@@ -41,7 +46,7 @@ async def update_job(job_id: str, job_update: JobUpdate):
     try:
         update_data = {k: v for k, v in job_update.dict().items() if v is not None}
         if not update_data:
-            raise HTTPException(status_code=400, detail="No update fields provided")
+            raise HTTPException(status_code=400, detail="missing update fields provided")
         updated_job = JobDocument.update_job(job_id, update_data)
         if not updated_job:
             raise HTTPException(status_code=404, detail="Job not found or update failed")
@@ -51,11 +56,15 @@ async def update_job(job_id: str, job_update: JobUpdate):
 
 #Get all applications for a specific job
 @router.get("/{job_id}/applications", response_model=dict)
-async def get_job_applications(job_id: str):
+async def get_job_applications(response: Response,job_id: str):
     try:
         job = JobDocument.get_job_by_id(job_id)
         if not job:
-            raise HTTPException(status_code=404, detail="Job not found")
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {
+                "sucess": False,
+                "error": f"job application with id {job_id} not found"
+            }
         
         applications = ApplicationDocument.get_applications_by_job(job_id)
         return {"success": True, "applications": applications}
