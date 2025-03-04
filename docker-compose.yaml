@@ -202,7 +202,24 @@ services:
     networks:
       - app_network
     restart: unless-stopped
-
+  
+  s3_server:
+    image: minio/minio:latest
+    container_name: S3Server
+    ports:
+      - "${S3_API_PORT}:9000" # S3 API Port
+      - "${S3_WEB_PORT}:9001" # Web UI
+    env_file:
+      - .env
+    volumes:
+      - s3-data:/data
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 networks:
   app_network:
@@ -212,3 +229,4 @@ volumes:
   shared_volume:
   rabbitmq_data:
   redis-data:
+  s3-data:
