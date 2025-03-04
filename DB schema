@@ -46,7 +46,7 @@ summary:"",
 type:"inperson/remote",
 commitment:"full_time/part_time/internship",
 qualification_level: "beginner/intermediate/Expert",
-responsibilities: "",
+responsibilities: "", // html
 location: ""
 }
 
