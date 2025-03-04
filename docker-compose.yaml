@@ -115,7 +115,7 @@ services:
     env_file: .env
     environment:
       RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
-      MONGODB_URI: "mongodb://mongo:27027/hr_db"
+      MONGODB_URI: "mongodb://mongo:27017/hr_db"
       GEMINI_API_KEY: "${GEMINI_API_KEY}"
       PYTHONPATH: "/src"
 

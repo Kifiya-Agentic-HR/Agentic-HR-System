@@ -18,7 +18,7 @@ async def create_application(
     gender: str = Form(...),
     disability: str = Form(None),
     cv: UploadFile = File(...),
-    experience_years: int = Form(...) 
+    experience_years: str = Form(...) 
 ):
     """Create a new job application and save the CV locally."""
     email_pattern = re.compile(r"^[\w\.-]+@([\w-]+\.)+[\w-]{2,}$")
@@ -111,12 +111,13 @@ async def create_application(
         
         # Store in database
 
-        application_data['job_id']
         new_application = ApplicationDocument.create_application(application_data)
         if not new_application:
             raise HTTPException(status_code=400, detail="Application creation failed")
+        
+        
         await publish_application({
-            "app_id": new_application,
+            "job": str(JobDocument.get_job_by_id(job_id)),
             "resume_path": file_path,
         })
         return {"success": True, "application": new_application}

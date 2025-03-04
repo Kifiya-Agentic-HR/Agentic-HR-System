@@ -42,14 +42,22 @@ async def get_job(response: Response,job_id: str):
         raise HTTPException(status_code=500, detail=f"Error retrieving job: {e}")
 
 @router.put("/{job_id}", response_model=dict)
-async def update_job(job_id: str, job_update: JobUpdate):
+async def update_job(response:Response ,job_id: str, job_update: JobUpdate):
     try:
         update_data = {k: v for k, v in job_update.dict().items() if v is not None}
         if not update_data:
-            raise HTTPException(status_code=400, detail="missing update fields provided")
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return {
+                "success": False,
+                "error":"missing update fields provided"
+            }
         updated_job = JobDocument.update_job(job_id, update_data)
         if not updated_job:
-            raise HTTPException(status_code=404, detail="Job not found or update failed")
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {
+                "success": False,
+                "error":"job not found or error occured when updated"
+            }
         return {"success": True, "job": updated_job}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating job: {e}")
