@@ -15,7 +15,7 @@ export default function SiteFooter() {
         <div className="flex flex-col gap-2">
           <h3 className="font-semibold mb-2">Contact</h3>
           <p className="text-sm">info@kifiyatech.com</p>
-          <p className="text-sm">+251 912 345 678</p>
+          <p className="text-sm">+251 116 671 579</p>
         </div>
         
         <div className="flex flex-col gap-2">
