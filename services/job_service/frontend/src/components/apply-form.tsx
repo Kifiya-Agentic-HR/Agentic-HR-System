@@ -224,6 +224,21 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                 </select>
               </div>
 
+              <div>
+                <Label className="text-primary">Resume (PDF or DOCX only)</Label>
+                <div
+                  {...getRootProps()}
+                  className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors"
+                >
+                  <input {...getInputProps()} required />
+                  <p className="text-primary/80">
+                    {formData.resume ? formData.resume.name : "Drag & drop or click to upload"}
+                  </p>
+                </div>
+              </div>
+
+              {error && <p className="text-sm text-red-500">{error}</p>}
+
               <Button
                 type="submit"
                 className="w-full transition-colors"
