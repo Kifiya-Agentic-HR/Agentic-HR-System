@@ -1,40 +1,40 @@
 services:
 
-  cms_backend:
-    build: ./services/cms/backend
-    container_name: CMSBackend
-    ports:
-      - "${CMS_BACKEND_PORT}:3000"
-    depends_on:
-      - mongo
-      - redis
-      - notification
-    env_file: .env
-    environment:
-      PORT: 3000
-      MONGO_URI: "mongodb://mongo:27017/hr_db"
-      MONGO_DB: "hr_db"
-      MONGO_INITDB_DATABASE: "hr_db"
-      REDIS_URI: "redis://redis:6379"
-      NOTIFICATION_SERVICE_URL: "http://notification:${NOTIFICATION_PORT}/api/v1/"
-      FRONTEND_BASE_URL: "http://localhost:${CMS_FRONTEND_PORT}"
-    networks:
-      - app_network
+  # cms_backend:
+  #   build: ./services/cms/backend
+  #   container_name: CMSBackend
+  #   ports:
+  #     - "${CMS_BACKEND_PORT}:3000"
+  #   depends_on:
+  #     - mongo
+  #     - redis
+  #     - notification
+  #   env_file: .env
+  #   environment:
+  #     PORT: 3000
+  #     MONGO_URI: "mongodb://mongo:27017/hr_db"
+  #     MONGO_DB: "hr_db"
+  #     MONGO_INITDB_DATABASE: "hr_db"
+  #     REDIS_URI: "redis://redis:6379"
+  #     NOTIFICATION_SERVICE_URL: "http://notification:${NOTIFICATION_PORT}/api/v1/"
+  #     FRONTEND_BASE_URL: "http://localhost:${CMS_FRONTEND_PORT}"
+  #   networks:
+  #     - app_network
     
-  cms_frontend:
-    build: ./services/cms/frontend
-    container_name: CMSFrontend
-    ports:
-      - "${CMS_FRONTEND_PORT}:3000"
-    depends_on:
-      - cms_backend
-    env_file: .env
-    environment:
-      NEXT_PUBLIC_API_BASE_URL: "http://localhost:${CMS_BACKEND_PORT}"
-    networks:
-      - app_network
-    volumes:
-      - shared_volume:/shared_volume  # Added shared volume
+  # cms_frontend:
+  #   build: ./services/cms/frontend
+  #   container_name: CMSFrontend
+  #   ports:
+  #     - "${CMS_FRONTEND_PORT}:3000"
+  #   depends_on:
+  #     - cms_backend
+  #   env_file: .env
+  #   environment:
+  #     NEXT_PUBLIC_API_BASE_URL: "http://localhost:${CMS_BACKEND_PORT}"
+  #   networks:
+  #     - app_network
+  #   volumes:
+  #     - shared_volume:/shared_volume  # Added shared volume
 
     
   interview_backend:
@@ -106,7 +106,7 @@ services:
     env_file: .env
     environment:
       RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
-      MONGODB_URI: "mongodb://mongo:27017/hr_db"
+      MONGODB_URI: "mongodb://mongo:27027/hr_db"
       GEMINI_API_KEY: "${GEMINI_API_KEY}"
       PYTHONPATH: "/src"
 
