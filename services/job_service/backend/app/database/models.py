@@ -21,6 +21,7 @@ class JobDocument(BaseDocument):
     @classmethod
     def create_job(cls, job_data):
         job_data["created_at"] = datetime.utcnow()
+        del job_data["post_date"]
         try:
             result = cls.get_collection().insert_one(job_data)
             return cls.get_collection().find_one({"_id": result.inserted_id})
@@ -114,6 +115,17 @@ class ApplicationDocument(BaseDocument):
         except errors.PyMongoError as e:
         
             raise Exception(f"Error fetching application by id: {e} {application_id}")
+    @classmethod
+    def get_application_by_candidate_job(cls, candidate_id , job_id):
+        try:
+            application = cls.get_collection().find_one({"candidate_id": candidate_id, "job_id": job_id})
+            if application:
+                application["_id"] = str(application["_id"])
+                application["job_id"] = str(application["job_id"])
+            return application
+        except errors.PyMongoError as e:
+        
+            logger.error(f"Error fetching application by candidate_id")
     @classmethod
     def get_applications(cls):
         try:
