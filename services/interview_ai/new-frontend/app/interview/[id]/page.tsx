@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { useParams } from "wouter";
+import { useParams, useRouter } from "next/navigation";
 import { VideoFeed } from "@/components/VideoFeed";
 import { ChatInterface } from "@/components/ChatInterface";
 import { PreInterviewCheck } from "@/components/PreInterviewCheck";
@@ -9,9 +9,11 @@ import { useAntiCheat } from "@/hooks/useAntiCheat";
 import Completion from "@/pages/completion";
 import { createSession, getSessionId, saveSessionId } from "@/lib/api";
 import type { ChatMessage } from "@/lib/schema";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Interview() {
-  const { id: interviewId } = useParams<{ id: string }>();
+  const params = useParams();
+  const interviewId = params?.id as string;
   const [isCheckComplete, setIsCheckComplete] = useState(false);
   const [isInterviewStarted, setIsInterviewStarted] = useState(false);
   const [isInterviewComplete, setIsInterviewComplete] = useState(false);
@@ -22,6 +24,7 @@ export default function Interview() {
 
   useEffect(() => {
     const initializeSession = async () => {
+      
       const existingSessionId = getSessionId();
       if (existingSessionId) {
         setSessionId(existingSessionId);

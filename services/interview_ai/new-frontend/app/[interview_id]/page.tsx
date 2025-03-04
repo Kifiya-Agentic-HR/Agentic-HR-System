@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Code2, Shield, ClipboardCheck, CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { getInterview } from "@/lib/api";
 
 const container = {
@@ -59,6 +59,7 @@ const statusConfig: Record<string, StatusConfig> = {
 
 export default function Home() {
   const params = useParams();
+  const router = useRouter();
   const interviewId = params?.interview_id as string ?? "";
   const [loading, setLoading] = useState(true);
   const [interviewStatus, setInterviewStatus] = useState<"scheduled" | "completed" | "expired" | "flagged">("scheduled");
@@ -81,7 +82,7 @@ export default function Home() {
   }, [interviewId]);
 
   const handleStart = () => {
-    // setLocation(`/interview/${interviewId}`);
+    router.push(`/interview/${interviewId}`);
   };
 
   if (loading) {

@@ -40,6 +40,8 @@ question_generation_task:
       * **Direct Language:** uses direct language such as "Your task is" and "Rules:"
       * **Improved Flow:** the prompt flows better, making it easier for the LLM to understand and follow the instructions.
 
+      STRICT RULE: NEVER CHANGE THE SKILLS DICTIONARY.
+
 
   expected_output: >
     An "ongoing" state response containing a personalized question for the candidate.

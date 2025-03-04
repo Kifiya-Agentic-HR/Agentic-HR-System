@@ -1,17 +1,13 @@
-// components/ChatInterface.tsx
 'use client';
 
-import { useState, useRef, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { Send, AlertTriangle } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card } from "@/components/ui/card";
-import { motion, AnimatePresence } from "framer-motion";
-import { useFaceDetection } from "@/hooks/useFaceDetection";
 import { sendChatMessage } from "@/lib/api";
 import type { ChatMessage } from "@/lib/schema";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface ChatInterfaceProps {
   sessionId: string;
@@ -20,107 +16,153 @@ interface ChatInterfaceProps {
   onStart: () => void;
 }
 
-export function ChatInterface({ 
+export function ChatInterface({
   sessionId,
-  initialMessages,
+  initialMessages = [],
   onComplete,
   onStart
 }: ChatInterfaceProps) {
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const { lookingAway, multipleFaces, confidenceScore } = useFaceDetection(videoRef);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isSending, setIsSending] = useState(false);
 
-  const chatMutation = useMutation({
-    mutationFn: (message: string) => sendChatMessage(sessionId, message),
-    onSuccess: (response) => {
-      if (response.success) {
-        setMessages(prev => [
-          ...prev,
-          { text: response.text, role: 'user' },
-          { text: response.text, role: 'interviewer' }
-        ]);
-        
-        if (response.state === 'completed') {
-          onComplete();
-        }
-        
-        if (!messages.length) onStart();
-      }
-    }
-  });
-
+  /**
+   * On mount:
+   *   1) If there is already some chat history in initialMessages, load it.
+   *   2) If no messages exist, fetch the first interview question by sending an empty message.
+   */
   useEffect(() => {
-    if (!messages.length && initialMessages.length === 0) {
-      chatMutation.mutate("");
-    }
-  }, []);
+    if (initialMessages.length > 0) {
+      setMessages(initialMessages);
+    } else {
+      // No existing messages => ask for the interviewer's first prompt
+      (async () => {
+        try {
+          setIsSending(true);
+          const response = await sendChatMessage(sessionId, "");
+          setIsSending(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+          if (response?.success) {
+            setMessages([{ text: response.text, role: "interviewer" }]);
+            onStart?.();
+            if (response.state === "completed") {
+              onComplete?.();
+            }
+          }
+        } catch (error) {
+          console.error("Error initializing chat:", error);
+          setIsSending(false);
+        }
+      })();
+    }
+  }, [sessionId, initialMessages, onComplete, onStart]);
+
+  /**
+   * Send a new user message, then await the interviewer response.
+   */
+  async function handleSend(e: React.FormEvent) {
     e.preventDefault();
     if (!message.trim()) return;
 
-    chatMutation.mutate(message);
+    const userMsg: ChatMessage = {
+      text: message.trim(),
+      role: "user",
+    };
+
+    setMessages((prev) => [...prev, userMsg]);
     setMessage("");
-  };
+    setIsSending(true);
+
+    try {
+      const response = await sendChatMessage(sessionId, userMsg.text);
+      setIsSending(false);
+
+      if (response?.success) {
+        const interviewerMsg: ChatMessage = {
+          text: response.text,
+          role: "interviewer",
+        };
+        setMessages((prev) => [...prev, interviewerMsg]);
+
+        if (response.state === "completed") {
+          onComplete?.();
+        } else {
+          onStart?.(); // If it's ongoing/welcome, consider that "in progress"
+        }
+      }
+    } catch (error) {
+      console.error("Error sending chat:", error);
+      setIsSending(false);
+      // Optionally display an error or handle fallback
+    }
+  }
 
   return (
-    <Card className="flex flex-col h-full relative">
-      <AnimatePresence>
-        {(lookingAway || multipleFaces || confidenceScore < 0.6) && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className={`absolute top-0 left-0 right-0 z-10 p-2 text-center text-sm ${
-              multipleFaces ? "bg-red-500" : "bg-[#FF8A00]"
-            } text-white`}
-          >
-            {multipleFaces ? (
-              <div className="flex items-center justify-center gap-2">
-                <AlertTriangle className="h-4 w-4" />
-                <span>Multiple faces detected! Please ensure you are alone in the room.</span>
-              </div>
-            ) : lookingAway ? (
-              <span>Please face the camera to continue</span>
-            ) : (
-              <span>Please ensure proper lighting conditions</span>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <Card className="flex flex-col h-full shadow-lg rounded-xl overflow-hidden border border-gray-200">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-500 to-sky-600 text-white p-4 text-xl font-bold">
+        Kifiya
+      </div>
 
-      <ScrollArea className="flex-1 p-4">
-        {messages.map((msg, index) => (
-          <div key={index} className="mb-4">
-            <div className={`${
-              msg.role === 'user' ? 'bg-blue-100' : 'bg-primary/10'
-            } rounded-lg p-3`}>
-              <p className="text-sm">{msg.text}</p>
-            </div>
-          </div>
-        ))}
-        {chatMutation.isPending && (
-          <div className="mb-4 animate-pulse">
-            <div className="bg-gray-100 rounded-lg p-3 w-3/4 h-12" />
-          </div>
-        )}
+      {/* Messages Area */}
+      <ScrollArea className="flex-1 px-4 py-2 bg-gray-50">
+        <AnimatePresence initial={false}>
+          {messages.map((msg, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.25 }}
+              className="mb-4"
+            >
+              <div
+                className={`
+                  rounded-lg p-3 max-w-[80%]
+                  ${
+                    msg.role === "user"
+                      ? "bg-blue-500 text-white ml-auto text-right"
+                      : "bg-gray-100 text-gray-800 mr-auto"
+                  }
+                `}
+              >
+                <p className="text-sm whitespace-pre-line">{msg.text}</p>
+              </div>
+            </motion.div>
+          ))}
+
+          {isSending && (
+            <motion.div
+              key="thinking-bubble"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.25 }}
+              className="mb-4"
+            >
+              <div className="bg-gray-200 text-gray-700 rounded-lg p-3 max-w-[80%] mr-auto animate-pulse">
+                <p className="text-sm">Thinking…</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </ScrollArea>
 
-      <form onSubmit={handleSubmit} className="p-4 border-t">
+      {/* Input + Send Button */}
+      <form onSubmit={handleSend} className="p-4 bg-white border-t border-gray-200">
         <div className="flex gap-2">
           <Input
+            placeholder="Type your answer…"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="You: "
-            disabled={chatMutation.isPending}
+            disabled={isSending}
           />
-          <Button 
-            type="submit" 
-            disabled={chatMutation.isPending}
-            className="bg-[#364957] hover:bg-[#364957]/90"
+          <Button
+            type="submit"
+            disabled={isSending}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4"
           >
-            <Send className="h-4 w-4" />
+            Send
           </Button>
         </div>
       </form>
