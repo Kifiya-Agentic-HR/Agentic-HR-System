@@ -1,34 +1,29 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, UseGuards } from '@nestjs/common';
 import { ApplicationsService } from './applications.service';
-import { CreateApplicationDto } from './dto/create-application.dto';
-import { UpdateApplicationDto } from './dto/update-application.dto';
+import { AuthGuard } from '../../auth/guards/auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
+import { UserRole } from '../users/schemas/user.schema';
 
 @Controller('applications')
+@UseGuards(AuthGuard, RolesGuard)
 export class ApplicationsController {
-  constructor(private readonly applicationsService: ApplicationsService) {}
-
-  @Post()
-  create(@Body() createApplicationDto: CreateApplicationDto) {
-    return this.applicationsService.create(createApplicationDto);
-  }
+  constructor(private readonly appsService: ApplicationsService) {}
 
   @Get()
-  findAll() {
-    return this.applicationsService.findAll();
+  @Roles(UserRole.HR, UserRole.ADMIN)
+  async findAll() {
+    return this.appsService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.applicationsService.findOne(+id);
+  @Roles(UserRole.HR, UserRole.ADMIN)
+  async findOne(@Param('id') id: string) {
+    return this.appsService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateApplicationDto: UpdateApplicationDto) {
-    return this.applicationsService.update(+id, updateApplicationDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.applicationsService.remove(+id);
+  @Post()
+  async create(@Body() appData: any) {
+    return this.appsService.create(appData);
   }
 }

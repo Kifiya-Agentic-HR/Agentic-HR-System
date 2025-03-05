@@ -1,33 +1,78 @@
-// src/jobs/jobs.service.ts
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Job } from './schemas/job.schema';
-import { CreateJobDto } from './dto/create-job.dto';
-import { UpdateJobDto } from './dto/update-job.dto';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class JobsService {
-  constructor(@InjectModel(Job.name) private jobModel: Model<Job>) {}
+  private readonly baseUrl: string;
 
-  async create(dto: CreateJobDto): Promise<Job> {
-    const job = new this.jobModel(dto);
-    return job.save();
+  constructor(private readonly httpService: HttpService) {
+    this.baseUrl = process.env.JOBS_MICROSERVICE_URL || 'http://localhost:9000';
   }
 
-  async findAll(): Promise<Job[]> {
-    return this.jobModel.find().exec();
+  async findAll() {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(`${this.baseUrl}/jobs`),
+      );
+      return response.data; // e.g. { success: true, jobs: [...] }
+    } catch (error) {
+      return { success: false, error: 'Error fetching jobs' };
+    }
   }
 
-  async findOne(id: string): Promise<Job> {
-    return this.jobModel.findById(id).exec();
+  async findOne(id: string) {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(`${this.baseUrl}/jobs/${id}`),
+      );
+      return response.data;
+    } catch (error) {
+      return { success: false, error: `Error fetching job ${id}` };
+    }
   }
 
-  async update(id: string, updateDto: UpdateJobDto): Promise<Job> {
-    return this.jobModel.findByIdAndUpdate(id, updateDto, { new: true }).exec();
+  async create(jobData: any) {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/jobs`, jobData),
+      );
+      return response.data;
+    } catch (error) {
+      return { success: false, error: 'Error creating job' };
+    }
   }
 
-  async remove(id: string): Promise<Job> {
-    return this.jobModel.findByIdAndDelete(id).exec();
+  async update(id: string, jobData: any) {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.put(`${this.baseUrl}/jobs/${id}`, jobData),
+      );
+      return response.data;
+    } catch (error) {
+      return { success: false, error: `Error updating job ${id}` };
+    }
+  }
+
+  async remove(id: string) {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.delete(`${this.baseUrl}/jobs/${id}`),
+      );
+      return response.data;
+    } catch (error) {
+      return { success: false, error: `Error deleting job ${id}` };
+    }
+  }
+
+  async findApplicationsByJob(jobId: string) {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(`${this.baseUrl}/jobs/${jobId}/applications`),
+      );
+      return response.data;
+    } catch (error) {
+      return { success: false, error: `Error fetching applications for job ${jobId}` };
+    }
   }
 }
