@@ -1,34 +1,18 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { InterviewsService } from './interviews.service';
-import { CreateInterviewDto } from './dto/create-interview.dto';
-import { UpdateInterviewDto } from './dto/update-interview.dto';
+import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import { InterviewService } from './interviews.service';
+import { AuthGuard } from '../auth/guards/auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../users/schemas/user.schema';
 
-@Controller('interviews')
-export class InterviewsController {
-  constructor(private readonly interviewsService: InterviewsService) {}
+@Controller('interview')
+@UseGuards(AuthGuard, RolesGuard)
+export class InterviewController {
+  constructor(private readonly interviewService: InterviewService) {}
 
-  @Post()
-  create(@Body() createInterviewDto: CreateInterviewDto) {
-    return this.interviewsService.create(createInterviewDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.interviewsService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.interviewsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateInterviewDto: UpdateInterviewDto) {
-    return this.interviewsService.update(+id, updateInterviewDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.interviewsService.remove(+id);
+  @Post('schedule')
+  @Roles(UserRole.HR)
+  async schedule(@Body() body: { application_id: string }) {
+    return this.interviewService.schedule(body.application_id);
   }
 }

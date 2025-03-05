@@ -1,26 +1,26 @@
 import { Injectable } from '@nestjs/common';
-import { CreateInterviewDto } from './dto/create-interview.dto';
-import { UpdateInterviewDto } from './dto/update-interview.dto';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
-export class InterviewsService {
-  create(createInterviewDto: CreateInterviewDto) {
-    return 'This action adds a new interview';
+export class InterviewService {
+  private readonly baseUrl: string;
+
+  constructor(private readonly httpService: HttpService) {
+    this.baseUrl = process.env.INTERVIEW_BASE_URL || 'http://localhost:8080';
   }
 
-  findAll() {
-    return `This action returns all interviews`;
-  }
+  async schedule(applicationId: string) {
+    try {
+      const payload = { application_id: applicationId };
 
-  findOne(id: number) {
-    return `This action returns a #${id} interview`;
-  }
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/schedule`, payload),
+      );
 
-  update(id: number, updateInterviewDto: UpdateInterviewDto) {
-    return `This action updates a #${id} interview`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} interview`;
+      return response.data;
+    } catch (error) {
+      return { success: false, error: 'Error scheduling interview' };
+    }
   }
 }
