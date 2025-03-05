@@ -1,10 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards } from '@nestjs/common';
 import { JobsService } from './jobs.service';
-import { CreateJobDto } from './dto/create-job.dto';
-import { UpdateJobDto } from './dto/update-job.dto';
-import { AuthGuard } from '../auth/guards/auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { AuthGuard } from '../../auth/guards/auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
 import { UserRole } from '../users/schemas/user.schema';
 
 @Controller('jobs')
@@ -12,35 +10,42 @@ import { UserRole } from '../users/schemas/user.schema';
 export class JobsController {
   constructor(private readonly jobsService: JobsService) {}
 
-  // HR can create
-  @Post()
-  @Roles(UserRole.HR)
-  create(@Body() createJobDto: CreateJobDto) {
-    return this.jobsService.create(createJobDto);
-  }
-
-  // Everyone can read (admin or hr)
+  // GET /jobs
   @Get()
-  findAll() {
+  async findAll() {
     return this.jobsService.findAll();
   }
 
+  // GET /jobs/:id
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string) {
     return this.jobsService.findOne(id);
   }
 
-  // HR can update
-  @Patch(':id')
-  @Roles(UserRole.HR)
-  update(@Param('id') id: string, @Body() updateJobDto: UpdateJobDto) {
-    return this.jobsService.update(id, updateJobDto);
+  // GET /jobs/:id/applications
+  @Get(':id/applications')
+  async findApplicationsByJob(@Param('id') id: string) {
+    return this.jobsService.findApplicationsByJob(id);
   }
 
-  // HR can delete
+  // POST /jobs => Only HR can create
+  @Post()
+  @Roles(UserRole.HR)
+  async create(@Body() jobData: any) {
+    return this.jobsService.create(jobData);
+  }
+
+  // PUT /jobs/:id => Only HR can update
+  @Put(':id')
+  @Roles(UserRole.HR)
+  async update(@Param('id') id: string, @Body() jobData: any) {
+    return this.jobsService.update(id, jobData);
+  }
+
+  // DELETE /jobs/:id => Only HR can delete
   @Delete(':id')
   @Roles(UserRole.HR)
-  remove(@Param('id') id: string) {
+  async remove(@Param('id') id: string) {
     return this.jobsService.remove(id);
   }
 }
