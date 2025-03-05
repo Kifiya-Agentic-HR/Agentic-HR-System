@@ -1,4 +1,3 @@
-// src/users/dto/create-user.dto.ts
 import { IsEmail, IsString, IsOptional, IsEnum } from 'class-validator';
 import { UserRole } from '../schemas/user.schema';
 

@@ -1,4 +1,3 @@
-// src/users/users.module.ts
 import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UsersService } from './users.service';

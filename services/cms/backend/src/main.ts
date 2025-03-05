@@ -1,8 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import { UsersService } from './users/users.service'; // import your UsersService
-import { UserRole } from './users/schemas/user.schema'; // import the enum
+import { UsersService } from './users/users.service'; 
+import { UserRole } from './users/schemas/user.schema';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -11,7 +11,6 @@ async function bootstrap() {
   app.enableCors();
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }));
 
-  // Initialize the app so we can retrieve providers (like UsersService).
   await app.init();
 
   // Attempt to bootstrap an admin user from ENV variables.
