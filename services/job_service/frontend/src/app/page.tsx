@@ -1,17 +1,21 @@
-// src/app/page.tsx
 import { Suspense } from "react";
 import { ArrowUpRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import JobsGrid from "@/components/jobs-grid";
 import LoadingSkeleton from "@/components/loading-skeleton";
-import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
 
-export default function HomePage() {
+export default function HomePage({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] };
+}) {
+  const search = searchParams.search as string | undefined;
+  const type = searchParams.type as string | undefined;
+  const skills = searchParams.skills as string | undefined;
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-primary/5 via-white to-white">
-      {/* <SiteHeader /> */}
-
       <main className="flex-1">
         {/* Hero Section */}
         <div className="bg-[#364957] text-[#FF8A00] py-20">
@@ -20,21 +24,52 @@ export default function HomePage() {
               Build the Future of Finance
             </h1>
             <p className="text-xl text-primary-foreground/90 mb-8">
-              Join Kifiya&apos;s team shaping Africa&apos;s financial technology
-              landscape
+              Join Kifiya's team shaping Africa's financial technology landscape
             </p>
-            <div className="max-w-2xl mx-auto bg-white/10 backdrop-blur-sm rounded-lg p-1">
-              <div className="flex items-center justify-between px-4 py-2">
-                <span className="text-sm text-white/80">
-                  Search roles (Coming Soon)
-                </span>
+            <div className="max-w-3xl mx-auto bg-white/10 backdrop-blur-sm rounded-lg p-1">
+              <form
+                action="/"
+                method="get"
+                className="flex flex-wrap items-center justify-center gap-4 px-4 py-2"
+              >
+                <div className="flex items-center mb-2">
+                  <label htmlFor="type" className="text-white/80 mr-2">
+                    Job Type:
+                  </label>
+                  <select
+                    id="type"
+                    name="type"
+                    className="custom-select text-white bg-transparent border-b border-white/20 focus:outline-none focus:ring-0 focus:bg-transparent appearance-none"
+                  >
+                    <option value="">All</option>
+                    <option value="remote">Remote</option>
+                    <option value="in-person">In-Person</option>
+                  </select>
+                </div>
+                <div className="flex items-center mb-2">
+                  <input
+                    type="text"
+                    name="search"
+                    placeholder="Search roles"
+                    className="custom-select text-white bg-transparent border-b border-white/20 focus:outline-none focus:ring-0 focus:bg-transparent "
+                  />
+                </div>
+                <div className="flex items-center mb-2">
+                  <input
+                    type="text"
+                    name="skills"
+                    placeholder="Skills (comma-separated)"
+                    className="custom-select text-white bg-transparent border-b border-white/20 focus:outline-none focus:ring-0 focus:bg-transparent "
+                  />
+                </div>
                 <Button
+                  type="submit"
                   variant="ghost"
-                  className="text-white hover:bg-white/10"
+                  className="text-white hover:bg-white/70 p-2"
                 >
                   <ArrowUpRight className="w-5 h-5" />
                 </Button>
-              </div>
+              </form>
             </div>
           </div>
         </div>
@@ -49,7 +84,7 @@ export default function HomePage() {
           </div>
 
           <Suspense fallback={<LoadingSkeleton />}>
-            <JobsGrid />
+            <JobsGrid search={search} type={type} skills={skills} />
           </Suspense>
         </div>
       </main>
