@@ -27,10 +27,10 @@ export default function JobApplicationPage({ params }: JobApplicationPageProps) 
 
   useEffect(() => {
     async function fetchJob() {
-      const jobData = await getJob(Number(jobId));
+      const jobData = await getJob(jobId);
       if (!jobData) {
         router.push('/404');
-      } else if (jobData.status === 'Closed') {
+      } else if (jobData.job_status === 'Closed') {
         setShowPopup(true);
       } else {
         setJob(jobData);
@@ -91,7 +91,7 @@ export default function JobApplicationPage({ params }: JobApplicationPageProps) 
                 <div className="flex flex-wrap gap-4">
                   <div className="flex items-center gap-2 text-primary/80">
                     <Briefcase className="w-5 h-5" />
-                    <span>{job.status}</span>
+                    <span>{job.job_status}</span>
                   </div>
                   <div className="flex items-center gap-2 text-primary/80">
                     <MapPin className="w-5 h-5" />
