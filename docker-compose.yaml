@@ -265,9 +265,9 @@ services:
       QUERY_DEFAULTS_LIMIT: 20
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
       PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
-      DEFAULT_VECTORIZER_MODULE: 'text2vec-transformers'
-      ENABLE_MODULES: 'text2vec-transformers'
-      TRANSFORMERS_INFERENCE_API: 'http://t2v-transformers:8080'
+      DEFAULT_VECTORIZER_MODULE: 'text2vec-huggingface'
+      ENABLE_MODULES: 'text2vec-huggingface'
+      HUGGINGFACE_API_KEY: '${HUGGINGFACE_API_KEY}'
     ports:
       - 8082:8080
     volumes:
@@ -280,20 +280,6 @@ services:
       timeout: 10s
       retries: 3
 
-  t2v-transformers:
-    image: semitechnologies/transformers-inference:sentence-transformers-all-MiniLM-L6-v2
-    container_name: Transformers
-    environment:
-      ENABLE_CUDA: 0
-    networks:
-      - app_network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/.well-known/ready"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-
 networks:
   app_network:
     driver: bridge
@@ -303,3 +289,4 @@ volumes:
   rabbitmq_data:
   redis-data:
   s3-data:
+  weaviate_data:
