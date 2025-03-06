@@ -83,11 +83,12 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
       formPayload.append('gender', formData.gender);
       formPayload.append('disability', formData.disability);
       formPayload.append('experience_years', formData.experience_years);
+      formPayload.append('job_id', jobId)
       if (formData.resume !== null) {
-        formPayload.append('resume', formData.resume, formData.resume.name);
+        formPayload.append('cv', formData.resume, formData.resume.name);
       }
 
-      const response = await fetch(`http://localhost:9000/jobs/${jobId}/apply`, {
+      const response = await fetch(`http://localhost:9000/applications`, {
         method: 'POST',
         body: formPayload,
       });
