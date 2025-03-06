@@ -7,7 +7,7 @@ export class ApplicationsService {
   private readonly baseUrl: string;
 
   constructor(private readonly httpService: HttpService) {
-    this.baseUrl = process.env.APPLICATIONS_MICROSERVICE_URL || 'http://localhost:9000';
+    this.baseUrl = process.env.JOB_APPLICATION_PORT || 'http://localhost:9000';
   }
 
   async findAll() {

@@ -7,7 +7,7 @@ export class InterviewService {
   private readonly baseUrl: string;
 
   constructor(private readonly httpService: HttpService) {
-    this.baseUrl = process.env.INTERVIEW_BASE_URL || 'http://localhost:8080';
+    this.baseUrl = process.env.INTERVIEW_BACKEND_PORT || 'http://localhost:8080';
   }
 
   async schedule(applicationId: string) {
