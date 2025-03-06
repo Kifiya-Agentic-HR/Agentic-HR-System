@@ -138,8 +138,51 @@ export default function AccountSettingsForm() {
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="currentPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-[#364957] text-lg font-semibold">
+                    Current Password
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter current password"
+                      type="password"
+                      className="border-2 border-[#364957]/20 focus:border-[#FF8A00]
+                        focus-visible:ring-[#FF8A00]/50 text-[#364957] placeholder-[#364957]/50
+                        transition-all duration-200 hover:border-[#364957]/30 h-12"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-            {/* Other FormFields (currentPassword, newPassword) can be added similarly */}
+            <FormField
+              control={form.control}
+              name="newPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-[#364957] text-lg font-semibold">
+                    New Password
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter new password (optional)"
+                      type="password"
+                      className="border-2 border-[#364957]/20 focus:border-[#FF8A00]
+                        focus-visible:ring-[#FF8A00]/50 text-[#364957] placeholder-[#364957]/50
+                        transition-all duration-200 hover:border-[#364957]/30 h-12"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <Button
               type="submit"
