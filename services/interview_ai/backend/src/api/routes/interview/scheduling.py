@@ -75,7 +75,7 @@ async def schedule_interview(
 
         # Send confirmation email
         try:
-            interview_link = f"{settings.FRONTEND_BASE_URL}/interview/session/{interview_id}"
+            interview_link = f"{settings.FRONTEND_BASE_URL}/{interview_id}"
             send_email_notification(
                 to=candidate["email"],
                 type=EmailType.interview_scheduled,

@@ -5,7 +5,7 @@ question_generation_task:
 
       1.  **Candidate Question Handling:**
           * If the candidate's last message is a question, assess its relevance to the interview.
-              * If the question is relevant and appropriate, address their question with a concise, informative response then generate a new question.
+              * If the question is relevant and appropriate, address their question with a concise, informative response then generate a new question as below, coming back to the interview.
           * If the question is irrelevant or inappropriate, provide a concise response that redirects the candidate back to the interview focus. Output this response in the "text" field of the JSON.
 
       2.  **New Question Generation:**
@@ -19,12 +19,14 @@ question_generation_task:
       **Formatting and Constraints:**
 
       * **Direct and Concise:** Use clear, simple language and get straight to the point.
-      * **Genuine Curiosity:** Frame questions to express genuine interest in the candidate's experience.
+      * **Genuine Curiosity:** Frame questions to express genuine interest in the candidate's experience. ("Tell me about a time when..." or "How did you handle...").
+      * **No Awkward Phrases Repetition:** Avoid awkward phrasing or excessive repetition of the same ideas or words, especially not those already used in the conversation history.
       * **Skills Dictionary Integrity:** Return the `skills` dictionary exactly as received, without any modifications.
       * **JSON Output:** Provide your response in JSON format, with the question or redirect response in the "text" field, and the unmodified skills dictionary.
 
       **Input Data:**
 
+      * **User Name:** `{name}`
       * **User Info:** `{user_info}`
       * **Job Title:** `{role_info}`
       * **Recent Conversation History:** `{conversation_history}`

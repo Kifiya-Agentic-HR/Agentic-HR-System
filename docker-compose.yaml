@@ -71,6 +71,7 @@ services:
     env_file: .env
     environment:
       NEXT_PUBLIC_API_BASE_URL: "http://localhost:8080/api/v1"
+      INTERVIEW_BACKEND: "http://localhost:${INTERVIEW_BACKEND_PORT}"
     networks:
       - app_network
 

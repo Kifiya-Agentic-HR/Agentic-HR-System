@@ -46,12 +46,12 @@ class UnifiedInterface:
 
         config = {
             "welcome": {
-                "required": ["user_info", "role_info"],
+                "required": ["user_info", "name", "role_info"],
                 "crew": self.intro_crew,
                 "crew_name": "Introduction crew"
             },
             "ongoing": {
-                "required": ["conversation_history", "skills", "user_info", "role_info", "user_answer"],
+                "required": ["conversation_history", "name", "skills", "user_info", "role_info", "user_answer"],
                 "crew": self.qa_crew,
                 "crew_name": "Interview QA crew"
             },

@@ -46,7 +46,7 @@ class SessionResponse(BaseModel):
 
 class FlagRequest(BaseModel):
     interview_id: str
-    violations: bool
+    violations: str
 
 class FlagResponse(BaseModel):
     success: bool

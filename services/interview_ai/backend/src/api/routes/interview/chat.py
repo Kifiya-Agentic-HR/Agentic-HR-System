@@ -13,8 +13,17 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 def calculate_score(skills: dict) -> int:
-    # Each skill has a rating out of 10
-    return (sum(skill.get("rating", 0) for skill in skills.values()) / len(skills)) * 10 # Average score out of 100
+    try:
+        # Each skill has a rating out of 10
+        if type(skills) is not dict:
+            return 
+        total = 0
+        for skill, data in skills.items():
+            total += data.get("score", 0)
+        return total / len(skills)
+    except Exception as e:
+        logger.error(f"Score calculation error: {str(e)}")
+        return -1
 
 @router.post("", response_model=ChatResponse)
 async def process_chat(
@@ -64,7 +73,7 @@ async def process_chat(
                 await mongo_db.interviews.update_one(
                     {"_id": ObjectId(session_data.interview_id)},
                     {"$set": {
-                        "interview_status": "done",
+                        "interview_status": "completed",
                         "skill_assessment": interviewer_result.get("skills", {}),
                         "conversation_history": session_data.conversation_history,
                         "hiring_decision": interviewer_result.get("hiring_decision", ""),

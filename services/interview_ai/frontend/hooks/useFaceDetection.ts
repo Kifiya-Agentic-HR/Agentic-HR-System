@@ -37,7 +37,7 @@ export function useFaceDetection(videoRef: RefObject<HTMLVideoElement | null>) {
         faceapiRef.current = await import("face-api.js");
         
         // Simulate model loading progress
-        const modelProgress = [0, 15, 25, 30, 50, 60, 75, 80, 100];
+        const modelProgress = [0, 30, 50, 75, 95, 100];
         for (const progress of modelProgress) {
           setState(prev => ({ ...prev, loadingProgress: progress }));
           await new Promise(resolve => setTimeout(resolve, 500));

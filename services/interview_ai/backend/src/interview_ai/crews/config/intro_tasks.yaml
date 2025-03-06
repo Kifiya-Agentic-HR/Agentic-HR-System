@@ -15,6 +15,9 @@ welcome_task:
 
     NOTE: Avoid overly formal language. Speak as if you're having a casual yet professional conversation.
     
+    User Name:
+      {name}
+
     User Info:
       {user_info}
     
