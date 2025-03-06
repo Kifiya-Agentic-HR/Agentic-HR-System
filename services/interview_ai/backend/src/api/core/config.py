@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     MAX_CONVERSATION_HISTORY: int = 6
     NOTIFICATION_SERVICE_URL: str
     FRONTEND_BASE_URL: str
+    WEAVIATE_URL: str
 
 def get_settings():
     try:
