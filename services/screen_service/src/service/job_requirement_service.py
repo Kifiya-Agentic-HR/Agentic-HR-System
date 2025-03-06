@@ -2,9 +2,6 @@ import os
 from dotenv import load_dotenv
 import google.generativeai as genai
 
-from src.utils.file_reader import extract_text_from_file
-
-
 load_dotenv()
 
 gemini_api_key = os.getenv("GEMINI_API_KEY")

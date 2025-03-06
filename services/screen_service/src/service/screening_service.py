@@ -3,6 +3,7 @@ import os
 import re
 from dotenv import load_dotenv
 import google.generativeai as genai
+from src.utils.cv_parser import parse_cv
 from src.service.job_requirement_service import analyze_job_requirements
 from src.utils.file_reader import extract_text_from_file
 from src.utils.vector_keyword_similarity import calculate_scores
@@ -35,6 +36,7 @@ def scoreResume(requirement_text, resume_file_path):
     """
     # Extract text from the resume file
     extracted_applicant_resume = extract_text_from_file(resume_file_path)
+    parsed_cv = parse_cv(extracted_applicant_resume)
     weight = analyze_job_requirements(requirement_text)
     scores = calculate_scores(requirement_text, extracted_applicant_resume)
     
@@ -47,7 +49,7 @@ def scoreResume(requirement_text, resume_file_path):
   "task": "Evaluate applicant resume against weighted job requirements and provide scored analysis in JSON format. If the resume is a direct copy of job requirement, give it a score of 0.",
   "inputs": {{
     "job_requirements": "{requirement_text}",
-    "applicant_resume": "{extracted_applicant_resume}",
+    "applicant_resume": "{parsed_cv}",
     "weights": {weight}
   }},
   "instructions": [
@@ -131,7 +133,7 @@ def scoreResume(requirement_text, resume_file_path):
         # Parse JSON safely
         result = json.loads(json_str)
 
-        return result, keyword_weight, vector_weight, extracted_applicant_resume
+        return result, keyword_weight, vector_weight, parsed_cv
 
     except Exception as e:
         return {

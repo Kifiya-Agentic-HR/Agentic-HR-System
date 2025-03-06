@@ -5,8 +5,7 @@ from src.service.screening_service import scoreResume
 from config_local import Config
 import aio_pika
 from concurrent.futures import ThreadPoolExecutor
-from src.service.skill_analysis_service import analyze_job_skills
-from src.models import JobDocument , ScreeningResultDocument
+from src.models import ScreeningResultDocument
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
@@ -40,7 +39,7 @@ async def process_message(message: aio_pika.IncomingMessage):
                 executor, ScreeningResultDocument.create_result, result
             )
 
-            logging.info(f"Successfully processed application {data.get('app_id')}")
+            logging.info(f"Consumer : Successfully processed application")
 
         except json.JSONDecodeError:
             logging.error("Failed to decode JSON from message body.")

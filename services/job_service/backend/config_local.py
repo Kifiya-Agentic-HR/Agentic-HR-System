@@ -22,7 +22,3 @@ class Config:
         assert cls.MINIO_ROOT_PASSWORD is not None, "MinIO root password is not set"
 
 Config.check_config()
-
-
-
-# Retrieve configuration from environment variables
