@@ -14,10 +14,10 @@ RUN npm ci
 COPY . .
 
 # Build the Next.js application
-# RUN npm run buil
+RUN npm run build
 
 # Expose the port that Next.js listens on
 EXPOSE 3000
 
 # Start the Next.js application in production mode
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "Start"]

@@ -1,5 +1,5 @@
 // components/Completion.tsx
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -11,35 +11,47 @@ import { Violation } from "@/hooks/useAntiCheat";
 interface CompletionProps {
   completed: boolean;
   violations: Violation[];
+  interviewId: string;
 }
 
-export default function Completion({ completed, violations }: CompletionProps) {
+export default function Completion({ completed, violations, interviewId }: CompletionProps) {
+  // Prevent server-side errors by not rendering the component on the server.
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const hasFlagged = useRef(false);
+
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    if (!completed) {
-      const sessionId = getSessionId();
-      if (!sessionId) return;
+    return () => {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(console.error);
+      }
+    };
+  }, []);
+  
+  useEffect(() => {
+    if (!completed && !hasFlagged.current) {
+      hasFlagged.current = true;
 
-      const formattedViolations = violations.map(v => 
-        `${v.type}: ${v.description}`
-      ).join('\n');
-      
-      flagInterview(sessionId, formattedViolations).catch(error => {
-        console.error('Failed to flag interview:', error);
+      const formattedViolations = violations
+        .map((v) => `${v.type}: ${v.description}`)
+        .join("\n");
+
+      flagInterview(interviewId, formattedViolations).catch((error) => {
+        console.error("Failed to flag interview:", error);
+        hasFlagged.current = false;
       });
     }
   }, [completed, violations]);
 
   const handleFinish = () => {
-    // Clear session data
     clearSessionId();
-    
     try {
-      // Attempt to close the window
       window.close();
     } catch (e) {
-      // Fallback to home redirect if window can't be closed
       setLocation("/");
     }
   };
@@ -54,12 +66,12 @@ export default function Completion({ completed, violations }: CompletionProps) {
       >
         <Card className="rounded-xl shadow-lg">
           <CardHeader className="text-center space-y-4">
-            <img 
-              src="https://kifiya.com/wp-content/uploads/2022/12/Logo.svg" 
-              alt="Kifiya Logo" 
+            <img
+              src="https://kifiya.com/wp-content/uploads/2022/12/Logo.svg"
+              alt="Kifiya Logo"
               className="h-12 mb-6 mx-auto"
             />
-            
+
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
