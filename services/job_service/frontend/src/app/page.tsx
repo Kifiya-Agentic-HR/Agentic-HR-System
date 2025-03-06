@@ -11,7 +11,7 @@ import SiteFooter from "@/components/site-footer";
 export default function HomePage() {
   const searchParams = useSearchParams();
   
-  // Extract parameters safely
+
   const search = searchParams.get("search") || "";
   const type = searchParams.get("type") || "";
   const skills = searchParams.get("skills") || "";
