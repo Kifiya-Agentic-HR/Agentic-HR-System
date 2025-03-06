@@ -8,6 +8,7 @@ python-magic
 scikit-learn
 nltk
 fastapi
+fastapi[all]
 uvicorn
 python-dotenv
 flask 
