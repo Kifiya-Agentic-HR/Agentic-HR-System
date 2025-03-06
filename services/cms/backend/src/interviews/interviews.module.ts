@@ -1,9 +1,12 @@
 import { Module } from '@nestjs/common';
-import { InterviewsService } from './interviews.service';
-import { InterviewsController } from './interviews.controller';
+import { HttpModule } from '@nestjs/axios';
+import { InterviewController } from './interviews.controller';
+import { InterviewService } from './interviews.service';
 
 @Module({
-  controllers: [InterviewsController],
-  providers: [InterviewsService],
+  imports: [HttpModule],
+  controllers: [InterviewController],
+  providers: [InterviewService],
+  exports: [InterviewService],
 })
 export class InterviewsModule {}
