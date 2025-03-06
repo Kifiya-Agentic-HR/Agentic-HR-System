@@ -110,7 +110,7 @@ class ApplicationDocument(BaseDocument):
                 application["_id"] = str(application["_id"])
                 application["job_id"] = str(application["job_id"])
                 print("application found{}")
-            print(f"no application found{application} {application_id}")
+            logger.info(f"no application found{application} {application_id}")
             return application
         except errors.PyMongoError as e:
         

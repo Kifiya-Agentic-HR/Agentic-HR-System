@@ -106,11 +106,7 @@ async def create_application(
             "experience_years": experience_years,
             "candidate_id": candidate_id
         }
-        # store candidate
-
-        
         # Store in database
-
         new_application = ApplicationDocument.create_application(application_data)
         if not new_application:
             raise HTTPException(status_code=400, detail="Application creation failed")
