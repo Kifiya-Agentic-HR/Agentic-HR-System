@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { Briefcase, Clock, MapPin } from 'lucide-react';
 import ApplyForm from '@/components/apply-form';
 import { getJob,  Job } from '@/actions/get-jobs';
@@ -10,15 +10,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 const PRIMARY_COLOR = '#364957';
 const SECONDARY_COLOR = '#FF8A00';
 
-interface JobApplicationPageProps {
-  params: {
-    jobId: string;
-  };
-}
 
-export default function JobApplicationPage({ params }: JobApplicationPageProps) {
-  const { jobId } = params;
+export default function JobApplicationPage() {
+  const params = useParams();
+  const jobId = params?.jobId as string;
   const router = useRouter();
+
   
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
