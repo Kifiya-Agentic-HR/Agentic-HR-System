@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Briefcase, Clock, MapPin } from 'lucide-react';
 import ApplyForm from '@/components/apply-form';
-import { getJob } from '@/actions/get-jobs';
-import { Job } from '@/mock/apis';
+import { getJob,  Job } from '@/actions/get-jobs';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const PRIMARY_COLOR = '#364957';

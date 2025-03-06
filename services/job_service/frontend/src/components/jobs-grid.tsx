@@ -2,9 +2,9 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { formatDate } from "@/lib/utils";
-import { findJobs } from "@/actions/get-jobs";
+import { findJobs, Job } from "@/actions/get-jobs";
 import { ArrowUpRight } from "lucide-react";
-import { Job } from "@/mock/apis"; //replace this when using the actual api
+
 
 interface JobsGridProps {
   search?: string;
