@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { formatDate } from "@/lib/utils";
-import { getJobs } from "@/actions/get-jobs";
+import { findJobs } from "@/actions/get-jobs";
 import { ArrowUpRight } from "lucide-react";
 import { Job } from "@/mock/apis"; //replace this when using the actual api
 
@@ -18,7 +18,7 @@ export default async function JobsGrid({
   skills,
 }: JobsGridProps) {
   try {
-    const jobs: Job[] = await getJobs({ search, type, skills });
+    const jobs: Job[] = await findJobs({ search, type, skills });
 
     if (!jobs?.length) {
       return (
@@ -51,7 +51,7 @@ export default async function JobsGrid({
                       variant="outline"
                       className="border-secondary/30 text-[#FF8A00]"
                     >
-                      {job.status}
+                      {job.job_status}
                     </Badge>
                     <span className="text-sm text-primary/60">
                       {job.description.type}
