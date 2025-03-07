@@ -23,3 +23,5 @@ def get_settings():
     except ValidationError as e:
         logger.error("Configuration error: %s", e.json())
         raise
+
+settings = get_settings()
