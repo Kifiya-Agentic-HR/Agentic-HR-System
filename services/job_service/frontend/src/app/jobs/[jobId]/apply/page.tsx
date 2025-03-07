@@ -77,7 +77,7 @@ export default function JobApplicationPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-orange-95 p-6 shadow-2xl rounded-b-3xl mb-6">
+      <div className="min-h-screen bg-gradient-to-b bg-[#fff4e6] p-6 shadow-2xl rounded-b-3xl mb-6">
         <div className="container max-w-7xl py-12">
           <div className="grid lg:grid-cols-2 gap-12 items-start">
             {/* Job details */}
