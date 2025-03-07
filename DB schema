@@ -33,12 +33,12 @@
 +---------------------+                    +----------------------+ 
 |  _id                |                    |  _id                 |
 |  role               |                    |  assessment_result   |
-|  user_name          |                    |  application_id      |                   
-|  created_at         |                    |  level               | //easy, medium, hard
-|  password           |                    |  no_of_questions     | //defaulting to 2
-|  email              |                    |  assessment_reasoning|
-+---------------------+                    +----------------------+
-
+|  first_name         |                    |  application_id      |                   
+|  last_name          |                    |  level               | //easy, medium, hard
+|  created_at         |                    |  no_of_questions     | //defaulting to 2
+|  password           |                    |  assessment_reasoning|
+|  email              |                    +----------------------+
++---------------------+  
 
 Description = {
 summary:"",
