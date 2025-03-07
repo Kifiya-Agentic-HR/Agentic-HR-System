@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { CheckCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -105,7 +105,7 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
 
       setTimeout(() => {
         window.location.href = `/`;
-      }, 3000);
+      }, 3000); 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Application failed');
     } finally {
@@ -122,7 +122,7 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.5 }}
           >
             <div className="mb-8">
               <h2 className="text-2xl font-bold mb-2" style={{ color: PRIMARY_COLOR }}>
@@ -255,7 +255,21 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
             </form>
           </motion.div>
         ) : (
-          <p className="text-center text-primary/60">Application Submitted!</p>
+<div className="flex justify-center w-full">
+  <motion.div
+    key="success"
+    initial={{ opacity: 0, scale: 0.8 }}
+    animate={{ opacity: 1, scale: 1 }}
+    exit={{ opacity: 0, scale: 0.8 }}
+    transition={{ duration: 0.5 }}
+    className="flex flex-col items-center text-primary/60"
+  >
+    <CheckCircle size={64} className="text-green-500 mb-4" />
+    <p className="text-lg font-semibold">Application Submitted!</p>
+  </motion.div>
+</div>
+
+
         )}
       </AnimatePresence>
     </Card>
