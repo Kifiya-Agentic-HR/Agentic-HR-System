@@ -3,7 +3,7 @@ from fastapi import APIRouter, File, Form, HTTPException, Response, UploadFile, 
 import logging
 from app.utils.publisher import publish_application
 from app.utils.cloud_storage import upload_file
-from app.database.models import  ApplicationDocument, CandidateDocument, JobDocument
+from app.database.models import  ApplicationDocument, CandidateDocument, JobDocument, ScreeningResultDocument , InterviewsDocument
 
 
 logger = logging.getLogger(__name__)
@@ -134,6 +134,9 @@ async def get_applications():
 async def get_application(response: Response,application_id: str):
     try:
         application = ApplicationDocument.get_application_by_id(application_id)
+        candidate = CandidateDocument.get_candidate_by_id(application['candidate_id'])
+        screening = ScreeningResultDocument.get_by_application_id(application_id) 
+        interview = InterviewsDocument.get_interview_by_app_id(application_id)
         if not application:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {
@@ -141,6 +144,14 @@ async def get_application(response: Response,application_id: str):
                 "error": f"Application  with {application_id} is not found"
 
             }
-        return {"success": True, "application": application}
+        application_response = {
+            "_id":application_id,
+            "candidate": candidate,
+            "job_id": application['job_id'],
+            "cv_link": application['cv_link'],
+            "screening": screening,
+            "interview": interview
+        }
+        return {"success": True, "application": application_response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving application: {e}")
