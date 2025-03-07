@@ -46,6 +46,7 @@ services:
       - mongo
       - redis
       - notification
+      - weaviate
     env_file: .env
     environment:
       MONGO_URI: "mongodb://mongo:27017/hr_db"
@@ -55,11 +56,11 @@ services:
       MODEL: "${MODEL}"
       NOTIFICATION_SERVICE_URL: "http://notification:${NOTIFICATION_PORT}/api/v1/"
       FRONTEND_BASE_URL: "http://localhost:${INTERVIEW_FRONTEND_PORT}"
+      WEAVIATE_URL: "http://weaviate:8080"
     networks:
       - app_network
     volumes:
       - shared_volume:/shared_volume  # Added shared volume
-
 
   interview_frontend:
     build: ./services/interview_ai/frontend
@@ -71,6 +72,7 @@ services:
     env_file: .env
     environment:
       NEXT_PUBLIC_API_BASE_URL: "http://localhost:8080/api/v1"
+      INTERVIEW_BACKEND: "http://localhost:${INTERVIEW_BACKEND_PORT}"
     networks:
       - app_network
 
@@ -98,7 +100,7 @@ services:
       mongo:
         condition: service_started
       rabbitmq:
-        condition: service_healthy
+        condition: service_started
       s3-server:
         condition: service_healthy
       mc:
@@ -126,7 +128,7 @@ services:
       mongo:
         condition: service_started
       rabbitmq:
-        condition: service_healthy
+        condition: service_started
 
     networks:
       - app_network
@@ -188,14 +190,18 @@ services:
       - "15672:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+
+    # environment:
+    #   - RABBITMQ_CONFIG_FILE=/etc/rabbitmq/rabbitmq.conf
     networks:
       - app_network
-    healthcheck:
-      test: ["CMD", "rabbitmqctl", "status"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 10s
+    # healthcheck:
+    #   test: ["CMD", "rabbitmqctl", "status"]
+    #   interval: 10s
+    #   timeout: 10s
+    #   retries: 5
+    #   start_period: 10s
 
   # job_portal:
   #   build: ./services/screening/job-portal
@@ -255,6 +261,28 @@ services:
       - .env
     networks:
       - app_network
+  
+  weaviate:
+    image: semitechnologies/weaviate:1.23.0
+    container_name: Weaviate
+    environment:
+      QUERY_DEFAULTS_LIMIT: 20
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'text2vec-huggingface'
+      ENABLE_MODULES: 'text2vec-huggingface'
+      HUGGINGFACE_API_KEY: '${HUGGINGFACE_API_KEY}'
+    ports:
+      - 8082:8080
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/v1/.well-known/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 networks:
   app_network:
@@ -265,3 +293,4 @@ volumes:
   rabbitmq_data:
   redis-data:
   s3-data:
+  weaviate_data:
