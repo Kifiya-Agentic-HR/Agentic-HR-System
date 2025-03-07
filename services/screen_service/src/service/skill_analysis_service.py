@@ -1,13 +1,13 @@
 import json
-import os
 import re
 from dotenv import load_dotenv
 import google.generativeai as genai
+from config_local import Config
 from src.service.screening_service import balance_braces
 
 load_dotenv()
 
-gemini_api_key = os.getenv("GEMINI_API_KEY")
+gemini_api_key = Config.GEMINI_KEY
 if not gemini_api_key:
     raise ValueError("GEMINI_API_KEY is not set in the environment variables!")
 

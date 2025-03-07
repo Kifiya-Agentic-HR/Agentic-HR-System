@@ -1,6 +1,6 @@
 import json
 import re
-import os
+from config_local import Config
 import nltk
 import google.generativeai as genai
 
@@ -18,7 +18,7 @@ STOPWORDS = set(stopwords.words("english")).difference(set(["c++", "c"]))
 
 # Load environment variables
 load_dotenv()
-gemini_api_key = os.getenv("GEMINI_API_KEY")
+gemini_api_key = Config.GEMINI_KEY
 if not gemini_api_key:
     raise ValueError("GEMINI_API_KEY is missing in environment variables.")
 

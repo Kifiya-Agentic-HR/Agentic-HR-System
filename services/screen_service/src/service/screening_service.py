@@ -1,6 +1,6 @@
 import json
-import os
 import re
+from config_local import Config
 from dotenv import load_dotenv
 import google.generativeai as genai
 from src.utils.cv_parser import parse_cv
@@ -11,7 +11,7 @@ from src.utils.vector_keyword_similarity import calculate_scores
 load_dotenv()
 
 # Load API key
-gemini_api_key = os.getenv("GEMINI_API_KEY")
+gemini_api_key = Config.GEMINI_KEY
 if not gemini_api_key:
     raise ValueError("GEMINI_API_KEY is not set in the environment variables!")
 
