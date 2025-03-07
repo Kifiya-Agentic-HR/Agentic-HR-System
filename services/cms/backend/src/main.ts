@@ -1,19 +1,26 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import { UsersService } from './users/users.service'; 
+import { UsersService } from './users/users.service';
 import { UserRole } from './users/schemas/user.schema';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn', 'log', 'debug', 'verbose'],
   });
-  app.enableCors();
+
+  // Explicit CORS configuration to allow your frontend at http://localhost:3001
+  app.enableCors({
+    origin: 'http://localhost:3000',
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
+  });
+
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }));
 
   await app.init();
 
-  // Attempt to bootstrap an admin user from ENV variables.
+  // Bootstrap an admin user if needed
   await bootstrapAdminUser(app.get(UsersService));
   await app.listen(process.env.PORT || 3000);
 }
@@ -25,21 +32,18 @@ async function bootstrapAdminUser(usersService: UsersService) {
   const adminEmail = process.env.ADMIN_EMAIL;
   const adminPassword = process.env.ADMIN_PASSWORD;
 
-  // If you haven't provided admin credentials in .env, skip
   if (!adminEmail || !adminPassword) {
     console.log('No ADMIN_EMAIL or ADMIN_PASSWORD found in environment. Skipping admin bootstrap.');
     return;
   }
 
-  // Check if an admin already exists with this email
   const existingAdmin = await usersService.findByEmail(adminEmail);
   if (!existingAdmin) {
     console.log('No admin found. Creating admin user...');
-    // We'll create an admin user with the .env credentials
     await usersService.createAdminUser({
       email: adminEmail,
       password: adminPassword,
-      role: UserRole.ADMIN, // forced
+      role: UserRole.ADMIN,
     });
     console.log('Admin user created.');
   } else {

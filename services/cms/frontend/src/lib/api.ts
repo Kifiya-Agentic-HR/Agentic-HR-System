@@ -146,3 +146,45 @@ export async function postChat(chatData: { user_answer: string; session_id: stri
     return { success: false, error: error.message || "Failed to post chat message" };
   }
 }
+/*
+   @param {Object} authData - The login credentials { email, password }.
+ * @returns {Promise<Object>} - Expected response: { success: boolean, token?: string, user?: Object, error?: string }
+ */
+   export async function login(authData: { email: string; password: string; }): Promise<{ success: boolean; token?: string; user?: any; error?: string; }> {
+    try {
+      const res = await fetch(`http://localhost:5050/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(authData),
+      });
+  
+      // Log the response status for debugging
+      console.log("Response status:", res.status);
+  
+      if (!res.ok) {
+        let errorMsg = "Failed to login";
+        try {
+          const errorData = await res.json();
+          errorMsg = errorData.error || errorMsg;
+        } catch (jsonError) {
+          const errorText = await res.text();
+          errorMsg = errorText || errorMsg;
+        }
+        console.error('Login error response:', errorMsg, res.status);
+        return { success: false, error: errorMsg };
+      }
+  
+      // Parse the JSON response from the backend
+      const data = await res.json();
+      // Map the backend's "access_token" to our expected "token" property
+      return { success: true, token: data.access_token };
+    } catch (error: unknown) {
+      let errorMessage = "Failed to login";
+      if (error instanceof Error && error.message) {
+        errorMessage = error.message;
+      }
+      console.error('Error in login fetch:', error);
+      return { success: false, error: errorMessage };
+    }
+  }
+  

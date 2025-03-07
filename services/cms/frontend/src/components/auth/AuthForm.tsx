@@ -13,36 +13,98 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
+import { login } from "@/lib/api"; // adjust the import path as needed
+import { useRouter } from "next/navigation";
+import * as JWTDecode from "jwt-decode"; // Import as namespace
 
+// Log to confirm component mounting
+console.log("RecruitmentDashboard component has mounted");
+
+// Define a schema for the login form
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
+// Define an interface for the token payload
+interface TokenPayload {
+  role: string;
+  // add additional properties if needed
+}
+
 export default function RecruitmentDashboard() {
+  const router = useRouter();
+
+  // react-hook-form setup
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
   });
 
+  /**
+   * A helper function to decode the token, handling libraries that may not export a default.
+   * We cast the result instead of passing a type argument to avoid TS error.
+   */
+  function decodeToken(token: string): TokenPayload {
+    // Attempt to use .default first, otherwise use the namespace
+    const decodeFn = (JWTDecode as any).default || (JWTDecode as any);
+    // Call decodeFn without <TokenPayload>, then cast to TokenPayload
+    const decoded = decodeFn(token) as TokenPayload;
+    return decoded;
+  }
+
   const handleLogin = async (values: z.infer<typeof loginSchema>) => {
-    // Handle login logic
+    console.log("handleLogin was called with values:", values);
+
+    const result = await login(values);
+    console.log("Login result:", result);
+
+    if (result.success && result.token) {
+      localStorage.setItem("accessToken", result.token);
+      console.log("Token saved to localStorage:", result.token);
+
+      let decoded: TokenPayload;
+      try {
+        decoded = decodeToken(result.token);
+        console.log("Decoded token:", decoded);
+      } catch (e) {
+        console.error("Failed to decode token", e);
+        return;
+      }
+
+      console.log("User role:", decoded.role);
+
+      // Navigate based on the role extracted from the token
+      if (decoded.role === "ADMIN") {
+        console.log("Navigating to admin dashboard");
+        router.push("/admin/dashboard");
+      } else if (decoded.role === "HR") {
+        console.log("Navigating to HR dashboard");
+        router.push("/hr");
+      } else {
+        console.log("Navigating to default dashboard");
+        router.push("/dashboard");
+      }
+    } else {
+      console.error("Login failed", result.error);
+      // Optionally display an error message to the user
+    }
   };
 
   return (
     <div className="min-h-screen flex">
       {/* Left Panel */}
       <div className="bg-[#364957] w-1/2 flex flex-col items-center justify-center p-12 space-y-8">
-        {/* Company Logo */}
         <img
           src="/logo (2).svg"
           alt="Company Logo"
           className="w-64 h-auto"
-        />{" "}
-        {/* Make logo bigger */}
+        />
         <div className="flex flex-col items-center gap-4">
           <div className="flex items-center gap-2">
-            {" "}
-            {/* Added flex for icon and text */}
             <svg
               width="40"
               height="40"
@@ -75,10 +137,7 @@ export default function RecruitmentDashboard() {
           </div>
 
           <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(handleLogin)}
-              className="space-y-6"
-            >
+            <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-6">
               <FormField
                 control={form.control}
                 name="email"
@@ -86,7 +145,13 @@ export default function RecruitmentDashboard() {
                   <FormItem>
                     <Label>Email</Label>
                     <FormControl>
-                      <Input placeholder="natnael@kifiya.et" {...field} />
+                      <Input
+                        placeholder="example@kifiya.et"
+                        value={field.value || ""}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -102,7 +167,10 @@ export default function RecruitmentDashboard() {
                       <Input
                         type="password"
                         placeholder="••••••••"
-                        {...field}
+                        value={field.value || ""}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
                       />
                     </FormControl>
                     <FormMessage />
