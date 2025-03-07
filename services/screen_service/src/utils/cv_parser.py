@@ -64,6 +64,7 @@ the unstructured_cv is {unstructured_cv}
     - Analyze each sentence of the input CV and decide which section(s) it belongs to.
     - Ensure that no sentence is missed; if necessary, include the same sentence in multiple sections if it fits.
     - The order of sentences should be maintained to preserve context and detail.
+    - if the cv does not have a content return only "This applicant CV is empty"
 
 
 """
