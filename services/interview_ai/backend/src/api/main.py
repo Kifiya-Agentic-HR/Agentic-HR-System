@@ -17,7 +17,7 @@ def create_app():
     
     setup_dependencies(app)
     # set base /api/v1
-    app.include_router(interview_router, tags=["agentic", "HR", "Interviewer"] prefix="/api/v1")
+    app.include_router(interview_router, tags=["agentic", "HR", "Interviewer"], prefix="/api/v1")
     app.include_router(interview_router)
     app.include_router(ingestion_router, tags=["agentic", "RAG"], prefix="/api/v1")
     app.include_router(ingestion_router,  tags=["agentic", "RAG"],)
