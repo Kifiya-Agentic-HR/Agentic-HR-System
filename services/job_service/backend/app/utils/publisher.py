@@ -22,7 +22,7 @@ async def publish_application(message):
                 ),
                 routing_key=Config.QUEUE_NAME
             )
-        logging.info(f"Message sent successfully for app_id: {message.get('_id')}")
+        logging.info(f"Message sent successfully for app_id: {message.get('application_id')}")
     except Exception as e:
         logging.error(f"Failed to send message: {e}")
         raise  # Re-raise to trigger retry
