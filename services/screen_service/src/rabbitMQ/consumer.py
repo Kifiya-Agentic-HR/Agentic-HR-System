@@ -20,6 +20,7 @@ async def process_message(message: aio_pika.IncomingMessage):
 
             # Extract job details
             job_data = data.get("job")
+            application_id = data.get("application_id")
             
 
             llm_output, kw_score, vec_score, parsed_resume = scoreResume(
@@ -28,7 +29,7 @@ async def process_message(message: aio_pika.IncomingMessage):
             final_score = (llm_output["overall_score"] * 0.6) + kw_score + vec_score
 
             result = {
-                "application_id": data.get("application_id"),
+                "application_id": application_id,
                 "score": round(final_score, 1),
                 "reasoning": llm_output.get("score_breakdown", {}),
                 "parsed_cv": parsed_resume,
