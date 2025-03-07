@@ -98,11 +98,11 @@ export default function AccountSettingsForm() {
                     asChild
                     className="text-[#364957] text-lg font-semibold"
                   >
-                    <span>Full Name</span>
+                    <span>First Name</span>
                   </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter your full name"
+                      placeholder="Enter your first name"
                       className="border-2 border-[#364957]/20 focus:border-[#FF8A00] 
                         focus-visible:ring-[#FF8A00]/50 text-[#364957] placeholder-[#364957]/50
                         transition-all duration-200 hover:border-[#364957]/30 h-12"
@@ -113,21 +113,20 @@ export default function AccountSettingsForm() {
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
-              name="email"
+              name="name"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel
                     asChild
                     className="text-[#364957] text-lg font-semibold"
                   >
-                    <span>Email Address</span>
+                    <span>Last Name</span>
                   </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter your email"
+                      placeholder="Enter your last name"
                       className="border-2 border-[#364957]/20 focus:border-[#FF8A00] 
                         focus-visible:ring-[#FF8A00]/50 text-[#364957] placeholder-[#364957]/50
                         transition-all duration-200 hover:border-[#364957]/30 h-12"
