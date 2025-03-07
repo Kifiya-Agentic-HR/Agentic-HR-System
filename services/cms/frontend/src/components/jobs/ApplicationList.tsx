@@ -93,7 +93,7 @@ export const ApplicationList = ({
               }}
               className="w-full text-left px-3 py-2 rounded-lg border border-[#364957]/20 hover:bg-[#FF8A00]/10 text-[#364957]"
             >
-              {app.screening.score ? "Completed" : "Pending"}
+              {app.screening ? "Completed" : "Pending"}
               {app.screening.reasoning && (
                 <div className="text-sm text-[#364957]/60 mt-1">
                   {app.screening.reasoning}
