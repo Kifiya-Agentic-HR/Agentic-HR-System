@@ -5,7 +5,7 @@ class Config:
     MONGODB_URL = os.getenv("MONGODB_URI", "mongodb://mongodb:27017/hr_db")
     QUEUE_NAME = os.getenv("QUEUE_NAME", "application_queue")
     UPLOAD_DIR = os.getenv("UPLOAD_DIR", "/shared_volume")
-
+    GEMINI_KEY = os.getenv("GEMINI_API_KEY", None)
     @classmethod
     def check_config(cls):
         assert cls.RABBITMQ_URL, "RabbitMQ URL is not set"

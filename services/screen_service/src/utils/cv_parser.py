@@ -1,12 +1,12 @@
 # Load environment variables
-import os
+from config_local import Config
 import google.generativeai as genai
 
 from dotenv import load_dotenv
 
 
 load_dotenv()
-gemini_api_key = os.getenv("GEMINI_API_KEY")
+gemini_api_key = Config.GEMINI_KEY
 if not gemini_api_key:
     raise ValueError("GEMINI_API_KEY is missing in environment variables.")
 
