@@ -100,7 +100,7 @@ services:
       mongo:
         condition: service_started
       rabbitmq:
-        condition: service_healthy
+        condition: service_started
       s3-server:
         condition: service_healthy
       mc:
@@ -128,7 +128,7 @@ services:
       mongo:
         condition: service_started
       rabbitmq:
-        condition: service_healthy
+        condition: service_started
 
     networks:
       - app_network
@@ -190,14 +190,18 @@ services:
       - "15672:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+
+    # environment:
+    #   - RABBITMQ_CONFIG_FILE=/etc/rabbitmq/rabbitmq.conf
     networks:
       - app_network
-    healthcheck:
-      test: ["CMD", "rabbitmqctl", "status"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 10s
+    # healthcheck:
+    #   test: ["CMD", "rabbitmqctl", "status"]
+    #   interval: 10s
+    #   timeout: 10s
+    #   retries: 5
+    #   start_period: 10s
 
   # job_portal:
   #   build: ./services/screening/job-portal
