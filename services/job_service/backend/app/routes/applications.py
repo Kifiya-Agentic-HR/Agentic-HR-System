@@ -114,6 +114,7 @@ async def create_application(
         
         await publish_application({
             "job": str(JobDocument.get_job_by_id(job_id)),
+            "application_id": new_application,
             "resume_path": file_path,
         })
         return {"success": True, "application": new_application}
