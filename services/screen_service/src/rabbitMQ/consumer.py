@@ -66,7 +66,7 @@ async def consume_messages():
 
 if __name__ == "__main__":
     try:
-        logger.warning("CONSUMER RUNNING")
+        logger.info("CONSUMER RUNNING")
         asyncio.run(consume_messages())
     except KeyboardInterrupt:
         logger.info("Shutting down consumer...")
