@@ -27,4 +27,5 @@ config
 # Development
 pytest
 pytest-asyncio
+asyncio
 httpx
