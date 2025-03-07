@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getJobs } from "@/lib/api"; // Using the real API function
+import { getJobs, getJobApplications } from "@/lib/api"; // Using real API functions
 import { Job } from "./types";
 import { ApplicationList } from "./ApplicationList";
 
 export const JobList = () => {
-  // Date formatting function
   const formatDate = (dateString: string) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
@@ -19,6 +18,7 @@ export const JobList = () => {
 
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
+  const [selectedApps, setSelectedApps] = useState<any[]>([]);
 
   useEffect(() => {
     const loadJobs = async () => {
@@ -26,12 +26,22 @@ export const JobList = () => {
       if (data.success && data.jobs) {
         setJobs(data.jobs);
       } else {
-        // Handle error (data.error)
         console.error(data.error);
       }
     };
     loadJobs();
   }, []);
+
+  const handleViewApplications = async (jobId: string) => {
+    setSelectedJob(jobId);
+    const resp = await getJobApplications(jobId);
+    if (resp.success && resp.applications) {
+      setSelectedApps(resp.applications);
+    } else {
+      console.error(resp.error);
+      setSelectedApps([]);
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -42,7 +52,7 @@ export const JobList = () => {
       <div className="grid gap-8">
         {jobs.map((job) => (
           <div
-            key={job._id} // assuming your job object's identifier is _id
+            key={job._id}
             className="bg-[#FFF4E6] rounded-xl p-6 border border-[#364957]/20 transition-all hover:shadow-lg"
           >
             <div className="flex justify-between items-center mb-4">
@@ -51,28 +61,19 @@ export const JobList = () => {
               </h2>
               <div className="flex items-center gap-4">
                 <span className="px-4 py-2 bg-[#FF8A00]/10 text-[#FF8A00] rounded-full">
-                  {job.job_status} {/* Adjust property name if needed */}
+                  {job.job_status}
                 </span>
-                {job.applications && job.applications.length > 0 && (
-                  <span className="text-[#364957]/80">
-                    {formatDate(job.applications[0]?.appliedDate)} -{" "}
-                    {formatDate(
-                      job.applications[job.applications.length - 1]?.appliedDate
-                    )}
-                  </span>
-                )}
               </div>
             </div>
 
             {selectedJob === job._id ? (
-              <ApplicationList applications={job.applications} />
+              <ApplicationList applications={selectedApps} />
             ) : (
               <button
-                onClick={() => setSelectedJob(job._id)}
+                onClick={() => handleViewApplications(job._id)}
                 className="w-full py-3 text-[#364957] hover:bg-[#FF8A00]/10 rounded-xl"
               >
-                View {job.applications ? job.applications.length : 0}{" "}
-                applications →
+                View applications →
               </button>
             )}
           </div>
