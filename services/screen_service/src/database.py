@@ -10,7 +10,7 @@ class Database:
         self.client = MongoClient(mongo_uri)
         self.db = self.client.hr_db
         
-        # Optionally, you can cache your collections here:
+        # cache collections here
         self.screening_results_collection = self.db["screening_results"]
 
     def get_collection(self, name):

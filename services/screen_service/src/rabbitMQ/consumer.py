@@ -5,10 +5,9 @@ from src.service.screening_service import scoreResume
 from config_local import Config
 import aio_pika
 from concurrent.futures import ThreadPoolExecutor
-from src.service.skill_analysis_service import analyze_job_skills
-from src.models import JobDocument , ScreeningResultDocument
+from src.models import ScreeningResultDocument
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # ThreadPool for running synchronous operations asynchronously
 executor = ThreadPoolExecutor()
@@ -16,11 +15,12 @@ async def process_message(message: aio_pika.IncomingMessage):
     async with message.process():
         try: 
 
-            logging.info("Processing message...")
+            logger.info("Processing message...")
             data = json.loads(message.body.decode())
 
             # Extract job details
             job_data = data.get("job")
+            application_id = data.get("application_id")
             
 
             llm_output, kw_score, vec_score, parsed_resume = scoreResume(
@@ -29,7 +29,7 @@ async def process_message(message: aio_pika.IncomingMessage):
             final_score = (llm_output["overall_score"] * 0.6) + kw_score + vec_score
 
             result = {
-                "application_id": data.get("app_id"),
+                "application_id": application_id,
                 "score": round(final_score, 1),
                 "reasoning": llm_output.get("score_breakdown", {}),
                 "parsed_cv": parsed_resume,
@@ -40,32 +40,33 @@ async def process_message(message: aio_pika.IncomingMessage):
                 executor, ScreeningResultDocument.create_result, result
             )
 
-            logging.info(f"Successfully processed application {data.get('app_id')}")
+            logger.info(f"Consumer : Successfully processed application")
 
         except json.JSONDecodeError:
-            logging.error("Failed to decode JSON from message body.")
+            logger.error("Failed to decode JSON from message body.")
         except Exception as e:
-            logging.exception(f"Error processing message: {e}")
+            logger.exception(f"Error processing message: {e}")
 
 async def consume_messages():
     """Consumes messages from RabbitMQ and processes them."""
     try:
+        logger.info("consuming ")
         connection = await aio_pika.connect_robust(url=Config.RABBITMQ_URL)
         async with connection:
             channel = await connection.channel()
             queue = await channel.declare_queue(Config.QUEUE_NAME, durable=True)
 
-            logging.info(" [*] Waiting for messages. To exit press CTRL+C")
+            logger.info(" [*] Waiting for messages. To exit press CTRL+C")
             await queue.consume(process_message)
 
             # Keep running
             await asyncio.Future()
     except Exception as e:
-        logging.exception(f"Error in message consumption: {e}")
+        logger.exception(f"Error in message consumption: {e}")
 
 if __name__ == "__main__":
     try:
-        logging.info("CONSUMER RUNNING")
+        logger.info("CONSUMER RUNNING")
         asyncio.run(consume_messages())
     except KeyboardInterrupt:
-        logging.info("Shutting down consumer...")
+        logger.info("Shutting down consumer...")

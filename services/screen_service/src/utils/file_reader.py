@@ -1,11 +1,8 @@
 import io
 from xml.dom.minidom import Document
 import PyPDF2
-import docx2txt
 from PIL import Image
 import pytesseract
-from pdf2image import convert_from_path
-import pathlib
 import os
 
 import requests
@@ -42,10 +39,10 @@ def extract_text_from_file(file_url: str, file_type: str = None) -> str:
             page_text = page.extract_text()
             if page_text:
                 text += page_text + "\n"
-        if text == "":
-            file_bytes = io.BytesIO(response.content)
-            image = Image.open(file_bytes)
-            text = pytesseract.image_to_string(image)
+        # if text == "":
+        #     file_bytes = io.BytesIO(response.content)
+        #     image = Image.open(file_bytes)
+        #     text = pytesseract.image_to_string(image)
 
     elif file_type == ".docx":
         # Use in-memory bytes stream for DOCX
