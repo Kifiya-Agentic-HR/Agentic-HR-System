@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { fetchOngoingJobs } from "./mockApi";
+import { getJobs } from "@/lib/api"; // Using the real API function
 import { Job } from "./types";
 import { ApplicationList } from "./ApplicationList";
 
 export const JobList = () => {
   // Date formatting function
   const formatDate = (dateString: string) => {
-    if (!dateString) return "N/A"; // Prevents errors if the date is missing
+    if (!dateString) return "N/A";
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
       year: "numeric",
@@ -22,8 +22,13 @@ export const JobList = () => {
 
   useEffect(() => {
     const loadJobs = async () => {
-      const data = await fetchOngoingJobs();
-      setJobs(data);
+      const data = await getJobs();
+      if (data.success && data.jobs) {
+        setJobs(data.jobs);
+      } else {
+        // Handle error (data.error)
+        console.error(data.error);
+      }
     };
     loadJobs();
   }, []);
@@ -37,7 +42,7 @@ export const JobList = () => {
       <div className="grid gap-8">
         {jobs.map((job) => (
           <div
-            key={job.id}
+            key={job._id} // assuming your job object's identifier is _id
             className="bg-[#FFF4E6] rounded-xl p-6 border border-[#364957]/20 transition-all hover:shadow-lg"
           >
             <div className="flex justify-between items-center mb-4">
@@ -46,9 +51,9 @@ export const JobList = () => {
               </h2>
               <div className="flex items-center gap-4">
                 <span className="px-4 py-2 bg-[#FF8A00]/10 text-[#FF8A00] rounded-full">
-                  {job.status}
+                  {job.job_status} {/* Adjust property name if needed */}
                 </span>
-                {job.applications.length > 0 && (
+                {job.applications && job.applications.length > 0 && (
                   <span className="text-[#364957]/80">
                     {formatDate(job.applications[0]?.appliedDate)} -{" "}
                     {formatDate(
@@ -59,14 +64,15 @@ export const JobList = () => {
               </div>
             </div>
 
-            {selectedJob === job.id ? (
+            {selectedJob === job._id ? (
               <ApplicationList applications={job.applications} />
             ) : (
               <button
-                onClick={() => setSelectedJob(job.id)}
+                onClick={() => setSelectedJob(job._id)}
                 className="w-full py-3 text-[#364957] hover:bg-[#FF8A00]/10 rounded-xl"
               >
-                View {job.applications.length} applications →
+                View {job.applications ? job.applications.length : 0}{" "}
+                applications →
               </button>
             )}
           </div>
