@@ -188,3 +188,114 @@ export async function postChat(chatData: { user_answer: string; session_id: stri
     }
   }
   
+  export const createHRAccount = async (userData: any) => {
+    const token = localStorage.getItem("accessToken");
+  
+    console.log(" [Frontend] Starting HR account creation...");
+    console.log("[Frontend] Retrieved Token:", token);
+  
+    if (!token) {
+      console.error("[Frontend] No authentication token found");
+      return { success: false, error: "Unauthorized: No token provided" };
+    }
+  
+    console.log("[Frontend] Sending request with payload:", JSON.stringify(userData));
+  
+    try {
+      const response = await fetch(`http://localhost:5050/users/hr`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(userData),
+      });
+  
+      console.log("[Frontend] Response received. Status:", response.status);
+  
+      if (!response.ok) {
+        let errorMsg = `HTTP error! Status: ${response.status}`;
+  
+        try {
+          const errorData = await response.json();
+          errorMsg = errorData.error || errorMsg;
+          console.error("[Frontend] Backend returned an error:", errorMsg);
+        } catch (jsonError) {
+          const errorText = await response.text();
+          errorMsg = errorText || errorMsg;
+          console.error("[Frontend] Could not parse error response:", errorMsg);
+        }
+  
+        return { success: false, error: errorMsg };
+      }
+  
+      const data = await response.json();
+      console.log("[Frontend] HR Account Created Successfully:", data);
+      return { success: true, data };
+    } catch (error: unknown) {
+      let errorMessage = "[Frontend] Network error occurred during fetch";
+  
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+  
+      console.error("[Frontend] Network Error:", errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };
+  
+
+  export const updateOwnAccount = async (userData: any) => {
+    const token = localStorage.getItem("accessToken");
+  
+    console.log(" [Frontend] Starting user account update...");
+    console.log("[Frontend] Retrieved Token:", token);
+  
+    if (!token) {
+      console.error("[Frontend] No authentication token found");
+      return { success: false, error: "Unauthorized: No token provided" };
+    }
+  
+    console.log("[Frontend] Sending update request with payload:", JSON.stringify(userData));
+  
+    try {
+      const response = await fetch(`http://localhost:5050/users/me`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(userData),
+      });
+  
+      console.log("[Frontend] Response received. Status:", response.status);
+  
+      if (!response.ok) {
+        let errorMsg = `HTTP error! Status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMsg = errorData.error || errorMsg;
+          console.error("[Frontend] Backend returned an error:", errorMsg);
+        } catch (jsonError) {
+          const errorText = await response.text();
+          errorMsg = errorText || errorMsg;
+          console.error("[Frontend] Could not parse error response:", errorMsg);
+        }
+  
+        return { success: false, error: errorMsg };
+      }
+  
+      const data = await response.json();
+      console.log("[Frontend] User Account Updated Successfully:", data);
+      return { success: true, data };
+    } catch (error: unknown) {
+      let errorMessage = "[Frontend] Network error occurred during fetch";
+  
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+  
+      console.error("[Frontend] Network Error:", errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };

@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
 import { useState } from "react";
+import { updateOwnAccount } from "@/lib/api"; // Import the API function
 
 import {
   Form,
@@ -18,22 +19,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// Validation Schema
 const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
-  }),
   email: z.string().email({
     message: "Please enter a valid email address.",
   }),
   currentPassword: z.string().min(8, {
     message: "Password must be at least 8 characters.",
   }),
-  newPassword: z
-    .string()
-    .min(8, {
-      message: "New password must be at least 8 characters.",
-    })
-    .optional(),
+  newPassword: z.string().min(8, {
+    message: "New password must be at least 8 characters.",
+  }).optional(),
 });
 
 export default function AccountSettingsForm() {
@@ -42,7 +38,6 @@ export default function AccountSettingsForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
       email: "",
       currentPassword: "",
       newPassword: "",
@@ -51,13 +46,24 @@ export default function AccountSettingsForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
+    console.log(" [Frontend] Submitting Account Update:", values);
+
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      toast.success("Settings updated successfully", {
-        description: "Your account changes have been saved",
-      });
+      const response = await updateOwnAccount(values);
+      console.log(" [Frontend] API Response:", response);
+
+      if (response.success) {
+        toast.success("Settings updated successfully", {
+          description: "Your account changes have been saved",
+        });
+        form.reset();
+      } else {
+        toast.error("Update failed", {
+          description: response.error || "There was an error saving your changes",
+        });
+      }
     } catch (error) {
+      console.error(" [Frontend] API Error:", error);
       toast.error("Update failed", {
         description: "There was an error saving your changes",
       });
@@ -98,46 +104,20 @@ export default function AccountSettingsForm() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
-              name="name"
+              name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel
-                    asChild
-                    className="text-[#364957] text-lg font-semibold"
-                  >
-                    <span>First Name</span>
+                  <FormLabel className="text-[#364957] text-lg font-semibold">
+                    Email
                   </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter your first name"
+                      placeholder="Enter email address"
+                      type="email"
+                      {...field}
                       className="border-2 border-[#364957]/20 focus:border-[#FF8A00]
                         focus-visible:ring-[#FF8A00]/50 text-[#364957] placeholder-[#364957]/50
                         transition-all duration-200 hover:border-[#364957]/30 h-12"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel
-                    asChild
-                    className="text-[#364957] text-lg font-semibold"
-                  >
-                    <span>Last Name</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter your last name"
-                      className="border-2 border-[#364957]/20 focus:border-[#FF8A00]
-                        focus-visible:ring-[#FF8A00]/50 text-[#364957] placeholder-[#364957]/50
-                        transition-all duration-200 hover:border-[#364957]/30 h-12"
-                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
@@ -157,10 +137,10 @@ export default function AccountSettingsForm() {
                     <Input
                       placeholder="Enter current password"
                       type="password"
+                      {...field}
                       className="border-2 border-[#364957]/20 focus:border-[#FF8A00]
                         focus-visible:ring-[#FF8A00]/50 text-[#364957] placeholder-[#364957]/50
                         transition-all duration-200 hover:border-[#364957]/30 h-12"
-                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
@@ -180,10 +160,10 @@ export default function AccountSettingsForm() {
                     <Input
                       placeholder="Enter new password (optional)"
                       type="password"
+                      {...field}
                       className="border-2 border-[#364957]/20 focus:border-[#FF8A00]
                         focus-visible:ring-[#FF8A00]/50 text-[#364957] placeholder-[#364957]/50
                         transition-all duration-200 hover:border-[#364957]/30 h-12"
-                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
@@ -194,8 +174,7 @@ export default function AccountSettingsForm() {
             <Button
               type="submit"
               className="w-full bg-[#FF8A00] hover:bg-[#FF8A00]/90 text-[#364957] font-bold
-                text-lg py-6 transition-all duration-300 hover:scale-[1.02] shadow-lg
-                hover:shadow-xl"
+                text-lg py-6 transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl"
             >
               Update Account
             </Button>
