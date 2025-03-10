@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Patch, Param, Body, Req, UseGuards, Delete, Put } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Param, Body, Req, UseGuards, Delete, Put, ForbiddenException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -35,7 +35,7 @@ export class UsersController {
    * Admin can update any user by ID.
    * e.g. reset password, rename user, etc.
    */
-  @Put(':id')
+  @Patch(':id')
   @Roles(UserRole.ADMIN)
   updateAnyUser(@Param('id') id: string, @Body() dto: UpdateUserDto) {
     return this.usersService.updateUserByAdmin(id, dto);
@@ -45,19 +45,26 @@ export class UsersController {
    * HR (or admin) can read their own profile.
    * 'req.user.sub' is the userId from JWT.
    */
-  @Get('me')
+  @Get(':id')
   @Roles(UserRole.HR, UserRole.ADMIN)
-  getMe(@Req() req) {
-    return this.usersService.findOne(req.user.sub);
+  getUser(@Param('id') id: string, @Req() req) {
+    // If the user is HR, ensure the requested :id matches their own
+    if (req.user.role === UserRole.HR && req.user.sub !== id) {
+      throw new ForbiddenException('HR can only retrieve their own record.');
+    }
+    return this.usersService.findOne(id);
   }
 
   /**
-   * HR (or admin) can update their own password, first/last name, etc.
+   * HR (or admin) can update their own password, first/last name
    */
-  @Put('me')
+  @Patch(':id/self')
   @Roles(UserRole.HR, UserRole.ADMIN)
-  updateMe(@Req() req, @Body() dto: UpdateUserDto) {
-    return this.usersService.updateOwnAccount(req.user.sub, dto);
+  updateSelf(@Param('id') id: string, @Body() dto: UpdateUserDto, @Req() req) {
+    if (req.user.role === UserRole.HR && req.user.sub !== id) {
+      throw new ForbiddenException('HR can only update their own account.');
+    }
+    return this.usersService.updateOwnAccount(id, dto);
   }
 
 
