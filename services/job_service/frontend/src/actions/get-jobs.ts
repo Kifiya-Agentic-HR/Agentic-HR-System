@@ -12,6 +12,7 @@ export type Job = {
   job_status: string;
   skills: string[];
   postDate: string;
+  created_at?: string;
 };
 
 

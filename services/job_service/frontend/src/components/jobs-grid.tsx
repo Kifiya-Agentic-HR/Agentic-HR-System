@@ -71,7 +71,7 @@ export default async function JobsGrid({
 
                 {/* Skills */}
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {job.skills.slice(0, 3).map((skill, index) => (
+                  {Object.keys(job.skills).slice(0, 3).map((skill, index) => (
                     <Badge key={index} variant="secondary">
                       {skill}
                     </Badge>
@@ -81,7 +81,7 @@ export default async function JobsGrid({
                 {/* Post Date & Apply Now */}
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-primary/50">
-                    Posted {formatDate(job.postDate)}
+                    {formatDate(job.created_at)}
                   </span>
                   <span className="inline-flex items-center gap-1 text-sm text-[#FF8A00] font-medium">
                     Apply Now
