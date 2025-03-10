@@ -123,7 +123,7 @@ async def manage_session(
                     "chat_history": []
                 }
 
-            cv = await mongo_db.screening_results.find_one({"application_id": ObjectId(interview_data["application_id"])})
+            cv = await mongo_db.screening_results.find_one({"application_id": interview_data["application_id"]})
             parsed_cv = ""
             if not cv:
                 parsed_cv = ""

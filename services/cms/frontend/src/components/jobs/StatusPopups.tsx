@@ -9,17 +9,9 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Application } from "./types";
+import { scheduleInterview } from "@/lib/api"; // Import the function
 
-type StatusPopupProps = {
-  application: Application;
-  type: "screening" | "interview";
-  onClose: () => void;
-  onUpdate: (
-    type: "screening" | "interview",
-    status: string,
-    reasoning?: string
-  ) => void;
-};
+type StatusPopupProps = any;
 
 export const StatusPopup = ({
   application,
@@ -27,13 +19,25 @@ export const StatusPopup = ({
   onClose,
   onUpdate,
 }: StatusPopupProps) => {
+  const defaultScreening = { status: "pending" };
+  const defaultInterview = { interview_status: "pending" };
+
   const currentStatus =
-    type === "screening" ? application.screening : application.interview;
+    type === "screening"
+      ? application?.screening || defaultScreening
+      : application?.interview || defaultInterview;
+
+  const statusValue =
+    type === "screening" ? currentStatus.status : currentStatus.interview_status;
 
   const getStatusDetails = () => {
-    switch (currentStatus.status) {
+    switch (statusValue) {
       case "passed":
-        return { color: "bg-green-100 text-green-800", label: "Passed" };
+      case "hired":
+        return {
+          color: "bg-green-100 text-green-800",
+          label: type === "screening" ? "Passed" : "Hired",
+        };
       case "rejected":
         return { color: "bg-red-100 text-red-800", label: "Rejected" };
       default:
@@ -43,6 +47,16 @@ export const StatusPopup = ({
 
   const statusDetails = getStatusDetails();
 
+  // Function to handle inviting for an interview
+  const handleInvite = async () => {
+    try {
+      await scheduleInterview(application._id); // Call API function
+      onUpdate("screening", "invited"); // Update UI state
+    } catch (error) {
+      console.error("Failed to schedule interview:", error);
+    }
+  };
+
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-md">
@@ -50,15 +64,11 @@ export const StatusPopup = ({
           <DialogTitle className="text-[#364957]">
             {type.charAt(0).toUpperCase() + type.slice(1)} Details
           </DialogTitle>
-          <DialogDescription>
-            {/* Optionally include any additional description here */}
-          </DialogDescription>
+          <DialogDescription></DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div
-            className={`${statusDetails.color} px-3 py-1 rounded-full w-fit`}
-          >
+          <div className={`${statusDetails.color} px-3 py-1 rounded-full w-fit`}>
             {statusDetails.label}
           </div>
 
@@ -82,7 +92,7 @@ export const StatusPopup = ({
                   Reject
                 </Button>
                 <Button
-                  onClick={() => onUpdate("screening", "invited")}
+                  onClick={handleInvite} // Call handleInvite on click
                   className="bg-[#FF8A00] text-[#364957] hover:bg-[#FF8A00]/90"
                   variant="default"
                 >

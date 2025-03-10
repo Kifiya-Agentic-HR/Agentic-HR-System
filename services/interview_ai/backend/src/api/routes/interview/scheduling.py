@@ -58,9 +58,9 @@ async def schedule_interview(
 
         # creating interview record
         interview_data = {
-            "application_id": ObjectId(schedule_request.application_id),
-            "candidate_id": ObjectId(candidate_id),
-            "job_id": ObjectId(job_id),
+            "application_id": str(schedule_request.application_id),
+            "candidate_id": str(candidate_id),
+            "job_id": str(job_id),
             "interview_date": datetime.now(ZoneInfo("Etc/GMT-3")),
             "interview_status": "scheduled", # completed | scheduled | expired | flagged | started
             "skill_assessment": {},
