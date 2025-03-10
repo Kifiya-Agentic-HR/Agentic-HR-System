@@ -43,12 +43,6 @@ export const ApplicationList = ({
         interview_reasoning: reasoning || "",
       };
     }
-    const resp = await updateApplicationStatus(selectedApp._id, updates);
-    if (resp.success) {
-      setSelectedApp(null);
-    } else {
-      console.error(resp.error || "Failed to update status");
-    }
   };
 
   return (
@@ -77,7 +71,7 @@ export const ApplicationList = ({
 
             <div className="col-span-2">
               <Link
-                href={app.cv_link}
+                href={app.cv_link.replace("s3-server", window.location.hostname).replace(":9000", ":9002")}
                 className="text-[#FF8A00] hover:text-[#FF8A00]/80 underline"
                 target="_blank"
               >
@@ -93,12 +87,7 @@ export const ApplicationList = ({
                 }}
                 className="w-full text-left px-3 py-2 rounded-lg border border-[#364957]/20 hover:bg-[#FF8A00]/10 text-[#364957]"
               >
-                {app.screening ? "Completed" : "Pending"}
-                {app.screening && app.screening.reasoning && (
-                  <div className="text-sm text-[#364957]/60 mt-1">
-                    {app.screening.reasoning}
-                  </div>
-                )}
+                {app.screening ? app.screening.score : "Pending"}
               </button>
             </div>
 

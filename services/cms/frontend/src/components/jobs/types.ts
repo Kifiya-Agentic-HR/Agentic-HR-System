@@ -10,7 +10,7 @@ export interface Job {
     cv_link: string;
     created_at: string;
     screening: {
-      status: 'pending' | 'passed' | 'rejected';
+      score: number | null;
       reasoning?: string;
       updatedAt?: string;
     } | null;

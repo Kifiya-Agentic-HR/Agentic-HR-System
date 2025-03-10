@@ -156,3 +156,28 @@ async def get_application(response: Response,application_id: str):
         return {"success": True, "application": application_response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving application: {e}")
+
+@router.patch("/{application_id}/reject", response_model=dict)
+async def reject_application(application_id: str):
+    try:
+        # Attempt to reject the application.
+        result = ApplicationDocument.reject_application(application_id)
+        if result:
+            return {"success": True, "message": f"Application {application_id} rejected successfully."}
+        # In case no application was updated (optional error handling)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Application {application_id} not found.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error rejecting application: {e}")
+
+
+@router.patch("/{application_id}/accept", response_model=dict)
+async def accept_application(application_id: str):
+    try:
+        # Attempt to accept (pass) the application.
+        result = ApplicationDocument.accept_application(application_id)
+        if result:
+            return {"success": True, "message": f"Application {application_id} accepted successfully."}
+        # In case no application was updated (optional error handling)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Application {application_id} not found.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error accepting application: {e}")
