@@ -54,3 +54,5 @@ location: ""
 ## candidate_id = candidate._id
 ## application_id = applications._id
 
+- application_status // passed and rejected
+
