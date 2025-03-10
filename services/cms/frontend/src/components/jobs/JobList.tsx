@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { getJobs, getJobApplications } from "@/lib/api"; // Using real API functions
 import { Job } from "./types";
 import { ApplicationList } from "./ApplicationList";
+import { Chatbot } from "../Chatbot";
+
 
 export const JobList = () => {
   const formatDate = (dateString: string) => {
@@ -79,6 +81,9 @@ export const JobList = () => {
           </div>
         ))}
       </div>
+
+      {/* Add the Chatbot component */}
+      <Chatbot jobs={jobs} />
     </div>
   );
 };

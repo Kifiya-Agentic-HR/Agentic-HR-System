@@ -61,7 +61,7 @@ export default function AuthForm() {
 
       if (!decoded || !decoded.role) {
         console.error("Invalid or missing role in token. Redirecting to default dashboard.");
-        router.push("/dashboard");
+        router.push("/");
         return;
       }
 
@@ -78,7 +78,7 @@ export default function AuthForm() {
       } else if (decoded.role === "hr") {
         router.push("/hr");
       } else {
-        router.push("/dashboard");
+        router.push("/");
       }
     } else {
       console.error("Login failed", result.error);

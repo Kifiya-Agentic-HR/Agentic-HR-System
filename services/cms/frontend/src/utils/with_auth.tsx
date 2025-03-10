@@ -16,20 +16,20 @@ const withAuth = <P extends object>(
       if (typeof window === "undefined") return;
 
       const token = localStorage.getItem("accessToken");
-      const role = localStorage.getItem("userRole"); // Retrieve role from localStorage
+      const role = localStorage.getItem("userRole"); 
 
       console.log("Stored token:", token);
       console.log("Stored user role:", role);
 
       if (!token || !role) {
         console.warn("No token or role found, redirecting to login.");
-        router.push("/"); // Redirect to login if no token or role
+        router.push("/"); 
         return;
       }
 
       if (!allowedRoles.includes(role)) {
         console.warn("User role not authorized, redirecting to unauthorized page.");
-        router.push("/unauthorized"); // Redirect if role is not allowed
+        router.push("/"); 
         return;
       }
 
@@ -43,7 +43,7 @@ const withAuth = <P extends object>(
     }
 
     if (!isAuthenticated) {
-      return null; // Prevent unauthorized content from rendering
+      return null; 
     }
 
     return <WrappedComponent {...props} />;
