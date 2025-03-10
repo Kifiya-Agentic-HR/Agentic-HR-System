@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import type { RefObject } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useFaceDetection } from "@/hooks/useFaceDetection";
 
 export type ViolationType = "MINOR" | "MAJOR" | "CRITICAL";
 
@@ -34,7 +36,8 @@ const VIOLATION_WEIGHTS = {
   BROWSER_BACK: 1.0,
   KEYBOARD_SHORTCUT: 1,
   LONG_INACTIVITY: 0.5,
-  SUSPICIOUS_MOVEMENT: 0.5
+  SUSPICIOUS_MOVEMENT: 0.5,
+  FACE_NOT_FOUND: 0.3
 } as const;
 
 const THRESHOLDS = {
@@ -44,11 +47,14 @@ const THRESHOLDS = {
   MAX_WARNINGS: 5
 } as const;
 
-export function useAntiCheat(isActive: boolean = false) {
+export function useAntiCheat(isActive: boolean = false, videoRef: RefObject<HTMLVideoElement | null>) {
   const { toast } = useToast();
   const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastViolationRef = useRef<number>(0);
+  const violationCooldown = useRef<{ [key: string]: number }>({});
+
+  const faceState = useFaceDetection(videoRef);
 
   const [violations, setViolations] = useState<ViolationState>({
     tabSwitches: 0,
@@ -112,6 +118,55 @@ export function useAntiCheat(isActive: boolean = false) {
       };
     });
   }, []);
+
+  useEffect(() => {
+    if (!isActive) return;
+
+    const handleFaceViolations = () => {
+      const now = Date.now();
+      
+      if (faceState.multipleFaces) {
+        if (!violationCooldown.current.multipleFaces || now - violationCooldown.current.multipleFaces > 10000) {
+          addViolation(
+            "MAJOR",
+            "Multiple faces detected",
+            VIOLATION_WEIGHTS.MULTIPLE_FACES,
+            "System detected more than one face in camera view"
+          );
+          violationCooldown.current.multipleFaces = now;
+        }
+      }
+
+      if (faceState.lookingAway && faceState.lookingAwayStartTime) {
+        const awayDuration = now - faceState.lookingAwayStartTime;
+        
+        if (awayDuration > 10000 && (!violationCooldown.current.lookingAway || now - violationCooldown.current.lookingAway > 10000)) {
+          addViolation(
+            "MAJOR",
+            "Attention Alert",
+            VIOLATION_WEIGHTS.FACE_AWAY,
+            `Looking away from camera for ${Math.round(awayDuration/1000)} seconds`
+          );
+          violationCooldown.current.lookingAway = now;
+        }
+      }
+
+      if (!faceState.isFacePresent) {
+        if (!violationCooldown.current.noFace || now - violationCooldown.current.noFace > 15000) {
+          addViolation(
+            "CRITICAL",
+            "Face not detected",
+            VIOLATION_WEIGHTS.FACE_NOT_FOUND,
+            "No face detected in camera view"
+          );
+          violationCooldown.current.noFace = now;
+        }
+      }
+    };
+
+    const checkInterval = setInterval(handleFaceViolations, 2000);
+    return () => clearInterval(checkInterval);
+  }, [isActive, faceState, addViolation]);
 
   const applyBackgroundBlur = useCallback((blur: boolean) => {
     document.body.style.filter = blur ? 'blur(8px)' : 'none';

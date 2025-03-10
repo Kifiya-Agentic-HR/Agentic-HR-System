@@ -1,13 +1,34 @@
 'use client';
 
-import { RefObject, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 
-// Updated VideoFeed component
-export function VideoFeed({ videoRef }: { videoRef: RefObject<HTMLVideoElement> }) {
-  // Remove local face detection hook usage
+export function VideoFeed({ videoRef }: { videoRef: React.RefObject<HTMLVideoElement> }) {
   const { toast } = useToast();
+  const [dragConstraints, setDragConstraints] = useState({
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0
+  });
+
+  useEffect(() => {
+    const updateConstraints = () => {
+      setDragConstraints({
+        top: 0,
+        left: 0,
+        right: window.innerWidth - 320,
+        bottom: window.innerHeight - 240
+      });
+    };
+
+    window.addEventListener('resize', updateConstraints);
+    updateConstraints();
+    
+    return () => window.removeEventListener('resize', updateConstraints);
+  }, []);
 
   useEffect(() => {
     async function setupCamera() {
@@ -42,7 +63,7 @@ export function VideoFeed({ videoRef }: { videoRef: RefObject<HTMLVideoElement> 
     <motion.div
       drag
       dragConstraints={dragConstraints}
-      className="fixed bottom-4 right-4 w-80 h-60 rounded-lg overflow-hidden shadow-lg z-[100] bg-black"
+      className="fixed bottom-4 left-4 w-80 h-60 rounded-lg overflow-hidden shadow-lg z-[100] bg-black"
     >
       <video 
         ref={videoRef}

@@ -22,6 +22,10 @@ async def get_interview(interview_id: str,
                         mongo_db=Depends(get_mongo_db),
                             ):
     result = await mongo_db.interviews.find_one({"_id": ObjectId(interview_id)})
+    if not result:
+        response.status_code = 404
+        return {"success": False, "status": "not found"}
+    
     status = result.get("interview_status", None)
     if status == "completed":
         return {"success": True, "status": "completed"}
