@@ -24,6 +24,8 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
+
+import { createJob } from "@/lib/api";
 const formSchema = z.object({
   title: z.string().min(5, "Job title must be at least 5 characters"),
   type: z.enum(["inperson", "remote"]),
@@ -36,7 +38,9 @@ const formSchema = z.object({
       })
     )
     .min(1, "At least one skill required"),
-  responsibilities: z.string().min(50, "Responsibilities must be detailed"),
+  responsibilities: z
+    .string()
+    .min(50, "Responsibilities must be at least 50 characters"),
   location: z.string().min(3, "Location must be specified"),
 });
 
@@ -55,15 +59,35 @@ export default function JobPostingForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      toast.success("Job posted successfully", {
-        description: "New job listing has been published",
-      });
-      form.reset();
+      const payload = {
+        title: values.title,
+        description: {
+          summary: "", 
+          type: values.type, 
+          commitment: values.commitment, 
+          qualification_level: "beginner", 
+          responsibilities: values.responsibilities,
+          location: values.location,
+        },
+        job_status: "open",
+        skills: values.skills.map((s) => s.skill),
+      };
+
+      const result = await createJob(payload);
+
+      if (result.success) {
+        toast.success("Job posted successfully", {
+          description: "New job listing has been published",
+        });
+        form.reset();
+      } else {
+        toast.error("Posting failed", {
+          description: result.error || "Error creating the job post",
+        });
+      }
     } catch (error) {
       toast.error("Posting failed", {
-        description: "There was an error creating the job post",
+        description: (error as Error).message || "Network/server error",
       });
     }
   }

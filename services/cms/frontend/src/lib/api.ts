@@ -121,6 +121,20 @@ export async function acceptApplication(id: string) {
   }
 }
 
+export async function updateApplicationStatus(id: string, updates: any) {
+  try {
+    const res = await fetch(`${API_BASE}/applications/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+      body: JSON.stringify(updates),
+    });
+    const data = await res.json();
+    return data; // Expected { success: boolean, application: Application, error?: string }
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to update application status" };
+  }
+}
+
 // ----- INTERVIEW ENDPOINTS -----
 export async function scheduleInterview(application_id: string) {
   try {
