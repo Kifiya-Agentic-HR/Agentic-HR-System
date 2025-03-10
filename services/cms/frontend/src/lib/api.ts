@@ -148,9 +148,9 @@ export async function postChat(chatData: { user_answer: string; session_id: stri
 }
 /*
    @param {Object} authData - The login credentials { email, password }.
- * @returns {Promise<Object>} - Expected response: { success: boolean, token?: string, user?: Object, error?: string }
+ * @returns {Promise<Object>} - Expected response: { success: boolean, token?: string, userId?: string, role?: string, error?: string }
  */
-   export async function login(authData: { email: string; password: string; }): Promise<{ success: boolean; token?: string; user?: any; error?: string; }> {
+   export async function login(authData: { email: string; password: string; }): Promise<{ success: boolean; token?: string; userId?: string; role?: string; error?: string; }> {
     try {
       const res = await fetch(`http://localhost:5050/auth/login`, {
         method: "POST",
@@ -159,7 +159,7 @@ export async function postChat(chatData: { user_answer: string; session_id: stri
       });
   
       // Log the response status for debugging
-      console.log("Response status:", res.status);
+      console.log("🔵 [Frontend] Login response status:", res.status);
   
       if (!res.ok) {
         let errorMsg = "Failed to login";
@@ -170,24 +170,45 @@ export async function postChat(chatData: { user_answer: string; session_id: stri
           const errorText = await res.text();
           errorMsg = errorText || errorMsg;
         }
-        console.error('Login error response:', errorMsg, res.status);
+        console.error("❌ [Frontend] Login error response:", errorMsg, res.status);
         return { success: false, error: errorMsg };
       }
   
       // Parse the JSON response from the backend
       const data = await res.json();
-      // Map the backend's "access_token" to our expected "token" property
-      return { success: true, token: data.access_token };
+      console.log("🟢 [Frontend] Login successful:", data);
+  
+      // Extract token and decode it
+      const token = data.access_token;
+      const decodedToken = JSON.parse(atob(token.split(".")[1])); // Decode JWT payload
+      const userId = decodedToken.sub; // Extract user ID
+      const role = decodedToken.role; // Extract user role
+  
+      if (!userId || !role) {
+        console.error("❌ [Frontend] Invalid token: Missing userId or role.");
+        return { success: false, error: "Invalid token structure." };
+      }
+  
+      // ✅ Save token, userId, and role to localStorage
+      localStorage.setItem("accessToken", token);
+      localStorage.setItem("userId", userId);
+      localStorage.setItem("userRole", role);
+  
+      console.log("🟢 [Frontend] Saved to localStorage:", { token, userId, role });
+  
+      return { success: true, token, userId, role };
     } catch (error: unknown) {
       let errorMessage = "Failed to login";
       if (error instanceof Error && error.message) {
         errorMessage = error.message;
       }
-      console.error('Error in login fetch:', error);
+      console.error("❌ [Frontend] Error in login fetch:", error);
       return { success: false, error: errorMessage };
     }
   }
   
+
+
   export const createHRAccount = async (userData: any) => {
     const token = localStorage.getItem("accessToken");
   
@@ -247,55 +268,61 @@ export async function postChat(chatData: { user_answer: string; session_id: stri
 
   export const updateOwnAccount = async (userData: any) => {
     const token = localStorage.getItem("accessToken");
+    const userId = localStorage.getItem("userId"); // ✅ Get user ID from localStorage
   
-    console.log(" [Frontend] Starting user account update...");
-    console.log("[Frontend] Retrieved Token:", token);
+    console.log("🔵 [Frontend] Starting user account update...");
+    console.log("🟡 [Frontend] Retrieved Token:", token);
+    console.log("🟡 [Frontend] Retrieved User ID:", userId);
   
-    if (!token) {
-      console.error("[Frontend] No authentication token found");
-      return { success: false, error: "Unauthorized: No token provided" };
+    if (!token || !userId) {
+      console.error("❌ [Frontend] No authentication token or user ID found");
+      return { success: false, error: "Unauthorized: No token or user ID provided" };
     }
   
-    console.log("[Frontend] Sending update request with payload:", JSON.stringify(userData));
+    // ✅ Build request dynamically (excluding `email`, ensuring `password` is included)
+    const requestData: Record<string, any> = {
+      password: userData.newPassword, // ✅ Send `currentPassword` as `password`
+    };
+  
+    // ✅ Include `firstName` & `lastName` **only if they exist** (for HR users)
+    if (userData.firstName) requestData.firstName = userData.firstName;
+    if (userData.lastName) requestData.lastName = userData.lastName;
+  
+    console.log("🟡 [Frontend] Adjusted Request Payload:", JSON.stringify(requestData));
   
     try {
-      const response = await fetch(`http://localhost:5050/users/me`, {
-        method: "PATCH",
+      const response = await fetch(`http://localhost:5050/users/${userId}/self`, {
+        method: "PATCH", // ✅ Using PATCH as per backend change
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
         },
-        body: JSON.stringify(userData),
+        body: JSON.stringify(requestData),
       });
   
-      console.log("[Frontend] Response received. Status:", response.status);
+      console.log("🟡 [Frontend] Response received. Status:", response.status);
   
       if (!response.ok) {
         let errorMsg = `HTTP error! Status: ${response.status}`;
         try {
           const errorData = await response.json();
-          errorMsg = errorData.error || errorMsg;
-          console.error("[Frontend] Backend returned an error:", errorMsg);
+          errorMsg = errorData.error || JSON.stringify(errorData); // Log full error message
+          console.error("❌ [Frontend] Backend returned an error:", errorMsg);
         } catch (jsonError) {
           const errorText = await response.text();
           errorMsg = errorText || errorMsg;
-          console.error("[Frontend] Could not parse error response:", errorMsg);
+          console.error("❌ [Frontend] Could not parse error response:", errorMsg);
         }
   
         return { success: false, error: errorMsg };
       }
   
       const data = await response.json();
-      console.log("[Frontend] User Account Updated Successfully:", data);
+      console.log("🟢 [Frontend] User Account Updated Successfully:", data);
       return { success: true, data };
     } catch (error: unknown) {
-      let errorMessage = "[Frontend] Network error occurred during fetch";
-  
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-  
-      console.error("[Frontend] Network Error:", errorMessage);
-      return { success: false, error: errorMessage };
+      console.error("❌ [Frontend] Network Error:", error);
+      return { success: false, error: "Network error occurred" };
     }
   };
+  

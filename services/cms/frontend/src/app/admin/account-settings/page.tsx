@@ -19,6 +19,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// Logout Function
+const logout = () => {
+  console.log("🔴 [Frontend] Logging out...");
+
+  // ✅ Clear authentication-related local storage items
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("userId");
+  localStorage.removeItem("userRole");
+
+  // ✅ Redirect user to the login page
+  setTimeout(() => {
+    window.location.href = "/";
+  }, 50);
+};
+
 // Validation Schema
 const formSchema = z.object({
   email: z.string().email({
@@ -76,9 +91,19 @@ export default function AccountSettingsForm() {
     return (
       <div className="w-full max-w-2xl mx-auto px-4">
         <div className="bg-white rounded-xl shadow-2xl p-8">
-          <h2 className="text-3xl font-bold text-[#364957] mb-8 border-b-2 border-[#FF8A00]/30 pb-4">
-            Account Settings
-          </h2>
+          <div className="flex justify-between items-center mb-8 border-b-2 border-[#FF8A00]/30 pb-4">
+            <h2 className="text-3xl font-bold text-[#364957]">
+              Account Settings
+            </h2>
+            {/* Smaller Logout Button */}
+            <Button
+              onClick={logout}
+              className="bg-[#364957] hover:bg-[#2b3b46] text-white text-sm font-medium px-4 py-2"
+            >
+              Logout
+            </Button>
+          </div>
+
           <div className="space-y-6">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="space-y-2">
@@ -96,9 +121,18 @@ export default function AccountSettingsForm() {
   return (
     <div className="w-full max-w-2xl mx-auto px-4">
       <div className="bg-white rounded-xl shadow-2xl p-8 transition-all duration-300 hover:shadow-3xl hover:-translate-y-1">
-        <h2 className="text-3xl font-bold text-[#364957] mb-8 border-b-2 border-[#FF8A00]/30 pb-4">
-          Account Settings
-        </h2>
+        <div className="flex justify-between items-center mb-8 border-b-2 border-[#FF8A00]/30 pb-4">
+          <h2 className="text-3xl font-bold text-[#364957]">
+            Account Settings
+          </h2>
+          {/* Smaller Logout Button */}
+          <Button
+            onClick={logout}
+            className="bg-red-500 hover:bg-red-700 text-white text-sm font-medium px-4 py-2"
+          >
+            Logout
+          </Button>
+        </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
