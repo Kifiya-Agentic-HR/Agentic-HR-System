@@ -151,3 +151,37 @@ input:focus, select:focus {
   background-color: #364957; /* Change this to your desired color */
   color: white;
 }
+
+
+.PhoneInputCountry {
+  position: relative;
+  margin-right: 0;
+}
+
+.PhoneInputInput {
+  padding-left: 24px !important;
+  
+}
+
+.PhoneInputCountrySelect {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  opacity: 0;
+  z-index: 1;
+  cursor: pointer;
+}
+
+.PhoneInputCountryIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 3px;
+  overflow: hidden;
+}
