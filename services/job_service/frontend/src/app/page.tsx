@@ -26,42 +26,31 @@ export default function HomePage() {
             <p className="text-xl text-primary-foreground/90 mb-8">
               Join Kifiya's team shaping Africa's financial technology landscape
             </p>
-            <div className="max-w-3xl mx-auto bg-white/10 backdrop-blur-sm rounded-lg p-1">
+
+            <div className="max-w-3xl mx-auto bg-white/10 backdrop-blur-sm rounded-lg p-4">
               <form
                 action="/"
                 method="get"
-                className="flex flex-wrap items-center justify-center gap-4 px-4 py-2"
+                className="flex flex-col sm:flex-row sm:flex-wrap items-center justify-center gap-4 px-4 py-2"
               >
-                <div className="flex items-center mb-2">
-                  <label htmlFor="type" className="text-white/80 mr-2">Job Type:</label>
-                  <select
-                    id="type"
-                    name="type"
-                    className="custom-select text-white bg-transparent border-b border-white/20 focus:outline-none focus:ring-0 focus:bg-transparent appearance-none"
-                  >
-                    <option value="">All</option>
-                    <option value="remote">Remote</option>
-                    <option value="in-person">In-Person</option>
-                  </select>
-                </div>
-                <div className="flex items-center mb-2">
-                  <input
-                    type="text"
-                    name="search"
-                    placeholder="Search roles"
-                    className="custom-select text-white bg-transparent border-b border-white/20 focus:outline-none focus:ring-0 focus:bg-transparent"
-                  />
-                </div>
-                <div className="flex items-center mb-2">
-                  <input
-                    type="text"
-                    name="skills"
-                    placeholder="Skills (comma-separated)"
-                    className="custom-select text-white bg-transparent border-b border-white/20 focus:outline-none focus:ring-0 focus:bg-transparent"
-                  />
-                </div>
-                <Button type="submit" variant="ghost" className="text-white hover:bg-white/70 p-2">
-                  <ArrowUpRight className="w-5 h-5" />
+              
+                
+                <input
+                  type="text"
+                  name="search"
+                  placeholder="Title"
+                  className="text-white bg-transparent border-b border-white/20 focus:outline-none focus:ring-0 focus:bg-transparent w-full sm:w-auto"
+                />
+                
+                <input
+                  type="text"
+                  name="skills"
+                  placeholder="Skills (comma-separated)"
+                  className="text-white bg-transparent border-b border-white/20 focus:outline-none focus:ring-0 focus:bg-transparent w-full sm:w-auto"
+                />
+                
+                <Button type="submit" variant="ghost" className="text-white hover:bg-white/70 p-2 flex items-center">
+                  Search <ArrowUpRight className="w-5 h-5" />
                 </Button>
               </form>
             </div>

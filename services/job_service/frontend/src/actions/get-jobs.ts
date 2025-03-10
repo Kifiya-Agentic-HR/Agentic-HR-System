@@ -1,5 +1,3 @@
-const simulateDelay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
 export type Job = {
   _id: string;
   title: string;
@@ -12,12 +10,13 @@ export type Job = {
   job_status: string;
   skills: string[];
   postDate: string;
-  created_at?: string;
+  created_at: string;
 };
 
 
 const jobTypeMap: Record<string, string> = {
   in_person: "In Person",
+  inperson: "In Person",
   remote: "Remote",
   hybrid: "Hybrid",
 };
