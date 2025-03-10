@@ -65,7 +65,7 @@ final_evaluation_task:
       "state": "completed",
       "text": "Professional 2-3 sentence message with: 1) Thanking and Process acknowledgment 2) That they will be communicated for further steps",
       "hiring_decision": "Hire/No Hire/On Queue",
-      "reasoning": "Structured as: 1) Skill Analysis from Conversation 2) Conversation Evidence 3) Role Alignment 4) Decision Rationale",
+      "reasoning": "A string Structured as: 1) Skill Analysis from Conversation 2) Conversation Evidence 3) Role Alignment 4) Decision Rationale",
       "skills": "same as your input" 
     }
 

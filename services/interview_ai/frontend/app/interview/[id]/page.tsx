@@ -27,21 +27,11 @@ export default function Interview() {
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
 
   // Expose toggleFullScreen from the anti-cheat hook (if needed later)
-  const { violations, toggleFullScreen } = useAntiCheat(isInterviewStarted);
+  const { violations } = useAntiCheat(isInterviewStarted);
 
   // This function is invoked directly via the PreInterviewCheck button click.
   // Calling requestFullscreen() synchronously here ensures it counts as a user gesture.
   const handleStartInterview = () => {
-    document.documentElement.requestFullscreen().catch((error) => {
-      toast({
-        variant: "destructive",
-        title: "Fullscreen required",
-        description:
-          "Please allow fullscreen to continue with the interview. If you are using a mobile device, please rotate your device to landscape mode.",
-        duration: 3000,
-      });
-    });
-
     setIsInterviewStarted(true);
     setIsCheckComplete(true);
   };
@@ -72,7 +62,7 @@ export default function Interview() {
 
   useEffect(() => {
     const majorViolation = violations.violations.find(
-      (v) => v.type === "MAJOR" || v.type === "CRITICAL"
+      (v) => v.type === "MAJOR" || v.type === "CRITICAL" || v.type === "MINOR"
     );
 
     if (majorViolation) {
