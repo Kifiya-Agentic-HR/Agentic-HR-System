@@ -12,9 +12,10 @@ export const ApplicationList = ({ applications }: { applications: Application[] 
   // Format date to DD/MM/YYYY
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return ${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()};
+    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
   };
 
+  // Ensure applications are structured correctly
   const transformData = (rawData: any[]) => {
     return rawData.reduce((acc, { field, value }) => {
       acc[field.toLowerCase().replace(/\s+/g, "_")] = value;
@@ -30,12 +31,12 @@ export const ApplicationList = ({ applications }: { applications: Application[] 
       const score = status === "completed" ? 80 : status === "pending" ? 0 : parseInt(status, 10);
       updates.screening = {
         score: isNaN(score) ? null : score,
-        reasoning: reasoning  "",
+        reasoning: reasoning || "",
       };
     } else if (type === "interview") {
       updates.interview = {
         interview_status: status,
-        interview_reasoning: reasoning  "",
+        interview_reasoning: reasoning || "",
       };
     }
   };
@@ -62,7 +63,8 @@ export const ApplicationList = ({ applications }: { applications: Application[] 
                   ? "Passed"
                   : "Failed"
                 : "Pending";
-return (
+
+            return (
               <div
                 key={app._id}
                 className="grid grid-cols-7 gap-4 items-center bg-white border-b p-4 hover:bg-gray-50 transition-all"
