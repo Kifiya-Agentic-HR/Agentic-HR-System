@@ -147,12 +147,8 @@ class ApplicationDocument(BaseDocument):
                 logger.info("REACH APPS fetching candidate")
                 app["_id"] = str(app["_id"])
                 candidate = CandidateDocument.get_candidate_by_id(app['candidate_id'])
-                candidate 
-                logger.info(f"Candiadte {candidate} Fetching Screening")
                 screening = ScreeningResultDocument.get_by_application_id(app["_id"]) 
-                logger.info(f"Screening {screening} Fetching interview")
                 interview = InterviewsDocument.get_interview_by_app_id(app["_id"])
-                logger.info(f"interview {interview} Fetching")
                 app["job_id"] = str(app["job_id"])
                 app["candidate"] = candidate
                 app['screening'] = screening
@@ -161,7 +157,6 @@ class ApplicationDocument(BaseDocument):
                     app['screening']['_id'] = str(app['screening']['_id'])
                 if app['interview']:
                     app['interview']['_id'] = str(app['interview']['_id'])
-                logger.info(f"Final: {app}")
 
             return applications
         except Exception as e:

@@ -1,6 +1,23 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:9000"; 
 const INTERVIEW_BASE = process.env.NEXT_PUBLIC_INTERVIEW_BASE || "http://localhost:8080/api/v1";
 
+interface JobCreate {
+  title: string;
+  description: {
+    summary: string;
+    type: "inperson" | "remote";
+    commitment: "full_time" | "part_time" | "internship";
+    qualification_level?: string;
+    responsibilities: string;
+    location: string;
+  };
+  commitment?: string;
+  type?: string;
+  job_status?: string;
+  post_date?: Date;
+  skills: Record<string, Record<string, string>>;
+}
+
 // ----- JOBS ENDPOINTS -----
 export async function getJobs() {
   try {
@@ -114,6 +131,20 @@ export async function acceptApplication(id: string) {
     return data; // Expected { success: boolean, application: Application, error?: string }
   } catch (error: any) {
     return { success: false, error: error.message || "Failed to fetch application" };
+  }
+}
+
+export async function jobPost(jobData: JobCreate) {
+  try {
+    const res = await fetch(`${API_BASE}/jobs`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(jobData),
+    });
+    const data = await res.json();
+    return data; // Expected { success: boolean, job: Job, error?: string }
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to create job" };
   }
 }
 

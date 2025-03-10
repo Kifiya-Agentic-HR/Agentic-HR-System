@@ -12,7 +12,7 @@ export const ApplicationList = ({ applications }: { applications: Application[] 
   // Format date to DD/MM/YYYY
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return ${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()};
+    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
   };
 
   const transformData = (rawData: any[]) => {
@@ -24,20 +24,6 @@ export const ApplicationList = ({ applications }: { applications: Application[] 
 
   // Function to handle status updates
   const handleStatusUpdate = async (type: "screening" | "interview", status: string, reasoning?: string) => {
-    if (!selectedApp) return;
-    let updates: any = {};
-    if (type === "screening") {
-      const score = status === "completed" ? 80 : status === "pending" ? 0 : parseInt(status, 10);
-      updates.screening = {
-        score: isNaN(score) ? null : score,
-        reasoning: reasoning  "",
-      };
-    } else if (type === "interview") {
-      updates.interview = {
-        interview_status: status,
-        interview_reasoning: reasoning  "",
-      };
-    }
   };
 
   return (
