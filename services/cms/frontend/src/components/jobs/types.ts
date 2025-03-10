@@ -6,18 +6,30 @@ export interface Job {
   }
   
   export interface Application {
-    id: string;
-    candidateName: string;
-    cvLink: string;
-    appliedDate: string;
+    _id: string;
+    cv_link: string;
+    created_at: string;
     screening: {
       status: 'pending' | 'passed' | 'rejected';
       reasoning?: string;
       updatedAt?: string;
-    };
+    } | null;
     interview: {
-      status: 'not-started' | 'scheduled' | 'completed' | 'hired' | 'rejected';
+      interview_status: 'not-started' | 'scheduled' | 'completed' | 'hired' | 'rejected';
+      hiring_decision?: string;
+      interview_reasoning?: string;
       reasoning?: string;
       updatedAt?: string;
-    };
+
+    } | null;
+    candidate: {
+      _id: string;
+      email: string;
+      phone_number: string;
+      experience_years: string;
+      feedback: string;
+      full_name: string;
+      disability: string;
+      skills: string[];
+    }
   }

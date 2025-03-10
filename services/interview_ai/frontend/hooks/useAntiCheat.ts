@@ -25,23 +25,23 @@ export interface ViolationState {
 }
 
 const VIOLATION_WEIGHTS = {
-  COPY_PASTE: 1.0,
-  FACE_AWAY: 1.0,
-  TAB_SWITCH: 2.0,
-  WINDOW_MINIMIZE: 2.0,
-  MULTIPLE_FACES: 3.0,
-  FOCUS_LOSS: 2.5,
+  COPY_PASTE: 0.5,
+  FACE_AWAY: 0.01,
+  TAB_SWITCH: 0.5,
+  WINDOW_MINIMIZE: 1.0,
+  MULTIPLE_FACES: 2.0,
+  FOCUS_LOSS: 0.05,
   FULLSCREEN_EXIT: 0.05,
-  BROWSER_BACK: 2.0,
-  KEYBOARD_SHORTCUT: 1.0,
-  LONG_INACTIVITY: 3.0,
-  SUSPICIOUS_MOVEMENT: 1.5
+  BROWSER_BACK: 1.0,
+  KEYBOARD_SHORTCUT: 0.5,
+  LONG_INACTIVITY: 0.5,
+  SUSPICIOUS_MOVEMENT: 0.5
 } as const;
 
 const THRESHOLDS = {
-  INACTIVITY: 10000, // 10 seconds
+  INACTIVITY: 40000, // 10 seconds
   WARNING: 3,        // Total violations before warning
-  CRITICAL: 10,       // Total violations before critical warning
+  CRITICAL: 5,       // Total violations before critical warning
   MAX_WARNINGS: 5    // Maximum number of warnings before automatic termination
 } as const;
 
@@ -51,6 +51,7 @@ export function useAntiCheat(isActive: boolean = false) {
   const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastViolationRef = useRef<number>(0);
   const fullscreenRetryRef = useRef<number>(0);
+  const fullscreenIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const [violations, setViolations] = useState<ViolationState>({
     tabSwitches: 0,
@@ -270,27 +271,41 @@ export function useAntiCheat(isActive: boolean = false) {
     };
 
     // Updated handleFullscreenChange function
-const handleFullscreenChange = () => {
-  if (!document.fullscreenElement) {
-    addViolation(
-      "MINOR",
-      "Fullscreen exited",
-      VIOLATION_WEIGHTS.FULLSCREEN_EXIT,
-      "Interview must remain in fullscreen mode"
-    );
-    
-    const retryInterval = setInterval(() => {
-      if (!document.fullscreenElement && fullscreenRetryRef.current < 3) {
-        document.documentElement.requestFullscreen().catch(() => {
-          fullscreenRetryRef.current++;
-        });
-      } else {
-        clearInterval(retryInterval);
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement) {
+        addViolation(
+          "MINOR",
+          "Fullscreen exited",
+          VIOLATION_WEIGHTS.FULLSCREEN_EXIT,
+          "Interview must remain in fullscreen mode"
+        );
+        
+        // Only create a new interval if one isn’t already running
+        if (!fullscreenIntervalRef.current) {
+          fullscreenIntervalRef.current = setInterval(() => {
+            // Check if fullscreen has been achieved
+            if (document.fullscreenElement) {
+              clearInterval(fullscreenIntervalRef.current!);
+              fullscreenIntervalRef.current = null;
+              fullscreenRetryRef.current = 0;
+            } else if (fullscreenRetryRef.current < 3) {
+              document.documentElement.requestFullscreen().catch(() => {
+                fullscreenRetryRef.current++;
+              });
+            } else {
+              clearInterval(fullscreenIntervalRef.current!);
+              fullscreenIntervalRef.current = null;
+              fullscreenRetryRef.current = 0;
+            }
+          }, 1000);
+        }
+      } else if (fullscreenIntervalRef.current) {
+        // If fullscreen is active but an interval exists, clear it
+        clearInterval(fullscreenIntervalRef.current);
+        fullscreenIntervalRef.current = null;
         fullscreenRetryRef.current = 0;
       }
-    }, 1000);
-  }
-};
+    };
 
   // Update requestFullscreen function
   const requestFullscreen = async (retries = 3) => {

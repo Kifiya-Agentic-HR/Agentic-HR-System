@@ -1,4 +1,5 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || ""; 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:9000"; 
+const INTERVIEW_BASE = process.env.NEXT_PUBLIC_INTERVIEW_BASE || "http://localhost:8080/api/v1";
 
 // ----- JOBS ENDPOINTS -----
 export async function getJobs() {
@@ -109,12 +110,12 @@ export async function updateApplicationStatus(id: string, updates: any) {
 }
 
 // ----- INTERVIEW ENDPOINTS -----
-export async function scheduleInterview(scheduleData: { application_id: string; candidate_id: string }) {
+export async function scheduleInterview(application_id: string) {
   try {
-    const res = await fetch(`${API_BASE}/schedule`, {
+    const res = await fetch(`${INTERVIEW_BASE}/interview/schedule`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(scheduleData),
+      body: JSON.stringify({ application_id: application_id }),
     });
     const data = await res.json();
     return data; // Expected { success: boolean }
