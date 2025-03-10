@@ -13,7 +13,7 @@ class JobDescription(BaseModel):
     summary: str
     type: Literal["inperson", "remote"]
     commitment: Literal["full_time", "part_time", "internship"]
-    qualification_level: Literal["beginner", "intermediate", "expert"]
+    qualification_level: Optional[str] = ""
     responsibilities: str
     location: str
 
@@ -22,10 +22,11 @@ class JobBase(BaseModel):
     description: JobDescription
     job_status: Optional[str] = "open"
     post_date: Optional[datetime] = None
-    skills: List[str] = []
+    skills: dict[str, dict[str, str]]
 
 class JobCreate(JobBase):
     pass
+
 
 class JobUpdate(BaseModel):
     title: Optional[str] = None

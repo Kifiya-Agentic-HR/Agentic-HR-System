@@ -2,21 +2,43 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Briefcase, Clock, MapPin } from 'lucide-react';
+import { Briefcase, Clock, MapPin, Lock, BookOpenText, BrainCircuit, Users, CheckCircle } from 'lucide-react';
 import ApplyForm from '@/components/apply-form';
 import { getJob,  Job } from '@/actions/get-jobs';
 import { motion, AnimatePresence } from 'framer-motion';
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 
 const PRIMARY_COLOR = '#364957';
 const SECONDARY_COLOR = '#FF8A00';
 
+function parseListItems(htmlString: string) {
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlString, 'text/html');
+    const listItems = Array.from(doc.querySelectorAll('li'));
+    
+    if (listItems.length > 0) {
+      return listItems.map(li => {
+        // Extract text from <p> if exists, otherwise use li text
+        const p = li.querySelector('p');
+        return p ? p.textContent || '' : li.textContent || '';
+      });
+    }
+    
+    // Fallback for plain text with newlines
+    return htmlString.split('\n').filter(line => line.trim());
+  } catch (e) {
+    // Fallback for invalid HTML
+    return htmlString.split('\n').filter(line => line.trim());
+  }
+}
 
 export default function JobApplicationPage() {
   const params = useParams();
   const jobId = params?.jobId as string;
   const router = useRouter();
 
-  
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
@@ -37,7 +59,18 @@ export default function JobApplicationPage() {
   }, [jobId, router]);
 
   if (loading) {
-    return <div className="container max-w-7xl py-12 text-center">Loading...</div>;
+    return (
+      <div className="container max-w-6xl py-12">
+        <Skeleton height={80} className="mb-8" baseColor={`${PRIMARY_COLOR}20`} />
+        <div className="grid lg:grid-cols-2 gap-12">
+          <div className="space-y-8">
+            <Skeleton count={5} baseColor={`${PRIMARY_COLOR}20`} />
+            <Skeleton height={300} baseColor={`${PRIMARY_COLOR}20`} />
+          </div>
+          <Skeleton height={600} baseColor={`${PRIMARY_COLOR}20`} />
+        </div>
+      </div>
+    );
   }
 
   if (showPopup) {
@@ -47,18 +80,21 @@ export default function JobApplicationPage() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          className="fixed inset-0 flex items-center justify-center bg-white backdrop-blur-sm"
+          className="fixed inset-0 flex items-center justify-center bg-white/90 backdrop-blur-sm"
         >
-          <div className="bg-white p-6 rounded-xl shadow-2xl max-w-sm text-center">
-            <h2 className="text-2xl font-bold text-red-500">Application Closed</h2>
-            <p className="text-primary/80 mt-2">
-              We're sorry, but we are no longer accepting applications for this job.
+          <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md text-center border border-gray-200">
+            <div className="flex justify-center mb-4">
+              <Lock className="w-12 h-12 text-red-500" strokeWidth={1.5} />
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Application Closed</h2>
+            <p className="text-gray-600 mb-6">
+              This position is no longer accepting applications. Check back later for new opportunities!
             </p>
             <button
               onClick={() => router.back()} 
-              className="mt-4 bg-black text-white px-4 py-2 rounded-lg"
+              className="w-full bg-[#FF8A00] text-white px-6 py-3 rounded-lg hover:bg-[#E67A00] transition-colors font-medium shadow-sm"
             >
-              Go Back
+              Explore Other Roles
             </button>
           </div>
         </motion.div>
@@ -68,101 +104,111 @@ export default function JobApplicationPage() {
 
   if (!job) {
     return (
-      <div className="container max-w-7xl py-12 text-center">
-        <h2 className="text-3xl font-bold text-primary">Job Not Found</h2>
-        <p className="text-primary/70">The job you are looking for does not exist or has been removed.</p>
+      <div className="container max-w-6xl py-24 text-center">
+        <h2 className="text-4xl font-bold text-[#364957] mb-4">Opportunity Not Found</h2>
+        <p className="text-[#364957]/80 max-w-md mx-auto">
+          The position you're looking for has either been filled or is no longer available.
+        </p>
       </div>
     );
   }
 
   return (
-    <>
-      <div className="min-h-screen bg-gradient-to-b bg-[#fff4e6] p-6 shadow-2xl rounded-b-3xl mb-6">
-        <div className="container max-w-7xl py-12">
-          <div className="grid lg:grid-cols-2 gap-12 items-start">
-            {/* Job details */}
+    <div className="bg-white">
+      <div className="bg-gradient-to-b from-gray-50 to-white border-b border-gray-100">
+        <div className="container max-w-7xl py-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="grid lg:grid-cols-2 gap-12 items-start"
+          >
             <div className="space-y-8">
-              <div className="border-b-2 pb-8">
-                <h1 className="text-4xl font-bold text-[#364957] mb-4">{job.title}</h1>
-                <div className="flex flex-wrap gap-4">
-                  <div className="flex items-center gap-2 text-primary/80">
+              <div className="space-y-4">
+                <button
+                  onClick={() => router.back()}
+                  className="text-[#364957] hover:text-[#2a3844] flex items-center gap-2 mb-8 font-medium"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+                  Back to Careers
+                </button>
+                <h1 className="text-4xl font-bold text-[#364957] leading-tight">{job.title}</h1>
+                <div className="flex flex-wrap gap-3">
+                  <div className="flex items-center gap-2 text-[#364957] bg-[#364957]/10 px-4 py-2 rounded-full">
                     <Briefcase className="w-5 h-5" />
-                    <span>{job.job_status}</span>
+                    <span className="text-sm font-medium">{job.job_status.toUpperCase()}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-primary/80">
+                  <div className="flex items-center gap-2 text-[#364957] bg-[#364957]/10 px-4 py-2 rounded-full">
                     <MapPin className="w-5 h-5" />
-                    <span>{job.description.type}</span>
+                    <span className="text-sm font-medium">{job.description.type}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-primary/80">
+                  <div className="flex items-center gap-2 text-[#364957] bg-[#364957]/10 px-4 py-2 rounded-full">
                     <Clock className="w-5 h-5" />
-                    <span>{job.description.commitment}</span>
+                    <span className="text-sm font-medium">{job.description.commitment}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Job Description */}
               <div className="prose max-w-none">
-                <h2 className="text-2xl font-semibold text-[#364957] mb-4">About the Role</h2>
-                <p className="text-primary/80">{job.description.summary}</p>
+                <h2 className="text-2xl font-semibold text-[#364957] mb-6 flex items-center gap-2">
+                  <BookOpenText className="w-6 h-6 text-[#FF8A00]" />
+                  About the Role
+                </h2>
+                <p className="text-[#364957]/90 leading-relaxed">{job.description.summary}</p>
 
-                <h3 className="text-xl font-semibold text-[#364957] mt-8 mb-4">Requirements</h3>
-                <p className="text-primary/80">{job.description.responsibilities}</p>
-
-
-                {/* Skills Section
-                <h3 className="text-xl font-semibold text-[#364957] mt-8 mb-4">Skills Required</h3>
-                <ul className="flex flex-wrap gap-2 text-primary/80">
-                  {Array.isArray(job.skills) && job.skills.length > 0 ? (
-                    job.skills.map((skill, index) => (
-                      <li key={index} className="bg-gray-200 px-3 py-1 rounded-lg text-sm">
-                        {skill}
-                      </li>
-                    ))
-                  ) : (
-                    <p className="text-primary/60">No specific skills mentioned.</p>
-                  )}
-                </ul> */}
+                <h3 className="text-xl font-semibold text-[#364957] mt-12 mb-6 flex items-center gap-2">
+                  <CheckCircle className="w-6 h-6 text-[#FF8A00]" />
+                  What You'll Do
+                </h3>
+                <ul className="grid gap-3">
+                  {parseListItems(job.description.responsibilities).map((item, index) => (
+                    <li key={index} className="flex items-start gap-3 text-[#364957]/90">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF8A00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check-circle w-5 h-5 flex-shrink-0 mt-1">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <path d="m9 11 3 3L22 4"/>
+                      </svg>
+                      <span dangerouslySetInnerHTML={{ __html: item }} />
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
 
-            <div className="h-full self-start">
+            <div className="sticky top-24 bg-white rounded-xl shadow-lg border border-[#364957]/20">
               <ApplyForm jobId={jobId} />
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
 
-      <div className="container max-w-7xl py-14 p-8" style={{ borderColor: `${PRIMARY_COLOR}20` }}>
-        <h2 className="text-2xl font-bold mb-8  text-center" style={{ color: PRIMARY_COLOR }}>
-          Our Hiring Process
+      <div className="container max-w-6xl py-16">
+        <h2 className="text-3xl font-bold text-[#364957] mb-12 text-center">
+          Our Hiring Journey
         </h2>
         <div className="grid md:grid-cols-3 gap-8">
-          {['Application Review', 'AI Interview', 'Team Interview'].map((step, i) => (
-            <div
-              key={step}
-              className="text-center p-9 rounded-xl"
-              style={{
-                backgroundColor: `${PRIMARY_COLOR}08`,
-                border: `1px solid ${PRIMARY_COLOR}20`,
-              }}
+          {[
+            { icon: BookOpenText, title: 'Application Review', duration: '1-2 days' },
+            { icon: BrainCircuit, title: 'Skills Assessment', duration: '3-5 days' },
+            { icon: Users, title: 'Team Interview', duration: '1 week' },
+          ].map((step, i) => (
+            <motion.div
+              key={step.title}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className="bg-white p-8 rounded-xl border border-[#364957]/20 hover:border-[#FF8A00]/40 transition-all group relative"
             >
-              <div
-                className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 "
-                style={{
-                  backgroundColor: `${SECONDARY_COLOR}15`,
-                  color: SECONDARY_COLOR,
-                }}
-              >
-                <span className="font-bold">{i + 1}</span>
+              <div className="absolute inset-0 rounded-xl border-2 border-[#FF8A00] opacity-0 group-hover:opacity-20 transition-opacity pointer-events-none"></div>
+              <div className="flex flex-col items-center text-center">
+                <div className="w-16 h-16 rounded-2xl bg-[#FF8A00]/10 flex items-center justify-center mb-6">
+                  <step.icon className="w-8 h-8 text-[#FF8A00]" />
+                </div>
+                <h3 className="text-xl font-semibold text-[#364957] mb-2">{step.title}</h3>
+                <p className="text-[#364957]/80 text-sm">{step.duration}</p>
               </div>
-              <h3 className="font-semibold mb-2" style={{ color: PRIMARY_COLOR }}>
-                {step}
-              </h3>
-              <p style={{ color: `${PRIMARY_COLOR}AA` }}>Typically 1-2 business days</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
-    </>
+    </div>
   );
 }

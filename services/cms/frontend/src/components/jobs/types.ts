@@ -7,29 +7,46 @@ export interface Job {
   
   export interface Application {
     _id: string;
-    cv_link: string;
+    job_id: string;
     created_at: string;
-    screening: {
-      score: number | null;
-      reasoning?: string;
-      updatedAt?: string;
-    } | null;
-    interview: {
-      interview_status: 'not-started' | 'scheduled' | 'completed' | 'hired' | 'rejected';
-      hiring_decision?: string;
-      interview_reasoning?: string;
-      reasoning?: string;
-      updatedAt?: string;
-
-    } | null;
+    cv_link: string;
+    application_status: 'pending' | 'hired' | 'rejected';
     candidate: {
       _id: string;
+      full_name: string;
       email: string;
       phone_number: string;
       experience_years: string;
-      feedback: string;
-      full_name: string;
       disability: string;
       skills: string[];
-    }
+      feedback: string;
+    };
+    screening: {
+      _id: string;
+      score: number;
+      reasoning: Array<{
+        criterion: string;
+        evidence: string[];
+        missing_elements: string[];
+      }>;
+      parsed_cv?: string;
+      created_at: string;
+    } | null;
+    interview: {
+      _id: string;
+      interview_status: 'not-started' | 'scheduled' | 'completed' | 'flagged';
+      interview_date?: string;
+      hiring_decision?: 'Hire' | 'No Hire';
+      interview_reasoning?: string;
+      violations?: string;
+      conversation_history?: string[];
+      score?: number;
+      skill_assessment?: Record<string, {
+        score: number;
+        required_level: string;
+        number_of_questions: number;
+        evidence: string;
+      }>;
+      created_at: string;
+    } | null;
   }
