@@ -52,7 +52,7 @@ export const JobList = () => {
       <div className="grid gap-8">
         {jobs.map((job) => (
           <div
-            key={job._id}
+            key={job.id}
             className="bg-[#FFF4E6] rounded-xl p-6 border border-[#364957]/20 transition-all hover:shadow-lg"
           >
             <div className="flex justify-between items-center mb-4">
@@ -61,16 +61,16 @@ export const JobList = () => {
               </h2>
               <div className="flex items-center gap-4">
                 <span className="px-4 py-2 bg-[#FF8A00]/10 text-[#FF8A00] rounded-full">
-                  {job.job_status}
+                  {job.status}
                 </span>
               </div>
             </div>
 
-            {selectedJob === job._id ? (
+            {selectedJob === job.id ? (
               <ApplicationList applications={selectedApps} />
             ) : (
               <button
-                onClick={() => handleViewApplications(job._id)}
+                onClick={() => handleViewApplications(job.id)}
                 className="w-full py-3 text-[#364957] hover:bg-[#FF8A00]/10 rounded-xl"
               >
                 View applications →

@@ -7,7 +7,7 @@ export class JobsService {
   private readonly baseUrl: string;
 
   constructor(private readonly httpService: HttpService) {
-    this.baseUrl = process.env.JOB_PORTAL_PORT || 'http://localhost:5000';
+    this.baseUrl = process.env.JOB_PORTAL_PORT || 'http://localhost:9000';
   }
 
   async findAll() {
