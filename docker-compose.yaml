@@ -109,6 +109,19 @@ services:
     networks:
       - app_network
 
+  job_service_frontend:
+    build: ./services/job_service/frontend
+    container_name: job_service_frontend
+    ports:
+      - "${JOB_PORTAL_PORT}:3000"
+    env_file: .env
+    environment:
+      BASE_API_URL: "http://localhost:${JOB_APPLICATION_PORT}"
+    networks:
+      - app_network
+    restart: unless-stopped
+
+
   screening_consumer:
     build:
       context: ./services/screen_service/

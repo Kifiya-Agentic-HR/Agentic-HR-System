@@ -1,32 +1,48 @@
+print("Consumer script started")
+import time
+start = time.time()
 import asyncio
 import json
 import logging
-from src.service.screening_service import scoreResume
-from config_local import Config
-import aio_pika
 from concurrent.futures import ThreadPoolExecutor
+import aio_pika
+from config_local import Config
 from src.models import ScreeningResultDocument
+import sys
+m = time.time() - start
+print(f"Time taken to import: {m}")
+from src.service.screening_service import scoreResume
+print(f"Time taken to import scoreResume: {time.time() - (m+start)}")
+
 # Configure logging
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.INFO)
+logging.basicConfig(level=logging.INFO, handlers=[handler])
 logger = logging.getLogger(__name__)
 
-# ThreadPool for running synchronous operations asynchronously
+# ThreadPool for running blocking (synchronous) operations asynchronously
 executor = ThreadPoolExecutor()
+
 async def process_message(message: aio_pika.IncomingMessage):
     async with message.process():
-        try: 
-
+        try:
             logger.info("Processing message...")
             data = json.loads(message.body.decode())
 
-            # Extract job details
+            # Extract job details and resume_path
             job_data = data.get("job")
             application_id = data.get("application_id")
-            
+            resume_path = data.get("resume_path")
 
-            llm_output, kw_score, vec_score, parsed_resume = scoreResume(
-                job_data, data.get("resume_path")
+            # Offload the blocking scoreResume call to the thread pool
+            loop = asyncio.get_running_loop()
+            llm_output, kw_score, vec_score, parsed_resume = await loop.run_in_executor(
+                executor, scoreResume, job_data, resume_path
             )
-            final_score = (llm_output["overall_score"] * 0.6) + kw_score + vec_score
+
+            # Calculate final score safely, defaulting overall_score to 0 if missing
+            overall_score = llm_output.get("overall_score", 0)
+            final_score = (overall_score * 0.6) + kw_score + vec_score
 
             result = {
                 "application_id": application_id,
@@ -35,23 +51,23 @@ async def process_message(message: aio_pika.IncomingMessage):
                 "parsed_cv": parsed_resume,
             }
 
-            # Save result to MongoDB asynchronously
-            await asyncio.get_running_loop().run_in_executor(
+            # Save result to MongoDB asynchronously using the executor
+            await loop.run_in_executor(
                 executor, ScreeningResultDocument.create_result, result
             )
 
-            logger.info(f"Consumer : Successfully processed application")
+            logger.info(f"Consumer: Successfully processed application {application_id}")
 
         except json.JSONDecodeError:
             logger.error("Failed to decode JSON from message body.")
         except Exception as e:
-            logger.exception(f"Error processing message: {e}")
+            logger.error(f"Error processing message: {e}")
 
 async def consume_messages():
     """Consumes messages from RabbitMQ and processes them."""
     try:
-        logger.info("consuming ")
-        connection = await aio_pika.connect_robust(url=Config.RABBITMQ_URL)
+        logger.info("Starting consumer...")
+        connection = await aio_pika.connect_robust(Config.RABBITMQ_URL)
         async with connection:
             channel = await connection.channel()
             queue = await channel.declare_queue(Config.QUEUE_NAME, durable=True)
@@ -59,13 +75,14 @@ async def consume_messages():
             logger.info(" [*] Waiting for messages. To exit press CTRL+C")
             await queue.consume(process_message)
 
-            # Keep running
+            # Keep running indefinitely
             await asyncio.Future()
     except Exception as e:
         logger.exception(f"Error in message consumption: {e}")
 
 if __name__ == "__main__":
     try:
+        print(f"Consumer script started, time taken: {time.time() - start}")
         logger.info("CONSUMER RUNNING")
         asyncio.run(consume_messages())
     except KeyboardInterrupt:
