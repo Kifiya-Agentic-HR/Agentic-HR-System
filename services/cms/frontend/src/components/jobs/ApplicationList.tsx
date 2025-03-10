@@ -2,35 +2,22 @@
 
 import { Application } from "./types";
 import { useState } from "react";
-import { StatusPopup } from "./StatusPopups";
+import StatusPopup from "./StatusPopups"; // Fixed import
 import Link from "next/link";
 
 export const ApplicationList = ({ applications }: { applications: Application[] }) => {
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [popupType, setPopupType] = useState<"screening" | "interview">("screening");
 
-  // Format date to DD/MM/YYYY
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
-  };
-
-  const transformData = (rawData: any[]) => {
-    return rawData.reduce((acc, { field, value }) => {
-      acc[field.toLowerCase().replace(/\s+/g, "_")] = value;
-      return acc;
-    }, {});
-  };
-
-  // Function to handle status updates
-  const handleStatusUpdate = async (type: "screening" | "interview", status: string, reasoning?: string) => {
   };
 
   return (
     <>
       <div className="w-full overflow-x-auto">
         <div className="min-w-[1000px]">
-          {/* Table Header */}
           <div className="grid grid-cols-7 gap-4 px-4 py-2 text-sm font-semibold text-[#364957] bg-gray-100 border-b">
             <div>Candidate</div>
             <div>Applied Date</div>
@@ -40,78 +27,65 @@ export const ApplicationList = ({ applications }: { applications: Application[] 
             <div className="text-center">Application Status</div>
           </div>
 
-          {/* Table Rows */}
-          {applications.map((app) => {
-            const applicationStatus =
-              app.interview && app.interview.interview_status === "completed"
-                ? app.interview.hiring_decision?.toLowerCase() === "hire"
-                  ? "Passed"
-                  : "Failed"
-                : "Pending";
-return (
-              <div
-                key={app._id}
-                className="grid grid-cols-7 gap-4 items-center bg-white border-b p-4 hover:bg-gray-50 transition-all"
-              >
-                <div className="font-medium text-[#364957]">{app.candidate.full_name}</div>
-                <div className="text-[#364957]/80">{formatDate(app.created_at)}</div>
-                <div>
-                  <Link
-                    href={app.cv_link.replace("s3-server", window.location.hostname).replace(":9000", ":9002")}
-                    className="text-[#FF8A00] hover:text-[#FF8A00]/80 underline"
-                    target="_blank"
-                  >
-                    View CV
-                  </Link>
-                </div>
-                <div>
-                  <button
-                    onClick={() => {
-                      setSelectedApp(app);
-                      setPopupType("screening");
-                    }}
-                    className="w-full px-3 py-2 rounded-lg border border-[#364957]/20 hover:bg-[#FF8A00]/10 text-[#364957]"
-                  >
-                    {app.screening ? app.screening.score : "Pending"}
-                  </button>
-                </div>
-                <div>
-                  <button
-                    onClick={() => {
-                      setSelectedApp(app);
-                      setPopupType("interview");
-                    }}
-                    className="w-full px-3 py-2 rounded-lg border border-[#364957]/20 hover:bg-[#FF8A00]/10 text-[#364957]"
-                  >
-                    <span className="capitalize">
-                      {app.interview
-                        ? app.interview.interview_status === "completed"
-                          ? app.interview.hiring_decision
-                          : app.interview.interview_status.replace("-", " ")
-                        : "Pending"}
-                    </span>
-                    {app.interview?.reasoning && (
-                      <div className="text-sm text-[#364957]/60 mt-1">
-                        {app.interview.interview_reasoning}
-                      </div>
-                    )}
-                  </button>
-                </div>
-                <div className="text-center font-medium text-[#364957]">{applicationStatus}</div>
+          {applications.map((app) => (
+            <div
+              key={app._id}
+              className="grid grid-cols-7 gap-4 items-center bg-white border-b p-4 hover:bg-gray-50 transition-all"
+            >
+              <div className="font-medium text-[#364957]">{app.candidate.full_name}</div>
+              <div className="text-[#364957]/80">{formatDate(app.created_at)}</div>
+              <div>
+                <Link
+                  href={app.cv_link.replace("s3-server", window.location.hostname).replace(":9000", ":9002")}
+                  className="text-[#FF8A00] hover:text-[#FF8A00]/80 underline"
+                  target="_blank"
+                >
+                  View CV
+                </Link>
               </div>
-            );
-          })}
+              <div>
+                <button
+                  onClick={() => {
+                    setSelectedApp(app);
+                    setPopupType("screening");
+                  }}
+                  className="w-full px-3 py-2 rounded-lg border border-[#364957]/20 hover:bg-[#FF8A00]/10 text-[#364957]"
+                >
+                  {app.screening?.score?.toFixed(1) || "Pending"}
+                </button>
+              </div>
+              <div>
+                <button
+                  onClick={() => {
+                    setSelectedApp(app);
+                    setPopupType("interview");
+                  }}
+                  className="w-full px-3 py-2 rounded-lg border border-[#364957]/20 hover:bg-[#FF8A00]/10 text-[#364957] text-left"
+                >
+                  <span className="capitalize">
+                    {app.interview
+                      ? app.interview.interview_status === "completed"
+                        ? app.interview.hiring_decision || "Completed"
+                        : app.interview.interview_status.replace(/[-_]/g, " ")
+                      : "Pending"}
+                  </span>
+                </button>
+              </div>
+              <div className="text-center font-medium text-[#364957]">
+                {app.application_status.charAt(0).toUpperCase() + app.application_status.slice(1)}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Status Popup */}
       {selectedApp && (
         <StatusPopup
-          application={selectedApp}
-          type={popupType}
-          onClose={() => setSelectedApp(null)}
-          onUpdate={handleStatusUpdate}
-        />
+        application={selectedApp}
+        type={popupType}
+        onClose={() => setSelectedApp(null)}
+        refreshApplications={async () => console.log("Applciations Refreshed")} // Properly pass the function
+      />
       )}
     </>
   );

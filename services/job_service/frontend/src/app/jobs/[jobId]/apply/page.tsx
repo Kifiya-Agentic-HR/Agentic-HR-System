@@ -173,7 +173,7 @@ export default function JobApplicationPage() {
               </div>
             </div>
 
-            <div className="sticky top-24 bg-white rounded-xl shadow-lg border border-[#364957]/20 p-8">
+            <div className="sticky top-24 bg-white rounded-xl shadow-lg border border-[#364957]/20">
               <ApplyForm jobId={jobId} />
             </div>
           </motion.div>

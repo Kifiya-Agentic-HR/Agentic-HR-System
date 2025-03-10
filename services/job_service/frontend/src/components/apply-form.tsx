@@ -159,7 +159,7 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
           >
             <div className="mb-8">
               <h2 className="text-2xl font-bold mb-2" style={{ color: PRIMARY_COLOR }}>
-                Apply for Position
+                Apply for the Position
               </h2>
               <p className="text-[#364957]/80">Complete the form below to submit your application</p>
             </div>
