@@ -12,7 +12,12 @@ from nltk.stem import WordNetLemmatizer
 from dotenv import load_dotenv
 
 # Initialize dependencies
-nltk.download("all", quiet=True)
+# nltk.download("all") # THIS IS ULTRA wrong
+nltk.download("punkt")
+nltk.download("stopwords")
+nltk.download("wordnet")
+nltk.download("omw-1.4")
+
 lemmatizer = WordNetLemmatizer()
 STOPWORDS = set(stopwords.words("english")).difference(set(["c++", "c"]))
 
