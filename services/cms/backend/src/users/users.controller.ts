@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Patch, Param, Body, Req, UseGuards, Delete } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Param, Body, Req, UseGuards, Delete, Put } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -35,7 +35,7 @@ export class UsersController {
    * Admin can update any user by ID.
    * e.g. reset password, rename user, etc.
    */
-  @Patch(':id')
+  @Put(':id')
   @Roles(UserRole.ADMIN)
   updateAnyUser(@Param('id') id: string, @Body() dto: UpdateUserDto) {
     return this.usersService.updateUserByAdmin(id, dto);
@@ -54,7 +54,7 @@ export class UsersController {
   /**
    * HR (or admin) can update their own password, first/last name, etc.
    */
-  @Patch('me')
+  @Put('me')
   @Roles(UserRole.HR, UserRole.ADMIN)
   updateMe(@Req() req, @Body() dto: UpdateUserDto) {
     return this.usersService.updateOwnAccount(req.user.sub, dto);
