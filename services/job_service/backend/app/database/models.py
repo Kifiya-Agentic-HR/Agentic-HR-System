@@ -166,6 +166,29 @@ class ApplicationDocument(BaseDocument):
             return applications
         except Exception as e:
             raise Exception(f"Error retrieving applications for job {job_id}: {e}")
+    
+    @classmethod
+    def reject_application(cls, application_id):
+        try:
+            cls.get_collection().update_one(
+                {"_id": ObjectId(application_id)},
+                {"$set": {"application_status": "rejected"}}
+            )
+            return True
+        except errors.PyMongoError as e:
+            raise Exception(f"Error rejecting application: {e}")
+    
+    @classmethod
+    def accept_application(cls, application_id):
+        try:
+            cls.get_collection().update_one(
+                {"_id": ObjectId(application_id)},
+                {"$set": {"application_status": "passed"}}
+            )
+            return True
+        except errors.PyMongoError as e:
+            raise Exception(f"Error accepting application: {e}")
+        
 class CandidateDocument(BaseDocument):
     collection_name = "candidates"
 
@@ -217,14 +240,14 @@ class ScreeningResultDocument(BaseDocument):
         return cls.get_collection().find_one({"_id": result.inserted_id})
 
     @classmethod
-    def get_by_application_id(cls, application_id):
+    def get_by_application_id(cls, application_id: str):
         # Find screening results using the application_id foreign key.
-        application_id_obj = ObjectId(application_id) if not isinstance(application_id, ObjectId) else application_id
-        result = cls.get_collection().find_one({"application_id": application_id_obj})
+        result = cls.get_collection().find_one({"application_id": application_id})
         if result:
             result["_id"] = str(result["_id"])
             result["application_id"] = str(result["application_id"])
         return result
+
 class InterviewsDocument(BaseDocument):
     collection_name = "interviews"
 

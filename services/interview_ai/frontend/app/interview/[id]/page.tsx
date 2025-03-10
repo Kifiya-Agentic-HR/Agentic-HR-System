@@ -7,7 +7,7 @@ import { ChatInterface } from "@/components/ChatInterface";
 import { PreInterviewCheck } from "@/components/PreInterviewCheck";
 import { useAntiCheat } from "@/hooks/useAntiCheat";
 import Completion from "@/pages/completion";
-import { createSession, getSessionId, saveSessionId, clearSessionId } from "@/lib/api";
+import { createSession, clearSessionId } from "@/lib/api";
 import type { ChatMessage } from "@/lib/schema";
 import { useToast } from "@/hooks/use-toast";
 
@@ -26,37 +26,36 @@ export default function Interview() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
 
-  const violations = useAntiCheat(isInterviewStarted);
+  // Expose toggleFullScreen from the anti-cheat hook (if needed later)
+  const { violations, toggleFullScreen } = useAntiCheat(isInterviewStarted);
 
-  const handleStartInterview = async () => {
-    try {
-      await document.documentElement.requestFullscreen();
-    }
-    catch (error) {
+  // This function is invoked directly via the PreInterviewCheck button click.
+  // Calling requestFullscreen() synchronously here ensures it counts as a user gesture.
+  const handleStartInterview = () => {
+    document.documentElement.requestFullscreen().catch((error) => {
       toast({
         variant: "destructive",
         title: "Fullscreen required",
-        description: "Please allow fullscreen to continue with the interview. If you are using a mobile device, please rotate your device to landscape mode.",
-        duration: 3000
+        description:
+          "Please allow fullscreen to continue with the interview. If you are using a mobile device, please rotate your device to landscape mode.",
+        duration: 3000,
       });
-    }
-    
+    });
+
     setIsInterviewStarted(true);
     setIsCheckComplete(true);
-
-  }
+  };
 
   useEffect(() => {
     const initializeSession = async () => {
       try {
         const sessionResponse = await createSession(interviewId);
         if (sessionResponse.success && sessionResponse.sessionId) {
-          // saveSessionId(sessionResponse.sessionId);
           setSessionId(sessionResponse.sessionId);
           setChatHistory(sessionResponse.chatHistory);
         }
       } catch (error) {
-        console.error('Session initialization failed:', error);
+        console.error("Session initialization failed:", error);
         window.location.href = `/${interviewId}`;
       }
     };
@@ -72,16 +71,18 @@ export default function Interview() {
   }, [violations.totalWeight]);
 
   useEffect(() => {
-    const majorViolation = violations.violations.find(v => 
-      v.type === "MAJOR" || v.type === "CRITICAL"
+    const majorViolation = violations.violations.find(
+      (v) => v.type === "MAJOR" || v.type === "CRITICAL"
     );
-  
+
     if (majorViolation) {
       toast({
         variant: "destructive",
         title: "Security Violation Detected",
-        description: `${majorViolation.description} - ${new Date(majorViolation.timestamp).toLocaleTimeString()}`,
-        duration: 5000
+        description: `${majorViolation.description} - ${new Date(
+          majorViolation.timestamp
+        ).toLocaleTimeString()}`,
+        duration: 5000,
       });
     }
   }, [violations.violations]);
@@ -89,15 +90,12 @@ export default function Interview() {
   if (!isCheckComplete) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <PreInterviewCheck 
-          onComplete={handleStartInterview}
-        />
+        <PreInterviewCheck onComplete={handleStartInterview} />
       </div>
     );
   }
 
   if (isInterviewComplete) {
-    // delete the session
     clearSessionId();
 
     return (
@@ -117,7 +115,10 @@ export default function Interview() {
             <ChatInterface
               sessionId={sessionId}
               initialMessages={chatHistory}
-              onComplete={() => {setIsInterviewComplete(true); setIsInterviewStarted(false)}}
+              onComplete={() => {
+                setIsInterviewComplete(true);
+                setIsInterviewStarted(false);
+              }}
               onStart={() => setIsInterviewStarted(true)}
             />
           )}

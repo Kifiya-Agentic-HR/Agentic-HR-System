@@ -95,19 +95,41 @@ export async function getApplicationById(id: string) {
   }
 }
 
-export async function updateApplicationStatus(id: string, updates: any) {
+export async function rejectApplication(id: string) {
   try {
-    const res = await fetch(`${API_BASE}/applications/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updates),
-    });
+    const res = await fetch(`${API_BASE}/applications/${id}/reject`, { method: "PATCH" });
     const data = await res.json();
     return data; // Expected { success: boolean, application: Application, error?: string }
   } catch (error: any) {
-    return { success: false, error: error.message || "Failed to update application status" };
+    return { success: false, error: error.message || "Failed to fetch application" };
   }
 }
+
+export async function acceptApplication(id: string) {
+  try {
+    const res = await fetch(`${API_BASE}/applications/${id}/accept`,
+      { method: "PATCH" }
+        );
+    const data = await res.json();
+    return data; // Expected { success: boolean, application: Application, error?: string }
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to fetch application" };
+  }
+}
+
+// export async function updateApplicationStatus(id: string, updates: any) {
+//   try {
+//     const res = await fetch(`${API_BASE}/applications/${id}`, {
+//       method: "PATCH",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify(updates),
+//     });
+//     const data = await res.json();
+//     return data; // Expected { success: boolean, application: Application, error?: string }
+//   } catch (error: any) {
+//     return { success: false, error: error.message || "Failed to update application status" };
+//   }
+// }
 
 // ----- INTERVIEW ENDPOINTS -----
 export async function scheduleInterview(application_id: string) {
@@ -121,29 +143,5 @@ export async function scheduleInterview(application_id: string) {
     return data; // Expected { success: boolean }
   } catch (error: any) {
     return { success: false, error: error.message || "Failed to schedule interview" };
-  }
-}
-
-export async function getInterviewSession(interviewId: string) {
-  try {
-    const res = await fetch(`${API_BASE}/session/${interviewId}`);
-    const data = await res.json();
-    return data; // Expected { success: boolean, session_id: string, interview_id: string, chat_history: any[], error?: string }
-  } catch (error: any) {
-    return { success: false, error: error.message || "Failed to fetch interview session" };
-  }
-}
-
-export async function postChat(chatData: { user_answer: string; session_id: string }) {
-  try {
-    const res = await fetch(`${API_BASE}/chat`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(chatData),
-    });
-    const data = await res.json();
-    return data; // Expected { success: boolean, text: string, state: "welcome" | "ongoing" | "completed", error?: string }
-  } catch (error: any) {
-    return { success: false, error: error.message || "Failed to post chat message" };
   }
 }

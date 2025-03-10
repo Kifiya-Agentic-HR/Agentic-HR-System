@@ -31,7 +31,7 @@ const VIOLATION_WEIGHTS = {
   WINDOW_MINIMIZE: 1.0,
   MULTIPLE_FACES: 2.0,
   FOCUS_LOSS: 0.05,
-  FULLSCREEN_EXIT: 0.05,
+  FULLSCREEN_EXIT: 0.5,
   BROWSER_BACK: 1.0,
   KEYBOARD_SHORTCUT: 0.5,
   LONG_INACTIVITY: 0.5,
@@ -39,7 +39,7 @@ const VIOLATION_WEIGHTS = {
 } as const;
 
 const THRESHOLDS = {
-  INACTIVITY: 40000, // 10 seconds
+  INACTIVITY: 40000, // 40 seconds
   WARNING: 3,        // Total violations before warning
   CRITICAL: 5,       // Total violations before critical warning
   MAX_WARNINGS: 5    // Maximum number of warnings before automatic termination
@@ -50,8 +50,6 @@ export function useAntiCheat(isActive: boolean = false) {
   const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastViolationRef = useRef<number>(0);
-  const fullscreenRetryRef = useRef<number>(0);
-  const fullscreenIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const [violations, setViolations] = useState<ViolationState>({
     tabSwitches: 0,
@@ -72,12 +70,12 @@ export function useAntiCheat(isActive: boolean = false) {
     if (lastViolation && lastViolation.timestamp !== lastViolationRef.current) {
       lastViolationRef.current = lastViolation.timestamp;
 
-      const severity = 
+      const severity =
         violations.totalWeight >= THRESHOLDS.CRITICAL ? "destructive" :
-        violations.totalWeight >= THRESHOLDS.WARNING ? "destructive" : 
+        violations.totalWeight >= THRESHOLDS.WARNING ? "destructive" :
         "default";
 
-      const title = 
+      const title =
         violations.totalWeight >= THRESHOLDS.CRITICAL ? "Critical Security Violation" :
         violations.totalWeight >= THRESHOLDS.WARNING ? "Security Warning" :
         "Notice";
@@ -113,10 +111,10 @@ export function useAntiCheat(isActive: boolean = false) {
       };
 
       const newTotalWeight = prev.totalWeight + weight;
-      const newWarningsIssued = 
-        newTotalWeight >= THRESHOLDS.WARNING ? 
-        prev.warningsIssued + 1 : 
-        prev.warningsIssued;
+      const newWarningsIssued =
+        newTotalWeight >= THRESHOLDS.WARNING ?
+          prev.warningsIssued + 1 :
+          prev.warningsIssued;
 
       return {
         ...prev,
@@ -153,6 +151,43 @@ export function useAntiCheat(isActive: boolean = false) {
     }));
   }, []);
 
+  // Fullscreen toggle function initiated by the user
+  const toggleFullScreen = useCallback(async () => {
+    if (!document.fullscreenElement) {
+      try {
+        await document.documentElement.requestFullscreen();
+      } catch (error) {
+        console.error("Failed to request fullscreen", error);
+      }
+    } else if (document.exitFullscreen) {
+      try {
+        await document.exitFullscreen();
+      } catch (error) {
+        console.error("Failed to exit fullscreen", error);
+      }
+    }
+  }, []);
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const fullscreenChangeHandler = (_e: Event) => {
+      if (!document.fullscreenElement) {
+        addViolation(
+          "MINOR",
+          "Fullscreen exited",
+          VIOLATION_WEIGHTS.FULLSCREEN_EXIT,
+          "Interview must remain in fullscreen mode"
+        );
+        // Auto re-request fullscreen; note that this might fail unless triggered by user gesture.
+        toggleFullScreen();
+      }
+    };
+    document.addEventListener("fullscreenchange", fullscreenChangeHandler);
+    return () => {
+      document.removeEventListener("fullscreenchange", fullscreenChangeHandler);
+    };
+  }, [addViolation, toggleFullScreen]);
+
   useEffect(() => {
     if (!isActive) return;
 
@@ -165,29 +200,8 @@ export function useAntiCheat(isActive: boolean = false) {
         document.body.style.userSelect = 'none';
         window.history.pushState(null, '', window.location.href);
 
-        // Request fullscreen with retry mechanism
-        const requestFullscreen = async (retries = 3) => {
-          try {
-            if (!document.fullscreenElement) {
-              await document.documentElement.requestFullscreen();
-              fullscreenRetryRef.current = 0;
-            }
-          } catch (error) {
-            console.error('Fullscreen request failed:', error);
-            if (retries > 0) {
-              setTimeout(() => requestFullscreen(retries - 1), 2000);
-            } else {
-              addViolation(
-                "CRITICAL",
-                "Fullscreen enforcement failed",
-                VIOLATION_WEIGHTS.FULLSCREEN_EXIT * 2,
-                "System unable to maintain fullscreen mode"
-              );
-            }
-          }
-        };
-
-        await requestFullscreen();
+        // **User must click a button to enter fullscreen mode.**
+        // Here, we do not auto-trigger fullscreen due to browser restrictions.
 
         // Set up monitoring intervals
         inactivityInterval = setInterval(() => {
@@ -270,65 +284,6 @@ export function useAntiCheat(isActive: boolean = false) {
       );
     };
 
-    // Updated handleFullscreenChange function
-    const handleFullscreenChange = () => {
-      if (!document.fullscreenElement) {
-        addViolation(
-          "MINOR",
-          "Fullscreen exited",
-          VIOLATION_WEIGHTS.FULLSCREEN_EXIT,
-          "Interview must remain in fullscreen mode"
-        );
-        
-        // Only create a new interval if one isn’t already running
-        if (!fullscreenIntervalRef.current) {
-          fullscreenIntervalRef.current = setInterval(() => {
-            // Check if fullscreen has been achieved
-            if (document.fullscreenElement) {
-              clearInterval(fullscreenIntervalRef.current!);
-              fullscreenIntervalRef.current = null;
-              fullscreenRetryRef.current = 0;
-            } else if (fullscreenRetryRef.current < 3) {
-              document.documentElement.requestFullscreen().catch(() => {
-                fullscreenRetryRef.current++;
-              });
-            } else {
-              clearInterval(fullscreenIntervalRef.current!);
-              fullscreenIntervalRef.current = null;
-              fullscreenRetryRef.current = 0;
-            }
-          }, 1000);
-        }
-      } else if (fullscreenIntervalRef.current) {
-        // If fullscreen is active but an interval exists, clear it
-        clearInterval(fullscreenIntervalRef.current);
-        fullscreenIntervalRef.current = null;
-        fullscreenRetryRef.current = 0;
-      }
-    };
-
-  // Update requestFullscreen function
-  const requestFullscreen = async (retries = 3) => {
-    try {
-      if (!document.fullscreenElement) {
-        await document.documentElement.requestFullscreen();
-        fullscreenRetryRef.current = 0;
-      }
-    } catch (error) {
-      console.error('Fullscreen request failed:', error);
-      if (retries > 0) {
-        setTimeout(() => requestFullscreen(retries - 1), 2000);
-      } else {
-        addViolation(
-          "CRITICAL",
-          "Fullscreen enforcement failed",
-          VIOLATION_WEIGHTS.FULLSCREEN_EXIT * 2,
-          "System unable to maintain fullscreen mode"
-        );
-      }
-    }
-  };
-
     const handlePopState = () => {
       addViolation(
         "MAJOR",
@@ -339,16 +294,15 @@ export function useAntiCheat(isActive: boolean = false) {
       window.history.pushState(null, '', window.location.href);
     };
 
-
     const handleRightClick = (e: MouseEvent) => {
-        e.preventDefault();
-        addViolation(
-          "MINOR",
-          "Right-click attempted",
-          VIOLATION_WEIGHTS.COPY_PASTE,
-          "Context menu access is restricted"
-        );
-      }
+      e.preventDefault();
+      addViolation(
+        "MINOR",
+        "Right-click attempted",
+        VIOLATION_WEIGHTS.COPY_PASTE,
+        "Context menu access is restricted"
+      );
+    };
 
     // Set up all event listeners
     document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -358,16 +312,15 @@ export function useAntiCheat(isActive: boolean = false) {
     document.addEventListener("paste", handleCopyPaste);
     document.addEventListener("cut", handleCopyPaste);
     document.addEventListener("keydown", handleKeyboardShortcuts);
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
     window.addEventListener("popstate", handlePopState);
-    document.addEventListener('contextmenu', handleRightClick);
+    document.addEventListener("contextmenu", handleRightClick);
     
     // Activity monitoring
     ["mousemove", "keydown", "click", "scroll"].forEach(event => {
       document.addEventListener(event, handleActivity);
     });
 
-    // Initialize the anti-cheat document
+    // Initialize the anti-cheat system
     setupAntiCheat();
 
     // Cleanup function
@@ -379,8 +332,8 @@ export function useAntiCheat(isActive: boolean = false) {
       document.removeEventListener("paste", handleCopyPaste);
       document.removeEventListener("cut", handleCopyPaste);
       document.removeEventListener("keydown", handleKeyboardShortcuts);
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
       window.removeEventListener("popstate", handlePopState);
+      document.removeEventListener("contextmenu", handleRightClick);
       
       ["mousemove", "keydown", "click", "scroll"].forEach(event => {
         document.removeEventListener(event, handleActivity);
@@ -409,5 +362,6 @@ export function useAntiCheat(isActive: boolean = false) {
     toast
   ]);
 
-  return violations;
+  // Expose the toggleFullScreen function so it can be triggered by a user action
+  return { violations, toggleFullScreen };
 }
