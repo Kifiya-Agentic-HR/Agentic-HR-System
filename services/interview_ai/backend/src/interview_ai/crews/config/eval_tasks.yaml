@@ -58,6 +58,8 @@ final_evaluation_task:
         - {role_info}
     4. User Information:
         - {user_info}
+
+      
   
   expected_output: >
     Strictly formatted JSON response without markdown:
@@ -68,6 +70,8 @@ final_evaluation_task:
       "reasoning": "A string Structured as: 1) Skill Analysis from Conversation 2) Conversation Evidence 3) Role Alignment 4) Decision Rationale",
       "skills": "same as your input" 
     }
+
+    NOTE. the reasoning key's value is strictly formatted as a string.
 
     **Validation Checklist:**
     - All strings use double quotes
