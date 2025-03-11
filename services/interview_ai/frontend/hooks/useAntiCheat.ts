@@ -82,6 +82,7 @@ export function useAntiCheat(isActive: boolean = false, videoRef: RefObject<HTML
 
       toastTimeoutRef.current = setTimeout(() => {
         toast({
+          // @ts-ignore
           variant: severity,
           title,
           description: `${lastViolation.description}${lastViolation.details ? `\n${lastViolation.details}` : ''}`,

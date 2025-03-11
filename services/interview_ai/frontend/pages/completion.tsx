@@ -1,6 +1,5 @@
 // components/Completion.tsx
 import { useEffect, useRef, useState } from "react";
-import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,8 @@ import { Violation } from "@/hooks/useAntiCheat";
 import { cn } from "@/lib/utils";
 import { ToastAction } from "@/components/ui/toast";
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
+
 
 interface CompletionProps {
   completed: boolean;
@@ -25,7 +26,7 @@ export default function Completion({ completed, violations, interviewId }: Compl
   const [flagError, setFlagError] = useState<string | null>(null);
   const [showViolations, setShowViolations] = useState(false);
   const hasFlagged = useRef(false);
-  const [, setLocation] = useLocation();
+  const router = useRouter();
 
   // Server-side guard
   if (typeof window === "undefined") return null;
@@ -79,7 +80,7 @@ export default function Completion({ completed, violations, interviewId }: Compl
 
   const handleFinish = () => {
     clearSessionId();
-    setLocation("/");
+    router.push("/");
   };
 
   const StatusIcon = completed ? CheckCircle2 : AlertCircle;

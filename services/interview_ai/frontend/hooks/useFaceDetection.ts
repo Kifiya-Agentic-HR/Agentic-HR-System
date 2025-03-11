@@ -97,6 +97,7 @@ export function useFaceDetection(videoRef: RefObject<HTMLVideoElement | null>) {
     const detectFace = async () => {
       const video = videoRef.current;
       if (!video || !faceapiRef.current || video.readyState < 4) {
+        // @ts-expect-error - video.readyState is not yet defined
         detectionRef.current = setTimeout(detectFace, DETECTION_INTERVAL);
         return;
       }
@@ -141,7 +142,7 @@ export function useFaceDetection(videoRef: RefObject<HTMLVideoElement | null>) {
       } catch (error) {
         console.error("Detection error:", error);
       }
-      
+      // @ts-expect-error - video.readyState is not yet defined
       detectionRef.current = setTimeout(detectFace, DETECTION_INTERVAL);
     };
 

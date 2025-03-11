@@ -6,10 +6,15 @@ import { VideoFeed } from "@/components/VideoFeed";
 import { ChatInterface } from "@/components/ChatInterface";
 import { PreInterviewCheck } from "@/components/PreInterviewCheck";
 import { useAntiCheat } from "@/hooks/useAntiCheat";
-import Completion from "@/pages/completion";
 import { createSession, clearSessionId } from "@/lib/api";
 import type { ChatMessage } from "@/lib/schema";
 import { useToast } from "@/hooks/use-toast";
+import dynamic from "next/dynamic";
+
+const Completion = dynamic(() => import("@/pages/completion"), {
+  ssr: false,
+});
+
 
 export default function Interview() {
   const params = useParams();
@@ -115,7 +120,10 @@ export default function Interview() {
             />
           )}
         </div>
-        {isInterviewStarted && <VideoFeed videoRef={videoRef} />}
+        {
+          // @ts-expect-error - videoRef is not null
+        isInterviewStarted && <VideoFeed videoRef={videoRef} 
+        />}
       </div>
     </div>
   );

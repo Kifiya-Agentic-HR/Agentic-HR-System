@@ -211,6 +211,7 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                       international
                       defaultCountry="ET"
                       value={formData.phone_number}
+                      // @ts-ignore - react-phone-number-input types are incorrect
                       onChange={handlePhoneChange}
                       className={`phone-input ${!formData.phone_number && touchedFields.phone_number ? 'invalid' : ''}`}
                       inputComponent={Input}
