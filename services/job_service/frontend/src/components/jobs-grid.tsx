@@ -5,16 +5,12 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { formatDate } from "@/lib/utils";
-import { getJobs, Job, formatJobDetails } from "@/actions/get-jobs";
+import { getJobs, Job } from "@/actions/get-jobs";
 import { ArrowUpRight } from "lucide-react";
+import { useCustomSearchParams } from "@/components/search-params-provider";
 
-interface JobsGridProps {
-  search?: string;
-  type?: string;
-  skills?: string;
-}
-
-export default function JobsGrid({ search, type, skills }: JobsGridProps) {
+export default function JobsGrid() {
+  const { search, type, skills } = useCustomSearchParams();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
@@ -35,7 +31,6 @@ export default function JobsGrid({ search, type, skills }: JobsGridProps) {
     loadJobs();
   }, []);
 
-  
   // Client-side filtering
   const filteredJobs = jobs.filter((job) => {
     const matchesSearch = search

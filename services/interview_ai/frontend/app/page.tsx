@@ -1,9 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Code2, Shield, ClipboardCheck } from "lucide-react";
 import { useState } from "react";
 
 const container = {

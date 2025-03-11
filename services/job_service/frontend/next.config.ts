@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+  },
   /* config options here */
   serverRuntimeConfig: {
     // Will only be available on the server side
