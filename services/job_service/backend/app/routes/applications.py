@@ -172,8 +172,11 @@ async def create_application(
         except Exception as e:
             logger.error(f"Error sending email notification: {str(e)}")
 
+        job = JobDocument.get_job_by_id(job_id)
+
         await publish_application({
-            "job": str(JobDocument.get_job_by_id(job_id)),
+            "job_description": str(job["description"]),
+            "job_skills": str(job["skills"]),
             "application_id": new_application,
             "resume_path": file_path,
         })
