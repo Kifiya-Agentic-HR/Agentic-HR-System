@@ -150,6 +150,10 @@ output_formatter_task:
       - Prioritize clarity and conciseness.
       - Rewrite robotic sentences to be more natural.
 
+      - Don't change the core meaning or details of the response.
+      - No "Hi [Name]," or "Best regards," closings are needed.
+      - Ensure the response remains professional and relevant to the context.
+
   expected_output: >
     Exactly the same JSON structure as the input, but with a more engaging and humanistic tone in the "text" field.
     Ensure that the response remains professional and relevant to the context.

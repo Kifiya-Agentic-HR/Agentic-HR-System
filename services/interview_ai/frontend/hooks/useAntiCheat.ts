@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import type { RefObject } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useFaceDetection } from "@/hooks/useFaceDetection";
 
 export type ViolationType = "MINOR" | "MAJOR" | "CRITICAL";
 
@@ -25,31 +27,34 @@ export interface ViolationState {
 }
 
 const VIOLATION_WEIGHTS = {
-  COPY_PASTE: 0.5,
-  FACE_AWAY: 0.01,
-  TAB_SWITCH: 0.5,
-  WINDOW_MINIMIZE: 1.0,
+  COPY_PASTE: 1.0,
+  FACE_AWAY: 0.5,
+  TAB_SWITCH: 3.0,
+  WINDOW_MINIMIZE: 2.0,
   MULTIPLE_FACES: 2.0,
-  FOCUS_LOSS: 0.05,
-  FULLSCREEN_EXIT: 0.5,
+  FOCUS_LOSS: 2,
   BROWSER_BACK: 1.0,
-  KEYBOARD_SHORTCUT: 0.5,
+  KEYBOARD_SHORTCUT: 1,
   LONG_INACTIVITY: 0.5,
-  SUSPICIOUS_MOVEMENT: 0.5
+  SUSPICIOUS_MOVEMENT: 0.5,
+  FACE_NOT_FOUND: 0.3
 } as const;
 
 const THRESHOLDS = {
-  INACTIVITY: 40000, // 40 seconds
-  WARNING: 3,        // Total violations before warning
-  CRITICAL: 5,       // Total violations before critical warning
-  MAX_WARNINGS: 5    // Maximum number of warnings before automatic termination
+  INACTIVITY: 30000,
+  WARNING: 3,
+  CRITICAL: 5,
+  MAX_WARNINGS: 5
 } as const;
 
-export function useAntiCheat(isActive: boolean = false) {
+export function useAntiCheat(isActive: boolean = false, videoRef: RefObject<HTMLVideoElement | null>) {
   const { toast } = useToast();
   const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastViolationRef = useRef<number>(0);
+  const violationCooldown = useRef<{ [key: string]: number }>({});
+
+  const faceState = useFaceDetection(videoRef);
 
   const [violations, setViolations] = useState<ViolationState>({
     tabSwitches: 0,
@@ -64,25 +69,16 @@ export function useAntiCheat(isActive: boolean = false) {
     warningsIssued: 0
   });
 
-  // Handle violation notifications
   useEffect(() => {
     const lastViolation = violations.violations[violations.violations.length - 1];
     if (lastViolation && lastViolation.timestamp !== lastViolationRef.current) {
       lastViolationRef.current = lastViolation.timestamp;
 
-      const severity =
-        violations.totalWeight >= THRESHOLDS.CRITICAL ? "destructive" :
-        violations.totalWeight >= THRESHOLDS.WARNING ? "destructive" :
-        "default";
+      const severity = violations.totalWeight >= THRESHOLDS.CRITICAL ? "destructive" :
+        violations.totalWeight >= THRESHOLDS.WARNING ? "warning" : "default";
 
-      const title =
-        violations.totalWeight >= THRESHOLDS.CRITICAL ? "Critical Security Violation" :
-        violations.totalWeight >= THRESHOLDS.WARNING ? "Security Warning" :
-        "Notice";
-
-      if (toastTimeoutRef.current) {
-        clearTimeout(toastTimeoutRef.current);
-      }
+      const title = violations.totalWeight >= THRESHOLDS.CRITICAL ? "Critical Violation" :
+        violations.totalWeight >= THRESHOLDS.WARNING ? "Warning" : "Notice";
 
       toastTimeoutRef.current = setTimeout(() => {
         toast({
@@ -111,10 +107,8 @@ export function useAntiCheat(isActive: boolean = false) {
       };
 
       const newTotalWeight = prev.totalWeight + weight;
-      const newWarningsIssued =
-        newTotalWeight >= THRESHOLDS.WARNING ?
-          prev.warningsIssued + 1 :
-          prev.warningsIssued;
+      const newWarningsIssued = newTotalWeight >= THRESHOLDS.WARNING ?
+        prev.warningsIssued + 1 : prev.warningsIssued;
 
       return {
         ...prev,
@@ -124,6 +118,55 @@ export function useAntiCheat(isActive: boolean = false) {
       };
     });
   }, []);
+
+  useEffect(() => {
+    if (!isActive) return;
+
+    const handleFaceViolations = () => {
+      const now = Date.now();
+      
+      if (faceState.multipleFaces) {
+        if (!violationCooldown.current.multipleFaces || now - violationCooldown.current.multipleFaces > 10000) {
+          addViolation(
+            "MAJOR",
+            "Multiple faces detected",
+            VIOLATION_WEIGHTS.MULTIPLE_FACES,
+            "System detected more than one face in camera view"
+          );
+          violationCooldown.current.multipleFaces = now;
+        }
+      }
+
+      if (faceState.lookingAway && faceState.lookingAwayStartTime) {
+        const awayDuration = now - faceState.lookingAwayStartTime;
+        
+        if (awayDuration > 10000 && (!violationCooldown.current.lookingAway || now - violationCooldown.current.lookingAway > 10000)) {
+          addViolation(
+            "MAJOR",
+            "Attention Alert",
+            VIOLATION_WEIGHTS.FACE_AWAY,
+            `Looking away from camera for ${Math.round(awayDuration/1000)} seconds`
+          );
+          violationCooldown.current.lookingAway = now;
+        }
+      }
+
+      if (!faceState.isFacePresent) {
+        if (!violationCooldown.current.noFace || now - violationCooldown.current.noFace > 15000) {
+          addViolation(
+            "CRITICAL",
+            "Face not detected",
+            VIOLATION_WEIGHTS.FACE_NOT_FOUND,
+            "No face detected in camera view"
+          );
+          violationCooldown.current.noFace = now;
+        }
+      }
+    };
+
+    const checkInterval = setInterval(handleFaceViolations, 2000);
+    return () => clearInterval(checkInterval);
+  }, [isActive, faceState, addViolation]);
 
   const applyBackgroundBlur = useCallback((blur: boolean) => {
     document.body.style.filter = blur ? 'blur(8px)' : 'none';
@@ -139,7 +182,7 @@ export function useAntiCheat(isActive: boolean = false) {
         "MINOR",
         "Keyboard shortcut blocked",
         VIOLATION_WEIGHTS.KEYBOARD_SHORTCUT,
-        `Attempted to use: ${e.ctrlKey ? 'Ctrl' : 'Cmd'}+${e.key.toUpperCase()}`
+        `Attempted: ${e.ctrlKey ? 'Ctrl' : 'Cmd'}+${e.key.toUpperCase()}`
       );
     }
   }, [addViolation]);
@@ -151,43 +194,6 @@ export function useAntiCheat(isActive: boolean = false) {
     }));
   }, []);
 
-  // Fullscreen toggle function initiated by the user
-  const toggleFullScreen = useCallback(async () => {
-    if (!document.fullscreenElement) {
-      try {
-        await document.documentElement.requestFullscreen();
-      } catch (error) {
-        console.error("Failed to request fullscreen", error);
-      }
-    } else if (document.exitFullscreen) {
-      try {
-        await document.exitFullscreen();
-      } catch (error) {
-        console.error("Failed to exit fullscreen", error);
-      }
-    }
-  }, []);
-
-  // Listen for fullscreen changes
-  useEffect(() => {
-    const fullscreenChangeHandler = (_e: Event) => {
-      if (!document.fullscreenElement) {
-        addViolation(
-          "MINOR",
-          "Fullscreen exited",
-          VIOLATION_WEIGHTS.FULLSCREEN_EXIT,
-          "Interview must remain in fullscreen mode"
-        );
-        // Auto re-request fullscreen; note that this might fail unless triggered by user gesture.
-        toggleFullScreen();
-      }
-    };
-    document.addEventListener("fullscreenchange", fullscreenChangeHandler);
-    return () => {
-      document.removeEventListener("fullscreenchange", fullscreenChangeHandler);
-    };
-  }, [addViolation, toggleFullScreen]);
-
   useEffect(() => {
     if (!isActive) return;
 
@@ -196,66 +202,51 @@ export function useAntiCheat(isActive: boolean = false) {
 
     const setupAntiCheat = async () => {
       try {
-        // Initial security measures
         document.body.style.userSelect = 'none';
         window.history.pushState(null, '', window.location.href);
 
-        // **User must click a button to enter fullscreen mode.**
-        // Here, we do not auto-trigger fullscreen due to browser restrictions.
-
-        // Set up monitoring intervals
         inactivityInterval = setInterval(() => {
           const now = Date.now();
           if (now - violations.lastActiveTimestamp > THRESHOLDS.INACTIVITY) {
             addViolation(
               "MAJOR",
-              "Inactivity detected",
+              "Extended Inactivity detected",
               VIOLATION_WEIGHTS.LONG_INACTIVITY,
-              `No activity for ${THRESHOLDS.INACTIVITY / 1000} seconds`
+              `${THRESHOLDS.INACTIVITY / 1000}s inactivity`
             );
           }
         }, THRESHOLDS.INACTIVITY);
 
         focusCheckInterval = setInterval(() => {
           if (!document.hasFocus()) {
-            setViolations(prev => ({
-              ...prev,
-              focusTime: prev.focusTime + 1
-            }));
+            setViolations(prev => ({ ...prev, focusTime: prev.focusTime + 1 }));
           }
         }, 1000);
 
       } catch (error) {
-        console.error('Anti-cheat initialization failed:', error);
-        setTimeout(() => {
-          toast({
-            variant: "destructive",
-            title: "Security System Error",
-            description: "Failed to initialize security measures. Please refresh and try again.",
-          });
-        }, 0);
+        console.error('Anti-cheat init failed:', error);
+        toast({
+          variant: "destructive",
+          title: "Security Error",
+          description: "Failed to initialize security measures",
+        });
       }
     };
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
         applyBackgroundBlur(true);
-        if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-        
         blurTimeoutRef.current = setTimeout(() => {
           addViolation(
             "MAJOR",
-            "Tab switching detected",
+            "Tab switched",
             VIOLATION_WEIGHTS.TAB_SWITCH,
-            "Extended period away from interview tab"
+            "Left interview tab"
           );
         }, THRESHOLDS.INACTIVITY);
       } else {
         applyBackgroundBlur(false);
-        if (blurTimeoutRef.current) {
-          clearTimeout(blurTimeoutRef.current);
-          blurTimeoutRef.current = null;
-        }
+        if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
       }
     };
 
@@ -265,31 +256,26 @@ export function useAntiCheat(isActive: boolean = false) {
         "MAJOR",
         "Window focus lost",
         VIOLATION_WEIGHTS.WINDOW_MINIMIZE,
-        "Interview window was minimized or lost focus"
+        "Window minimized"
       );
-    };
-
-    const handleWindowFocus = () => {
-      applyBackgroundBlur(false);
     };
 
     const handleCopyPaste = (e: Event) => {
       e.preventDefault();
-      e.stopPropagation();
       addViolation(
         "MINOR",
-        "Copy/paste attempted",
+        "Copy/paste blocked",
         VIOLATION_WEIGHTS.COPY_PASTE,
-        "Copying and pasting is not allowed during the interview"
+        "Restricted action"
       );
     };
 
     const handlePopState = () => {
       addViolation(
         "MAJOR",
-        "Navigation attempted",
+        "Navigation blocked",
         VIOLATION_WEIGHTS.BROWSER_BACK,
-        "Browser navigation is not allowed during the interview"
+        "Browser navigation restricted"
       );
       window.history.pushState(null, '', window.location.href);
     };
@@ -298,16 +284,15 @@ export function useAntiCheat(isActive: boolean = false) {
       e.preventDefault();
       addViolation(
         "MINOR",
-        "Right-click attempted",
+        "Right-click blocked",
         VIOLATION_WEIGHTS.COPY_PASTE,
-        "Context menu access is restricted"
+        "Context menu restricted"
       );
     };
 
-    // Set up all event listeners
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("blur", handleWindowBlur);
-    window.addEventListener("focus", handleWindowFocus);
+    window.addEventListener("focus", () => applyBackgroundBlur(false));
     document.addEventListener("copy", handleCopyPaste);
     document.addEventListener("paste", handleCopyPaste);
     document.addEventListener("cut", handleCopyPaste);
@@ -315,19 +300,16 @@ export function useAntiCheat(isActive: boolean = false) {
     window.addEventListener("popstate", handlePopState);
     document.addEventListener("contextmenu", handleRightClick);
     
-    // Activity monitoring
     ["mousemove", "keydown", "click", "scroll"].forEach(event => {
       document.addEventListener(event, handleActivity);
     });
 
-    // Initialize the anti-cheat system
     setupAntiCheat();
 
-    // Cleanup function
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("blur", handleWindowBlur);
-      window.removeEventListener("focus", handleWindowFocus);
+      window.removeEventListener("focus", () => applyBackgroundBlur(false));
       document.removeEventListener("copy", handleCopyPaste);
       document.removeEventListener("paste", handleCopyPaste);
       document.removeEventListener("cut", handleCopyPaste);
@@ -345,23 +327,10 @@ export function useAntiCheat(isActive: boolean = false) {
       if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
       if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
       
-      document.body.style.userSelect = 'none';
-      document.body.style.filter = 'none';
-      
-      if (document.fullscreenElement) {
-        document.exitFullscreen().catch(console.error);
-      }
+      document.body.style.userSelect = '';
+      document.body.style.filter = '';
     };
-  }, [
-    isActive,
-    addViolation,
-    applyBackgroundBlur,
-    handleActivity,
-    handleKeyboardShortcuts,
-    violations.lastActiveTimestamp,
-    toast
-  ]);
+  }, [isActive, addViolation, applyBackgroundBlur, handleActivity, handleKeyboardShortcuts, violations.lastActiveTimestamp, toast]);
 
-  // Expose the toggleFullScreen function so it can be triggered by a user action
-  return { violations, toggleFullScreen };
+  return { violations };
 }

@@ -127,3 +127,13 @@
     @apply bg-background text-foreground;
   }
 }
+
+[data-sonner-toaster][data-x-position="left"] {
+  left: 20px;
+  right: auto;
+}
+
+[data-sonner-toaster][data-y-position="top"] {
+  top: 20px;
+  bottom: auto;
+}
