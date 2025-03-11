@@ -24,6 +24,8 @@ def render_notification(notification: NotificationUnion) -> str:
         "text": "text.html",
         'application_received': 'application_received.html',
         "interview_flagged": "interview_flagged.html",
+        "application_passed": "application_passed.html",
+        "application_rejected": "application_rejected.html",
     }
     
     try:
