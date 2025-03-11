@@ -6,6 +6,8 @@ import os
 import requests
 from app.utils.publisher import publish_application
 from app.utils.cloud_storage import upload_file
+from dotenv import load_dotenv
+import google.generativeai as genai
 from app.database.models import  ApplicationDocument, CandidateDocument, JobDocument, ScreeningResultDocument , InterviewsDocument
 
 logger = logging.getLogger(__name__)
@@ -37,6 +39,16 @@ def send_email_notification(to: str, subject: str, type="application_received", 
     except requests.exceptions.RequestException as e:
         return {"status": "error", "message": str(e)}
 
+load_dotenv()
+
+# Load API key
+gemini_api_key = os.getenv("GEMINI_API_KEY", "")
+if not gemini_api_key: 
+    raise ValueError("GEMINI_API_KEY is not set in the environment variables!")
+
+# Configure Gemini AI
+genai.configure(api_key=gemini_api_key)
+model = genai.GenerativeModel("gemini-2.0-flash")
 
 def generate_rejection_feedback(name: str, screening: dict, interview: dict, title: str) -> (str, str):
     """
@@ -45,15 +57,74 @@ def generate_rejection_feedback(name: str, screening: dict, interview: dict, tit
     """
     context = f"Candidate: {name}, Position: {title}. "
     if screening:
-        context += f"Screening feedback: {screening.get('feedback', '')}. "
+        context += f"Screening Data: {screening}. "
     if interview:
-        context += f"Interview feedback: {interview.get('feedback', '')}."
+        context += f"Interview Data: {interview}."
+    
+    # Fill in the prompts with the candidate context.
+    REJECTION_REASON_PROMPT = f"""
+Candidate Details: {context}  
+
+Generate a **clear, professional rejection reason** explaining why the candidate is not the best fit for the role **based strictly on the provided screening and interview feedback**.  
+
+- Keep it **short, direct, and evidence-based**.  
+- **DO NOT** add disclaimers like "not enough context"—if details are missing, base the response only on what is provided.  
+- Use a **formal hiring manager tone**.  
+- No Markdown Formatting, just use plain text.
+- **DO NOT** include introductions or generic statements—focus only on the reason.  
+- Use a tone as if you are speaking directly to the CANDIDATE.
+"""
+
+    
+    SUGGESTION_PROMPT = f"""
+Candidate Details: {context}  
+
+Provide **one or two specific, actionable suggestions** the candidate can follow to improve their future applications **based on the given feedback**.  
+
+- Keep the advice **brief, practical, and constructive**.  
+- **DO NOT** add disclaimers like "not enough context"—base the response on available details.  
+- Use a **hiring manager's perspective** with a **positive, professional tone**.  
+- Don't use markdown formatting. Just use plain text.  
+- **DO NOT** include introductions or generic statements—focus only on the suggestions.  
+- Use a tone as if you are speaking directly to the CANDIDATE.
+"""
+
     
     rejection_reason = "Based on your screening performance, your current skill set does not fully meet our requirements."
     suggestion = "We suggest you further develop your technical skills and reapply in the future."
-
-    return rejection_reason, suggestion
-
+    
+    try:
+        # Generate rejection reason
+        rejection_reason = model.generate_content(
+            REJECTION_REASON_PROMPT,
+            generation_config={
+                "temperature": 0.1,
+                "top_p": 0.95,
+            }
+        )
+        rejection_reason = rejection_reason.text.strip()
+    
+        if not rejection_reason:
+            raise ValueError("Gemini returned an empty response.")
+    
+        # Generate suggestion
+        suggestion = model.generate_content(
+            SUGGESTION_PROMPT,
+            generation_config={
+                "temperature": 0.1,
+                "top_p": 0.95,
+            }
+        )
+        suggestion = suggestion.text.strip()
+    
+        if not suggestion:
+            raise ValueError("Gemini returned an empty response.")
+    
+        return rejection_reason, suggestion
+    except Exception as e:
+        logger.error(f"Failed to process GEMINI: {e.__str__()}")
+        return rejection_reason, suggestion
+    
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
