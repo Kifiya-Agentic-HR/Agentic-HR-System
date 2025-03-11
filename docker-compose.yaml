@@ -21,20 +21,22 @@ services:
     networks:
       - app_network
     
-  # cms_frontend:
-  #   build: ./services/cms/frontend
-  #   container_name: CMSFrontend
-  #   ports:
-  #     - "${CMS_FRONTEND_PORT}:3000"
-  #   depends_on:
-  #     - cms_backend
-  #   env_file: .env
-  #   environment:
-  #     NEXT_PUBLIC_API_BASE_URL: "http://localhost:${CMS_BACKEND_PORT}"
-  #   networks:
-  #     - app_network
-  #   volumes:
-  #     - shared_volume:/shared_volume  # Added shared volume
+  cms_frontend:
+    build: ./services/cms/frontend
+    container_name: CMSFrontend
+    ports:
+      - "${CMS_FRONTEND_PORT}:3000"
+    depends_on:
+      - cms_backend
+    env_file: .env
+    environment:
+      # NEXT_PUBLIC_API_BASE_URL: "http://localhost:${CMS_BACKEND_PORT}"
+      NEXT_PUBLIC_GEMINI_API_KEY: "${GEMINI_API_KEY}"
+
+    networks:
+      - app_network
+    volumes:
+      - shared_volume:/shared_volume  # Added shared volume
 
     
   interview_backend:
