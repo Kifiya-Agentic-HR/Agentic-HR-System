@@ -43,7 +43,7 @@ async def process_message(message: aio_pika.IncomingMessage):
 
             # Calculate final score safely, defaulting overall_score to 0 if missing
             overall_score = llm_output.get("overall_score", 0)
-            final_score = (overall_score * 0.6) + kw_score + vec_score
+            final_score = (overall_score * 0.8) + kw_score + vec_score
 
             result = {
                 "application_id": application_id,
