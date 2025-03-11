@@ -110,10 +110,11 @@ async def create_application(
         new_application = ApplicationDocument.create_application(application_data)
         if not new_application:
             raise HTTPException(status_code=400, detail="Application creation failed")
-        
+        job = JobDocument.get_job_by_id(job_id)
         
         await publish_application({
-            "job": str(JobDocument.get_job_by_id(job_id)),
+            "job_description": job["description"],
+            "job_skills": job["skills"],
             "application_id": new_application,
             "resume_path": file_path,
         })

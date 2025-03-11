@@ -29,7 +29,7 @@ def balance_braces(json_str):
         json_str += "}" * (open_braces - close_braces)
     return json_str
 
-def scoreResume(requirement_text, resume_file_path):
+def scoreResume(description_text, job_skills,  resume_file_path):
     """
     Evaluates an applicant's resume against job requirements using Gemini AI.
     Returns a JSON analysis with scores, strengths, and critical gaps.
@@ -37,8 +37,8 @@ def scoreResume(requirement_text, resume_file_path):
     # Extract text from the resume file
     extracted_applicant_resume = extract_text_from_file(resume_file_path)
     parsed_cv = parse_cv(extracted_applicant_resume)
-    weight = analyze_job_requirements(requirement_text)
-    scores = calculate_scores(requirement_text, extracted_applicant_resume)
+    weight = analyze_job_requirements(description_text)
+    scores = calculate_scores(description_text, extracted_applicant_resume)
     
     keyword_weight = scores["weighted_keyword"]
     vector_weight = scores["weighted_vector"]
@@ -46,9 +46,10 @@ def scoreResume(requirement_text, resume_file_path):
     # Construct the AI prompt
     prompt = f"""
 {{
-  "task": "Evaluate applicant resume against weighted job requirements and provide scored analysis in JSON format. If the resume is a direct copy of job requirement, give it a score of 0.",
+  "task": "Evaluate applicant resume against weighted job requirements, required skills and provide scored analysis in JSON format. If the resume is a direct copy of job requirement, give it a score of 0.",
   "inputs": {{
-    "job_requirements": "{requirement_text}",
+    "job_requirements": "{description_text}",
+    "required_skills": "{job_skills}"
     "applicant_resume": "{parsed_cv}",
     "weights": {weight}
   }},
