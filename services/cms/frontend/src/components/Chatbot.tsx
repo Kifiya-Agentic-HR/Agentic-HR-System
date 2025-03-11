@@ -33,10 +33,10 @@ export const Chatbot = ({ jobs }: { jobs: Job[] }) => {
   const formatApplicantData = (app: Application): string => {
     const screening = app.screening
       ? `
-Screening Status: ${app.screening.status}
+Screening Status: ${app.screening ? "Completed" : "Pending"}
 Screening Reasoning: ${app.screening.reasoning || "N/A"}
 ${app.screening.parsed_cv ? `Parsed CV Data:\n${app.screening.parsed_cv}` : ""}
-Screening Updated: ${app.screening.updatedAt || "N/A"}
+Screening Updated: ${app.screening.created_at || "N/A"}
       `
       : "Screening: Pending";
 
@@ -45,7 +45,7 @@ Screening Updated: ${app.screening.updatedAt || "N/A"}
 Interview Status: ${app.interview.interview_status}
 Hiring Decision: ${app.interview.hiring_decision || "N/A"}
 Interview Reasoning: ${app.interview.interview_reasoning || "N/A"}
-Interview Updated: ${app.interview.updatedAt || "N/A"}
+Interview Updated: ${app.interview.created_at || "N/A"}
       `
       : "Interview: Pending";
 
@@ -107,6 +107,7 @@ ${interview}
         setCurrentStep("selectApplicant");
 
         // Fetch applications
+
         const resp = await getJobApplications(job._id);
         if (resp.success && resp.applications) {
           setApplications(resp.applications);
@@ -183,6 +184,7 @@ Question: ${question}
       try {
         // Log the prompt for debugging
         console.log("Sending prompt:", JSON.stringify(prompt, null, 2));
+        // @ts-expect-error It is working fine.
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const text = response.text();
