@@ -35,6 +35,7 @@ export const Chatbot = ({ jobs }: { jobs: Job[] }) => {
       ? `
 Screening Status: ${app.screening.status}
 Screening Reasoning: ${app.screening.reasoning || "N/A"}
+${app.screening.parsed_cv ? `Parsed CV Data:\n${app.screening.parsed_cv}` : ""}
 Screening Updated: ${app.screening.updatedAt || "N/A"}
       `
       : "Screening: Pending";
