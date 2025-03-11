@@ -113,8 +113,8 @@ async def create_application(
         job = JobDocument.get_job_by_id(job_id)
         
         await publish_application({
-            "job_description": job["description"],
-            "job_skills": job["skills"],
+            "job_description": str(job["description"]),
+            "job_skills": str(job["skills"]),
             "application_id": new_application,
             "resume_path": file_path,
         })
