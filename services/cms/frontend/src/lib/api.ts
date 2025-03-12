@@ -1,5 +1,5 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:9000"; 
-const INTERVIEW_BASE = process.env.NEXT_PUBLIC_INTERVIEW_BASE || "http://localhost:8080/api/v1";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:5050"; 
+//const INTERVIEW_BASE = process.env.NEXT_PUBLIC_INTERVIEW_BASE || "http://localhost:8080/api/v1";
 
 interface JobCreate {
   title: string;
@@ -18,10 +18,16 @@ interface JobCreate {
   skills: Record<string, Record<string, string>>;
 }
 
+const getAuthHeaders = (): Record<string, string> => {
+  const token = localStorage.getItem("accessToken");
+  return token ? { "Authorization": `Bearer ${token}` } : {};
+};
+
 // ----- JOBS ENDPOINTS -----
 export async function getJobs() {
   try {
-    const res = await fetch(`${API_BASE}/jobs`);
+    const headers = { ...getAuthHeaders() };
+    const res = await fetch(`${API_BASE}/jobs`, { headers });
     const data = await res.json();
     return data; // Expected { success: boolean, jobs: Job[], error?: string }
   } catch (error: any) {
@@ -33,7 +39,7 @@ export async function createJob(jobData: any) {
   try {
     const res = await fetch(`${API_BASE}/jobs`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
       body: JSON.stringify(jobData),
     });
     const data = await res.json();
@@ -45,7 +51,7 @@ export async function createJob(jobData: any) {
 
 export async function getJobById(id: string) {
   try {
-    const res = await fetch(`${API_BASE}/jobs/${id}`);
+    const res = await fetch(`${API_BASE}/jobs/${id}`, { headers: { ...getAuthHeaders() } });
     const data = await res.json();
     return data; // Expected { success: boolean, job: Job, error?: string }
   } catch (error: any) {
@@ -57,7 +63,7 @@ export async function updateJob(id: string, jobData: any) {
   try {
     const res = await fetch(`${API_BASE}/jobs/${id}`, {
       method: "PUT", // or PATCH, depending on your backend implementation
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
       body: JSON.stringify(jobData),
     });
     const data = await res.json();
@@ -69,7 +75,7 @@ export async function updateJob(id: string, jobData: any) {
 
 export async function getJobApplications(jobId: string) {
   try {
-    const res = await fetch(`${API_BASE}/jobs/${jobId}/applications`);
+    const res = await fetch(`${API_BASE}/jobs/${jobId}/applications`, { headers: { ...getAuthHeaders() } });
     const data = await res.json();
     return data; // Expected { success: boolean, applications: Application[], error?: string }
   } catch (error: any) {
@@ -82,7 +88,7 @@ export async function createApplication(appData: any) {
   try {
     const res = await fetch(`${API_BASE}/applications`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
       body: JSON.stringify(appData),
     });
     const data = await res.json();
@@ -94,7 +100,7 @@ export async function createApplication(appData: any) {
 
 export async function getApplications() {
   try {
-    const res = await fetch(`${API_BASE}/applications`);
+    const res = await fetch(`${API_BASE}/applications`, { headers: { ...getAuthHeaders() } });
     const data = await res.json();
     return data; // Expected { success: boolean, applications: Application[], error?: string }
   } catch (error: any) {
@@ -114,7 +120,7 @@ export async function getApplicationById(id: string) {
 
 export async function rejectApplication(id: string) {
   try {
-    const res = await fetch(`${API_BASE}/applications/${id}/reject`, { method: "PATCH" });
+    const res = await fetch(`${API_BASE}/applications/${id}/reject`, { method: "PATCH", headers: { ...getAuthHeaders() } });
     const data = await res.json();
     return data; // Expected { success: boolean, application: Application, error?: string }
   } catch (error: any) {
@@ -125,7 +131,7 @@ export async function rejectApplication(id: string) {
 export async function acceptApplication(id: string) {
   try {
     const res = await fetch(`${API_BASE}/applications/${id}/accept`,
-      { method: "PATCH" }
+      { method: "PATCH", headers: { ...getAuthHeaders() } }
         );
     const data = await res.json();
     return data; // Expected { success: boolean, application: Application, error?: string }
@@ -138,7 +144,7 @@ export async function jobPost(jobData: JobCreate) {
   try {
     const res = await fetch(`${API_BASE}/jobs`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
       body: JSON.stringify(jobData),
     });
     const data = await res.json();
@@ -165,9 +171,9 @@ export async function jobPost(jobData: JobCreate) {
 // ----- INTERVIEW ENDPOINTS -----
 export async function scheduleInterview(application_id: string) {
   try {
-    const res = await fetch(`${INTERVIEW_BASE}/interview/schedule`, {
+    const res = await fetch(`${API_BASE}/interview/schedule`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...getAuthHeaders()  },
       body: JSON.stringify({ application_id: application_id }),
     });
     const data = await res.json();
@@ -176,3 +182,90 @@ export async function scheduleInterview(application_id: string) {
     return { success: false, error: error.message || "Failed to schedule interview" };
   }
 }
+
+//login 
+export async function login(authData: { email: string; password: string }): Promise<{ success: boolean; token?: string; userId?: string; role?: string; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(authData),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      return { success: false, error: errorData.error || "Failed to login" };
+    }
+
+    const data = await res.json();
+    const token = data.access_token;
+    const { sub: userId, role } = JSON.parse(atob(token.split(".")[1]));
+
+    if (!userId || !role) return { success: false, error: "Invalid token structure." };
+
+    localStorage.setItem("accessToken", token);
+    localStorage.setItem("userId", userId);
+    localStorage.setItem("userRole", role);
+
+    return { success: true, token, userId, role };
+  } catch (error) {
+    return { success: false, error: (error as Error).message || "Failed to login" };
+  }
+}
+
+//HR account creation
+export const createHRAccount = async (userData: any) => {
+  const token = localStorage.getItem("accessToken");
+  if (!token) return { success: false, error: "Unauthorized: No token provided" };
+
+  try {
+    const response = await fetch(`${API_BASE}/users/hr`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(userData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      return { success: false, error: errorData.error || `HTTP error! Status: ${response.status}` };
+    }
+
+    return { success: true, data: await response.json() };
+  } catch (error) {
+    return { success: false, error: (error as Error).message || "Network error occurred" };
+  }
+};
+
+//update account
+export const updateOwnAccount = async (userData: any) => {
+  const token = localStorage.getItem("accessToken");
+  const userId = localStorage.getItem("userId");
+  if (!token || !userId) return { success: false, error: "Unauthorized: No token or user ID provided" };
+
+  const requestData: Record<string, any> = { password: userData.newPassword };
+  if (userData.firstName) requestData.firstName = userData.firstName;
+  if (userData.lastName) requestData.lastName = userData.lastName;
+
+  try {
+    const response = await fetch(`${API_BASE}/users/${userId}/self`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(requestData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      return { success: false, error: errorData.error || `HTTP error! Status: ${response.status}` };
+    }
+
+    return { success: true, data: await response.json() };
+  } catch (error) {
+    return { success: false, error: "Network error occurred" };
+  }
+};
