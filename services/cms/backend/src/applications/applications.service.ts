@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, lastValueFrom } from 'rxjs';
 
 @Injectable()
 export class ApplicationsService {
@@ -25,17 +25,17 @@ export class ApplicationsService {
     }
   }
 
-  async findOne(id: string) {
-    this.logger.log(`Fetching application with ID: ${id}`);
+  async findOne(application_id: string) {
+    this.logger.log(`Fetching application with ID: ${application_id}`);
     try {
       const response = await firstValueFrom(
-        this.httpService.get(`${this.baseUrl}/applications/${id}`),
+        this.httpService.get(`${this.baseUrl}/applications/${application_id}`),
       );
       this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
       return response.data;
     } catch (error) {
-      this.logger.error(`Error fetching application ${id}: ${error.message}`, error.stack);
-      return { success: false, error: `Error fetching application ${id}` };
+      this.logger.error(`Error fetching application ${application_id}: ${error.message}`, error.stack);
+      return { success: false, error: `Error fetching application ${application_id}` };
     }
   }
 
@@ -50,6 +50,40 @@ export class ApplicationsService {
     } catch (error) {
       this.logger.error(`Error creating application: ${error.message}`, error.stack);
       return { success: false, error: 'Error creating application' };
+    }
+  }
+
+  async reject(application_id: string): Promise<any> {
+    this.logger.log(`Rejecting application with ID: ${application_id}`);
+    try {
+      const response = await firstValueFrom(
+        this.httpService.patch(`${this.baseUrl}/applications/${application_id}/reject`)
+      );
+      this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
+      return response.data; 
+    } catch (error) {
+      this.logger.error(`Error rejecting application ${application_id}: ${error.message}`, error.stack);
+      return {
+        success: false,
+        error: error?.response?.data?.error || 'Error rejecting application',
+      };
+    }
+  }
+
+  async accept(application_id: string): Promise<any> {
+    this.logger.log(`Accepting application with ID: ${application_id}`);
+    try {
+      const response = await firstValueFrom(
+        this.httpService.patch(`${this.baseUrl}/applications/${application_id}/accept`)
+      );
+      this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
+      return response.data; 
+    } catch (error) {
+      this.logger.error(`Error accepting application ${application_id}: ${error.message}`, error.stack);
+      return {
+        success: false,
+        error: error?.response?.data?.error || 'Error accepting application',
+      };
     }
   }
 }

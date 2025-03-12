@@ -8,7 +8,7 @@ export class InterviewService {
   private readonly logger = new Logger(InterviewService.name);
 
   constructor(private readonly httpService: HttpService) {
-    this.baseUrl = process.env.INTERVIEW_BACKEND_URL || 'http://interview_backend:8080';
+    this.baseUrl = process.env.INTERVIEW_BACKEND_URL || 'http://interview_backend:8080/api/v1/';
   }
 
   async schedule(applicationId: string) {
@@ -17,7 +17,7 @@ export class InterviewService {
       const payload = { application_id: applicationId };
 
       const response = await firstValueFrom(
-        this.httpService.post(`${this.baseUrl}/schedule`, payload),
+        this.httpService.post(`${this.baseUrl}/interview/schedule`, payload),
       );
 
       this.logger.debug(`Interview schedule response: ${JSON.stringify(response.data)}`);

@@ -173,7 +173,7 @@ export async function scheduleInterview(application_id: string) {
   try {
     const res = await fetch(`${API_BASE}/interview/schedule`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+      headers: { "Content-Type": "application/json", ...getAuthHeaders()  },
       body: JSON.stringify({ application_id: application_id }),
     });
     const data = await res.json();
