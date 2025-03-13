@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
 import { useState } from "react";
+import { createHRAccount } from "@/lib/api"; // Import the API function
 
 import {
   Form,
@@ -19,9 +20,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// Updated Schema: Now using firstName & lastName
 const formSchema = z.object({
-  username: z.string().min(3, {
-    message: "Username must be at least 3 characters.",
+  firstName: z.string().min(2, {
+    message: "First name must be at least 2 characters.",
+  }),
+  lastName: z.string().min(2, {
+    message: "Last name must be at least 2 characters.",
   }),
   email: z.string().email({
     message: "Please enter a valid email address.",
@@ -37,7 +42,8 @@ export default function CreateHrAccountForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: "",
+      firstName: "",
+      lastName: "",
       email: "",
       password: "",
     },
@@ -46,15 +52,23 @@ export default function CreateHrAccountForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      toast.success("Account created successfully", {
-        description: "HR credentials have been saved",
+      // Send updated data structure to the API
+      const response = await createHRAccount({
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email,
+        password: values.password,
+        role: "hr", // Ensure role is explicitly set
       });
+
+      toast.success("Account created successfully", {
+        description: `HR ${values.firstName} ${values.lastName} has been registered`,
+      });
+
       form.reset();
-    } catch (error) {
+    } catch (error: any) {
       toast.error("Creation failed", {
-        description: "There was an error creating the account",
+        description: error || "There was an error creating the account",
       });
     } finally {
       setLoading(false);
@@ -69,7 +83,7 @@ export default function CreateHrAccountForm() {
             Create HR Account
           </h2>
           <div className="space-y-6">
-            {[...Array(3)].map((_, i) => (
+            {[...Array(4)].map((_, i) => (
               <div key={i} className="space-y-2">
                 <Skeleton className="h-4 w-[30%] bg-[#364957]/20" />
                 <Skeleton className="h-10 bg-[#364957]/10" />
@@ -91,17 +105,18 @@ export default function CreateHrAccountForm() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* First Name Field */}
             <FormField
               control={form.control}
-              name="username"
+              name="firstName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-[#364957] text-lg font-semibold">
-                    Username
+                    First Name
                   </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter username..."
+                      placeholder="Enter first name..."
                       className="border-2 border-[#364957]/20 focus:border-[#FF8A00]
                         focus-visible:ring-[#FF8A00]/50 text-[#364957] placeholder-[#364957]/50
                         transition-all duration-200 hover:border-[#364957]/30 h-12"
@@ -113,6 +128,30 @@ export default function CreateHrAccountForm() {
               )}
             />
 
+            {/* Last Name Field */}
+            <FormField
+              control={form.control}
+              name="lastName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-[#364957] text-lg font-semibold">
+                    Last Name
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter last name..."
+                      className="border-2 border-[#364957]/20 focus:border-[#FF8A00]
+                        focus-visible:ring-[#FF8A00]/50 text-[#364957] placeholder-[#364957]/50
+                        transition-all duration-200 hover:border-[#364957]/30 h-12"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Email Field */}
             <FormField
               control={form.control}
               name="email"
@@ -136,6 +175,7 @@ export default function CreateHrAccountForm() {
               )}
             />
 
+            {/* Password Field */}
             <FormField
               control={form.control}
               name="password"
@@ -162,6 +202,7 @@ export default function CreateHrAccountForm() {
               )}
             />
 
+            {/* Submit Button */}
             <Button
               type="submit"
               className="w-full bg-[#FF8A00] hover:bg-[#FF8A00]/90 text-[#364957] font-bold
