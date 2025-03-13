@@ -1,21 +1,14 @@
 "use client";
 
 import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import { ArrowUpRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import JobsGrid from "@/components/jobs-grid";
 import LoadingSkeleton from "@/components/loading-skeleton";
 import SiteFooter from "@/components/site-footer";
+import SearchParamsProvider from "@/components/search-params-provider";
 
 export default function HomePage() {
-  const searchParams = useSearchParams();
-  
-
-  const search = searchParams.get("search") || "";
-  const type = searchParams.get("type") || "";
-  const skills = searchParams.get("skills") || "";
-
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-primary/5 via-white to-white">
       <main className="flex-1">
@@ -33,23 +26,23 @@ export default function HomePage() {
                 method="get"
                 className="flex flex-col sm:flex-row sm:flex-wrap items-center justify-center gap-4 px-4 py-2"
               >
-              
-                
                 <input
                   type="text"
                   name="search"
                   placeholder="Title"
                   className="text-white bg-transparent border-b border-white/20 focus:outline-none focus:ring-0 focus:bg-transparent w-full sm:w-auto"
                 />
-                
                 <input
                   type="text"
                   name="skills"
                   placeholder="Skills (comma-separated)"
                   className="text-white bg-transparent border-b border-white/20 focus:outline-none focus:ring-0 focus:bg-transparent w-full sm:w-auto"
                 />
-                
-                <Button type="submit" variant="ghost" className="text-white hover:bg-white/70 p-2 flex items-center">
+                <Button
+                  type="submit"
+                  variant="ghost"
+                  className="text-white hover:bg-white/70 p-2 flex items-center"
+                >
                   Search <ArrowUpRight className="w-5 h-5" />
                 </Button>
               </form>
@@ -64,8 +57,11 @@ export default function HomePage() {
             <h2 className="text-3xl font-bold text-primary">Career Opportunities</h2>
           </div>
 
+          {/* Wrap SearchParamsProvider and JobsGrid in a Suspense boundary */}
           <Suspense fallback={<LoadingSkeleton />}>
-            <JobsGrid search={search} type={type} skills={skills} />
+            <SearchParamsProvider>
+              <JobsGrid />
+            </SearchParamsProvider>
           </Suspense>
         </div>
       </main>

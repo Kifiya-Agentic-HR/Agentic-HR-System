@@ -13,13 +13,17 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 def calculate_score(skills: dict) -> int:
+    total = 0
     try:
         # Each skill has a rating out of 10
         if type(skills) is not dict:
-            return 
-        total = 0
+            return total
         for skill, data in skills.items():
+            if type(data) is not dict:
+                continue
             total += data.get("score", 0)
+            total += data.get("rating", 0)
+
         return total / len(skills)
     except Exception as e:
         logger.error(f"Score calculation error: {str(e)}")

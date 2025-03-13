@@ -21,6 +21,7 @@ const eslintConfig = [
       "react-hooks/exhaustive-deps": "off",
       // Disable warning for using <img> instead of <Image />
       "@next/next/no-img-element": "off",
+      "react/no-unescaped-entities": "off"
     },
   },
 ];

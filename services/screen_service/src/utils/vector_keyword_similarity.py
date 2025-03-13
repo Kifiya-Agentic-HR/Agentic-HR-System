@@ -92,7 +92,7 @@ def calculate_scores(job_text, resume_text):
     vector_score = calculate_vector_similarity(job_text, resume_text)
 
     # Weighted scoring system
-    weighted_keyword = keyword_score * 0.3  # 30% weight
+    weighted_keyword = keyword_score * 0.1  # 30% weight
     weighted_vector = vector_score * 0.1    # 10% weight
 
     return {

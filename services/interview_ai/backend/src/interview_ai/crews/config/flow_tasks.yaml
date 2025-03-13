@@ -7,7 +7,7 @@ flow_management_task:
       * **Completed:** All required skill evaluations are finished.
       **Stage Determination Rules:**
 
-      1.  **Welcome:** If the `conversation_history` is empty, the interview is in the "welcome" stage.
+      1.  **Welcome:** If the `conversation_history` is empty, the interview is in the "welcome" stage. [ONLY IF IT IS EMPTY OTHERWISE IT IS NOT IN WELCOME STAGE]
       2.  **Ongoing:** If the `conversation_history` is not empty, the interview is in the "ongoing" stage, *unless* the "completed" criteria are met.
       3.  **Completed:** The interview is "completed" when **all** skills meet **one** of these criteria:
           * At least 3 questions have been asked about the skill.
