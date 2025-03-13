@@ -234,11 +234,11 @@ const StatusPopup = ({
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-medium text-[#364957] capitalize">{skill}</span>
                     <span className="text-sm text-[#364957]/80">
-                      {data.score}/10
+                      {data.rating}/10
                     </span>
                   </div>
                   <ProgressBar 
-                    value={(data.score / 10) * 100} 
+                    value={(data.rating / 10) * 100} 
                     color="#FF8A00" 
                     className="h-2 rounded-full"
                   />

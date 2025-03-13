@@ -42,7 +42,8 @@ export interface Job {
       conversation_history?: string[];
       score?: number;
       skill_assessment?: Record<string, {
-        score: number;
+        score?: number;
+        rating: number;
         required_level: string;
         number_of_questions: number;
         evidence: string;
