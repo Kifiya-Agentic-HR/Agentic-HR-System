@@ -19,6 +19,9 @@ services:
       NOTIFICATION_SERVICE_URL: "http://notification:${NOTIFICATION_PORT}/api/v1/"
       FRONTEND_BASE_URL: "http://localhost:${CMS_FRONTEND_PORT}"
       INTERVIEW_BACKEND_URL: "http://interview_backend:8080/api/v1"
+      JWT_SECRET: "${JWT_SECRET}"
+      ADMIN_EMAIL: "${ADMIN_EMAIL}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
     networks:
       - app_network
     

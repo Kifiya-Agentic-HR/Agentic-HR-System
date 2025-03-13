@@ -22,7 +22,6 @@ def transform_skills(job_skills: dict) -> dict:
             "required_level": required_level,
             "rating": 0,
             "questions_asked": 0,
-            "weight": 10
         }
     return transformed
 
@@ -55,6 +54,8 @@ async def manage_session(
             if session_data:
                 try:
                     parsed_data = SessionData.model_validate_json(session_data)
+                    logger.info(f"-"*300)
+                    logger.info(f"Session data found SKills part: {parsed_data.skills}")
                     response.status_code = status.HTTP_200_OK
                     return {
                         "success": True,
