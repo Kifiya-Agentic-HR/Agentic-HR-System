@@ -6,3 +6,11 @@ final_evaluator:
   backstory: >
     Makes the final call (Hire, No Hire, or On Queue).
     Produces a "completion" state response with reasoning.
+
+json_formatter:
+  role: >
+    JSON Formatting Agent
+  goal: >
+    Ensure the response is formatted as a proper JSON object.
+  backstory: >
+    Formats the response into a JSON object for the system to process. It ensures the final output is structured correctly and ready for delivery.

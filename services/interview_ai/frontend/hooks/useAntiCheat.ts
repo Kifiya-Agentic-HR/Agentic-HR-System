@@ -75,7 +75,7 @@ export function useAntiCheat(isActive: boolean = false, videoRef: RefObject<HTML
       lastViolationRef.current = lastViolation.timestamp;
 
       const severity = violations.totalWeight >= THRESHOLDS.CRITICAL ? "destructive" :
-        violations.totalWeight >= THRESHOLDS.WARNING ? "warning" : "default";
+        violations.totalWeight >= THRESHOLDS.WARNING ? "default" : "default";
 
       const title = violations.totalWeight >= THRESHOLDS.CRITICAL ? "Critical Violation" :
         violations.totalWeight >= THRESHOLDS.WARNING ? "Warning" : "Notice";

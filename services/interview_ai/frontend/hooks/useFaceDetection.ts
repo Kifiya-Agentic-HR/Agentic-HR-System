@@ -15,8 +15,8 @@ export type FaceDetectionState = {
 
 const DETECTION_INTERVAL = 300; // Optimized detection interval
 const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@latest/model/';
-const MIN_CONFIDENCE = 0.7; // Increased confidence threshold
-const HEAD_OFFSET_THRESHOLD = 0.25; // Threshold for head position deviation
+const MIN_CONFIDENCE = 0.6; // Increased confidence threshold
+const HEAD_OFFSET_THRESHOLD = 0.2; // Threshold for head position deviation
 
 export function useFaceDetection(videoRef: RefObject<HTMLVideoElement | null>) {
   const [state, setState] = useState<FaceDetectionState>({
@@ -32,13 +32,15 @@ export function useFaceDetection(videoRef: RefObject<HTMLVideoElement | null>) {
   const detectionRef = useRef<number | null>(null);
   const faceapiRef = useRef<typeof import("face-api.js") | null>(null);
   const modelLoadAttempted = useRef(false);
-  
+
   useEffect(() => {
+  
     const loadModels = async () => {
       if (modelLoadAttempted.current) return;
       modelLoadAttempted.current = true;
 
       try {
+        // console.log('Loading face-api models...');
         const faceapi = await import("face-api.js");
         faceapiRef.current = faceapi;
 
@@ -55,12 +57,14 @@ export function useFaceDetection(videoRef: RefObject<HTMLVideoElement | null>) {
           faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
           updateProgress(80, 500),
           faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-          updateProgress(100, 300)
         ]);
 
+        updateProgress(100, 300)
+
+        // console.log('Models loaded successfully');
         setState(prev => ({ ...prev, isModelLoading: false }));
       } catch (error) {
-        console.error("Model loading failed:", error);
+        // console.error("Model loading failed:", error);
         setState(prev => ({ ...prev, isModelLoading: false }));
       }
     };
@@ -79,7 +83,7 @@ export function useFaceDetection(videoRef: RefObject<HTMLVideoElement | null>) {
       const eyesMidpoint = landmarks.positions
         .slice(36, 48) // Eye landmarks
         .reduce((acc, pt) => ({ x: acc.x + pt.x, y: acc.y + pt.y }), { x: 0, y: 0 });
-      
+
       eyesMidpoint.x /= 12;
       eyesMidpoint.y /= 12;
 
@@ -94,8 +98,10 @@ export function useFaceDetection(videoRef: RefObject<HTMLVideoElement | null>) {
       };
     };
 
+    
     const detectFace = async () => {
       const video = videoRef.current;
+      // console.log('Video ReadyState:', video?.readyState, 'Paused:', video?.paused);
       if (!video || !faceapiRef.current || video.readyState < 4) {
         // @ts-expect-error - video.readyState is not yet defined
         detectionRef.current = setTimeout(detectFace, DETECTION_INTERVAL);
@@ -103,11 +109,14 @@ export function useFaceDetection(videoRef: RefObject<HTMLVideoElement | null>) {
       }
 
       try {
+        // console.log('Starting face detection...');
         const detections = await faceapiRef.current
           .detectAllFaces(video, new faceapiRef.current.SsdMobilenetv1Options({ 
             minConfidence: MIN_CONFIDENCE 
           }))
           .withFaceLandmarks();
+
+        // console.log('Detections:', detections);
 
         let isLookingAway = detections.length === 0;
         let confidenceScore = 0;
@@ -146,7 +155,13 @@ export function useFaceDetection(videoRef: RefObject<HTMLVideoElement | null>) {
       detectionRef.current = setTimeout(detectFace, DETECTION_INTERVAL);
     };
 
+    if (!state.isModelLoading) {
+      console.log("Manually triggering face detection...");
+      detectFace();
+    }
+
     const video = videoRef.current;
+    console.log('Video ReadyState:', video?.readyState, 'Paused:', video?.paused);
     if (!video || state.isModelLoading) return;
 
     const handleVideoPlay = () => {
@@ -163,6 +178,5 @@ export function useFaceDetection(videoRef: RefObject<HTMLVideoElement | null>) {
       if (detectionRef.current) clearTimeout(detectionRef.current);
     };
   }, [state.isModelLoading, videoRef]);
-
   return state;
 }

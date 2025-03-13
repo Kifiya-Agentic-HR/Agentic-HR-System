@@ -46,7 +46,8 @@ export function PreInterviewCheck({ onComplete }: PreInterviewCheckProps) {
         toast({
           title: "Face Detection Issues",
           description: "Continuing with basic camera check. Some anti-cheating features may be limited.",
-          variant: "default"
+          variant: "default",
+          
         });
       }
     }, 10000);

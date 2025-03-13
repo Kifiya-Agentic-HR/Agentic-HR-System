@@ -100,9 +100,24 @@ export async function createApplication(appData: any) {
 
 export async function getApplications() {
   try {
-    const res = await fetch(`${API_BASE}/applications`, { headers: { ...getAuthHeaders() } });
-    const data = await res.json();
-    return data; // Expected { success: boolean, applications: Application[], error?: string }
+    // First get all jobs
+    const jobsResponse = await getJobs();
+    if (!jobsResponse.success) {
+      return { success: false, error: jobsResponse.error || "Failed to fetch jobs" };
+    }
+
+    // Fetch applications for each job
+    let mergedApplications: any[] = [];
+    for (const job of jobsResponse.jobs) {
+      const applicationsResponse = await getJobApplications(job._id);
+      if (applicationsResponse.success) {
+        mergedApplications = mergedApplications.concat(applicationsResponse.applications);
+      } else {
+        console.error(`Failed to fetch applications for job ${job._id}:`, applicationsResponse.error);
+      }
+    }
+
+    return { success: true, applications: mergedApplications };
   } catch (error: any) {
     return { success: false, error: error.message || "Failed to fetch applications" };
   }

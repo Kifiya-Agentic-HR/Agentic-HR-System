@@ -23,24 +23,24 @@ class UnifiedInterface:
 
     def _call_crew(self, crew, input_data, crew_name):
         try:
-            logger.info("-" * 50)
-            logger.info(f"Calling {crew_name} with input: {input_data}")
+            # logger.info("-" * 50)
+            # logger.info(f"Calling {crew_name} with input: {input_data}")
             response = crew.kickoff(inputs=input_data)
             return json_to_dict(response.raw)
         except Exception as e:
             return self._error(f"{crew_name} error: {e}")
 
     def kickoff(self, input_data, max_conversation_history=5):
-        print("Input data: ", input_data)
+        # print("Input data: ", input_data)
         if not isinstance(input_data, dict):
             return self._error("Input must be a dictionary.")
         try:
             flow_response = self.flow_crew.kickoff(inputs=input_data)
             flow_result = json_to_dict(flow_response.raw)
             stage = flow_result.get("state")
-            logger.info("-" * 50)
-            logger.info("-" * 50)
-            logger.info(f"Flow manager result: {flow_result}")
+            # logger.info("-" * 50)
+            # logger.info("-" * 50)
+            # logger.info(f"Flow manager result: {flow_result}")
         except Exception as e:
             return self._error(f"Flow manager error: {e}")
 

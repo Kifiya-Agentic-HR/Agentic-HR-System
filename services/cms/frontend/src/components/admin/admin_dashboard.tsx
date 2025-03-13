@@ -87,10 +87,10 @@ export default function Dashboard() {
   const totalApplications = applications.length;
   const jobPosts = jobs.length;
   const screenedPassed = applications.filter(
-    (app) => app.screening?.score >= 5
+    (app) => app.screening?.score >= 50
   ).length;
   const screenedFailed = applications.filter(
-    (app) => app.screening?.score < 5
+    (app) => app.screening?.score < 50
   ).length;
 
   // Gender distribution

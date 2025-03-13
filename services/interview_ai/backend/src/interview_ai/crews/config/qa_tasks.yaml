@@ -67,7 +67,7 @@ question_generation_task:
 
 answer_evaluation_task:
   description: >
-    **NOTE:** If what the user written is irrelevant to any of the skills in the skill dictionary, return the skills dictionary as is, otherwise:
+    **NOTE:** If what the user written is irrelevant to any of the skills in the skill dictionary (I don't know, etc... counts as a proper answer and relevant, so you can score for that), return the skills dictionary as is, otherwise:
 
     Read the user's most recent answer and evaluate how well it addresses each relevant skill. 
     Update the skills dictionary by adjusting the score for any skill that the user’s answer pertains to. 
