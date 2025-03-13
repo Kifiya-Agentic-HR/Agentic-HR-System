@@ -68,7 +68,7 @@ ${interview}
   const getSelectionMessage = (step: string, items: any[]): string => {
     if (step === "selectJob") {
       return (
-        "Hello! Please select a job by typing the corresponding number:\n" +
+        "Please select a job by typing the corresponding number:\n" +
         items
           .map((job, index) => `${index + 1}. ${job.title} (ID: ${job._id})`)
           .join("\n")
@@ -84,11 +84,35 @@ ${interview}
     return "";
   };
 
+  // Detect user intents
+  const detectIntent = (message: string): string => {
+    const lowerMsg = message.toLowerCase().trim();
+    const changeJobCmds = ["change job", "switch job", "select new job"];
+    const changeApplicantCmds = [
+      "change applicant",
+      "switch applicant",
+      "select new applicant",
+    ];
+    const greetings = ["hello", "hi", "hey", "good morning", "good afternoon"];
+    const goodbyes = ["bye", "goodbye", "see you", "exit", "quit"];
+
+    if (changeJobCmds.some((c) => lowerMsg.includes(c))) return "changeJob";
+    if (changeApplicantCmds.some((c) => lowerMsg.includes(c)))
+      return "changeApplicant";
+    if (greetings.some((g) => lowerMsg.includes(g))) return "greeting";
+    if (goodbyes.some((g) => lowerMsg.includes(g))) return "goodbye";
+    return "";
+  };
+
   // Initialize chatbot when opened
   useEffect(() => {
     if (isOpen && messages.length === 0 && currentStep === "selectJob") {
+      const greeting = "Hello! How can I assist you today?";
       const selectionMessage = getSelectionMessage("selectJob", jobs);
-      setMessages([{ role: "bot", content: selectionMessage }]);
+      setMessages([
+        { role: "bot", content: greeting },
+        { role: "bot", content: selectionMessage },
+      ]);
     }
   }, [isOpen, currentStep, jobs, messages.length]);
 
@@ -99,6 +123,60 @@ ${interview}
     setMessages((prev) => [...prev, { role: "user", content: input }]);
     setIsLoading(true);
 
+    // Detect and handle intents first
+    const intent = detectIntent(input);
+    if (intent) {
+      let botResponse = "";
+      switch (intent) {
+        case "greeting":
+          botResponse = "Hello! How can I assist you today?";
+          break;
+        case "goodbye":
+          botResponse = "Goodbye! Have a great day!";
+          break;
+        case "changeJob":
+          setSelectedJob(null);
+          setSelectedApplication(null);
+          setApplications([]);
+          setCurrentStep("selectJob");
+          botResponse = `Changing job. ${getSelectionMessage(
+            "selectJob",
+            jobs
+          )}`;
+          break;
+        case "changeApplicant":
+          if (!selectedJob) {
+            botResponse = "Please select a job first.";
+          } else {
+            try {
+              const resp = await getJobApplications(selectedJob._id);
+              if (resp.success && resp.applications) {
+                setApplications(resp.applications);
+                setCurrentStep("selectApplicant");
+                setSelectedApplication(null);
+                botResponse = `Changing applicant. ${getSelectionMessage(
+                  "selectApplicant",
+                  resp.applications
+                )}`;
+              } else {
+                botResponse = "Failed to fetch applicants.";
+              }
+            } catch (error) {
+              botResponse = "Error fetching applicants.";
+            }
+          }
+          break;
+      }
+
+      if (botResponse) {
+        setMessages((prev) => [...prev, { role: "bot", content: botResponse }]);
+      }
+      setInput("");
+      setIsLoading(false);
+      return;
+    }
+
+    // Handle normal conversation flow
     if (currentStep === "selectJob") {
       const selection = parseInt(input) - 1;
       if (selection >= 0 && selection < jobs.length) {
@@ -106,7 +184,6 @@ ${interview}
         setSelectedJob(job);
         setCurrentStep("selectApplicant");
 
-        // Fetch applications
         const resp = await getJobApplications(job._id);
         if (resp.success && resp.applications) {
           setApplications(resp.applications);
@@ -167,39 +244,20 @@ ${applicantInfo}
 Question: ${question}
       `;
 
-      // Structure the prompt as required by the Gemini API
-      const prompt = {
-        contents: [
-          {
-            parts: [
-              {
-                text: promptText,
-              },
-            ],
-          },
-        ],
-      };
-
       try {
-        // Log the prompt for debugging
-        console.log("Sending prompt:", JSON.stringify(prompt, null, 2));
-        const result = await model.generateContent(prompt);
+        const result = await model.generateContent({
+          contents: [{ parts: [{ text: promptText }] }],
+        });
         const response = await result.response;
         const text = response.text();
         setMessages((prev) => [...prev, { role: "bot", content: text }]);
       } catch (error: any) {
-        // Enhanced error logging
-        console.error(
-          "Gemini API Error:",
-          error.response?.data || error.message
-        );
+        console.error("API Error:", error);
         setMessages((prev) => [
           ...prev,
           {
             role: "bot",
-            content: `Error: ${
-              error.response?.data?.error?.message || error.message
-            }`,
+            content: "Sorry, I encountered an error. Please try again.",
           },
         ]);
       }
