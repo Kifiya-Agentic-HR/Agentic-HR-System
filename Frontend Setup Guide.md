@@ -10,7 +10,7 @@ We use the **Inter** font from Google Fonts for a clean and modern look.
 - **Implementation**: Add the following to your HTML `<head>` to include Inter:
   ```bash
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-  ```
+  ```z
 ## Color Branding
 Our brand identity is reflected in the following colors:
 
