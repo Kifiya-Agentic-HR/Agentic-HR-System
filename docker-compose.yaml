@@ -248,6 +248,26 @@ services:
   
     networks:
       - app_network
+  technical_assessment_frontend:
+    build:
+      context: ./services/technical_assessment/frontend
+      dockerfile: Dockerfile
+    container_name: technical_assessment_frontend
+    ports:
+      - "${TECHNICAL_ASSESSEMENT_FRONTENDPORT}:4000"
+    depends_on:
+      - technical_assessment_backend
+    env_file: .env
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: "http://localhost:${TECHNICAL_ASSESSEMENT_FRONTENDPORT}"
+      NEXT_PUBLIC_GEMINI_API_KEY: "${GEMINI_API_KEY}"
+      TECHNICAL_ASSESSEMENT_BACKEND: "http://localhost:${TECHNICAL_ASSESSEMENT_BACKENDPORT}"
+
+    networks:
+      - app_network
+    volumes:
+      - shared_volume:/shared_volume
+    restart: unless-stopped
 
   # job_portal:
   #   build: ./services/screening/job-portal
