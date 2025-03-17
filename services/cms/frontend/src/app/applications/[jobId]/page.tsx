@@ -28,15 +28,19 @@ export default function ApplicationList() {
 
   useEffect(() => {
     const loadApplications = async () => {
+      console.log("Reloading applications...");
       try {
         if (!params.jobId) {
           throw new Error("Job ID not found");
         }
+        // Optionally, you can add a timestamp if your API cares about cache
+        // const timestamp = new Date().getTime();
         const resp = await getJobApplications(params.jobId as string);
         if (resp.success && resp.applications) {
+          console.log("Applications fetched:", resp.applications);
           setApplications(resp.applications);
         } else {
-          console.error(resp.error);
+          console.error("API error:", resp.error);
         }
       } catch (error) {
         console.error("Failed to load applications:", error);
@@ -46,7 +50,16 @@ export default function ApplicationList() {
       }
     };
 
+    // Initial load of applications
     loadApplications();
+
+    // Set up automatic reload every 30 seconds
+    const intervalId = setInterval(() => {
+      loadApplications();
+    }, 30000);
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(intervalId);
   }, [params.jobId, router]);
 
   const formatDate = (dateString: string) => {
@@ -65,7 +78,7 @@ export default function ApplicationList() {
   return (
     <div className="flex">
       <div className="w-64 bg-white border-r border-gray-200 p-6 min-h-screen">
-        <div className="mb-6 ml-4">
+        <div className="mb-6">
           <img src="/logo.svg" alt="Logo" className="h-12" />
         </div>
         <nav className="space-y-4">
@@ -150,7 +163,7 @@ export default function ApplicationList() {
                           }}
                           className={`flex items-center px-4 py-2 rounded-xl transition-all ${
                             app.screening?.score
-                              ? "bg-[#FF8A00]/10 text-[#FF6A00] hover:bg-[#FF8A00]/20"
+                              ? "bg-[#FF8A00]/10 text-[#FF8A00] hover:bg-[#FF8A00]/20"
                               : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                           }`}
                         >
