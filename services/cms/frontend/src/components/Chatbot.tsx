@@ -7,14 +7,20 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Initialize Gemini API
 const genAI = new GoogleGenerativeAI(
-  process.env.NEXT_PUBLIC_GEMINI_API_KEY || ""
+  process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
+    "AIzaSyBOZfZH8sLc61pMRJlFB4Yt40eKqhucPCA                                                "
 );
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 interface ChatMessage {
   role: "user" | "bot";
   content: string;
 }
+
+// Helper: Remove unwanted markdown artifacts (e.g., triple asterisks)
+const sanitizeResponse = (text: string): string => {
+  return text.replace(/\*{3,}/g, "");
+};
 
 export const Chatbot = ({ jobs }: { jobs: Job[] }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -33,19 +39,22 @@ export const Chatbot = ({ jobs }: { jobs: Job[] }) => {
   const formatApplicantData = (app: Application): string => {
     const screening = app.screening
       ? `
-Screening Status: ${app.screening.status}
+Screening Status: ${app.screening.score ? "Completed" : "Pending"}
+Screening Score: ${app.screening.score || "N/A"}
 Screening Reasoning: ${app.screening.reasoning || "N/A"}
 ${app.screening.parsed_cv ? `Parsed CV Data:\n${app.screening.parsed_cv}` : ""}
-Screening Updated: ${app.screening.updatedAt || "N/A"}
+Screening Updated: ${app.screening.created_at || "N/A"}
       `
       : "Screening: Pending";
 
     const interview = app.interview
       ? `
 Interview Status: ${app.interview.interview_status}
+Interview Score: ${app.interview.score || "N/A"}
 Hiring Decision: ${app.interview.hiring_decision || "N/A"}
 Interview Reasoning: ${app.interview.interview_reasoning || "N/A"}
-Interview Updated: ${app.interview.updatedAt || "N/A"}
+Skill Assessment: ${app.interview.skill_assessment || "N/A"}
+Interview Updated: ${app.interview.created_at || "N/A"}
       `
       : "Interview: Pending";
 
@@ -68,10 +77,8 @@ ${interview}
   const getSelectionMessage = (step: string, items: any[]): string => {
     if (step === "selectJob") {
       return (
-        "Please select a job by typing the corresponding number:\n" +
-        items
-          .map((job, index) => `${index + 1}. ${job.title} (ID: ${job._id})`)
-          .join("\n")
+        "Hello, I hope you're having a great day. Please select a job by typing the corresponding number:\n" +
+        items.map((job, index) => `${index + 1}. ${job.title}`).join("\n")
       );
     } else if (step === "selectApplicant") {
       return (
@@ -84,7 +91,7 @@ ${interview}
     return "";
   };
 
-  // Detect user intents
+  // Detect user intents with exact matching for greetings
   const detectIntent = (message: string): string => {
     const lowerMsg = message.toLowerCase().trim();
     const changeJobCmds = ["change job", "switch job", "select new job"];
@@ -93,13 +100,14 @@ ${interview}
       "switch applicant",
       "select new applicant",
     ];
+    // Only trigger greeting when the message exactly equals one of these words
     const greetings = ["hello", "hi", "hey", "good morning", "good afternoon"];
     const goodbyes = ["bye", "goodbye", "see you", "exit", "quit"];
 
     if (changeJobCmds.some((c) => lowerMsg.includes(c))) return "changeJob";
     if (changeApplicantCmds.some((c) => lowerMsg.includes(c)))
       return "changeApplicant";
-    if (greetings.some((g) => lowerMsg.includes(g))) return "greeting";
+    if (greetings.includes(lowerMsg)) return "greeting";
     if (goodbyes.some((g) => lowerMsg.includes(g))) return "goodbye";
     return "";
   };
@@ -107,12 +115,8 @@ ${interview}
   // Initialize chatbot when opened
   useEffect(() => {
     if (isOpen && messages.length === 0 && currentStep === "selectJob") {
-      const greeting = "Hello! How can I assist you today?";
       const selectionMessage = getSelectionMessage("selectJob", jobs);
-      setMessages([
-        { role: "bot", content: greeting },
-        { role: "bot", content: selectionMessage },
-      ]);
+      setMessages([{ role: "bot", content: selectionMessage }]);
     }
   }, [isOpen, currentStep, jobs, messages.length]);
 
@@ -129,7 +133,30 @@ ${interview}
       let botResponse = "";
       switch (intent) {
         case "greeting":
-          botResponse = "Hello! How can I assist you today?";
+          botResponse = "Hello! How I hope you're having a great day.";
+          setMessages((prev) => [
+            ...prev,
+            { role: "bot", content: botResponse },
+          ]);
+          if (currentStep === "selectJob") {
+            const jobPrompt = getSelectionMessage("selectJob", jobs);
+            setMessages((prev) => [
+              ...prev,
+              { role: "bot", content: jobPrompt },
+            ]);
+          } else if (
+            currentStep === "selectApplicant" &&
+            applications.length > 0
+          ) {
+            const applicantPrompt = getSelectionMessage(
+              "selectApplicant",
+              applications
+            );
+            setMessages((prev) => [
+              ...prev,
+              { role: "bot", content: applicantPrompt },
+            ]);
+          }
           break;
         case "goodbye":
           botResponse = "Goodbye! Have a great day!";
@@ -166,9 +193,11 @@ ${interview}
             }
           }
           break;
+        // ... handle other intents if needed ...
+        default:
+          break;
       }
-
-      if (botResponse) {
+      if (intent !== "greeting") {
         setMessages((prev) => [...prev, { role: "bot", content: botResponse }]);
       }
       setInput("");
@@ -236,7 +265,8 @@ ${interview}
       const question = input;
       const applicantInfo = formatApplicantData(selectedApplication);
       const promptText = `
-You are an HR assistant. Based on the following applicant information, answer the question. If the information is not available in the provided data, respond with "I'm sorry, that information is not available."
+      RETURN TYPE: TEXT (NO MARKDOWN)
+You are an HR assistant. Based on the following applicant information, answer the question. If the information is not available in the provided data, respond with "I'm sorry, that information is not available. \n\nNOTICE: Do NOT return markdowns."
 
 Applicant Information:
 ${applicantInfo}
@@ -246,10 +276,12 @@ Question: ${question}
 
       try {
         const result = await model.generateContent({
-          contents: [{ parts: [{ text: promptText }] }],
+          contents: [{ role: "user", parts: [{ text: promptText }] }],
         });
         const response = await result.response;
-        const text = response.text();
+        let text = response.text();
+        // Sanitize to remove unwanted markdown formatting
+        text = sanitizeResponse(text);
         setMessages((prev) => [...prev, { role: "bot", content: text }]);
       } catch (error: any) {
         console.error("API Error:", error);
