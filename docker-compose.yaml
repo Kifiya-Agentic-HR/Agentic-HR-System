@@ -18,6 +18,10 @@ services:
       REDIS_URI: "redis://redis:6379"
       NOTIFICATION_SERVICE_URL: "http://notification:${NOTIFICATION_PORT}/api/v1/"
       FRONTEND_BASE_URL: "http://localhost:${CMS_FRONTEND_PORT}"
+      INTERVIEW_BACKEND_URL: "http://interview_backend:8080/api/v1"
+      JWT_SECRET: "${JWT_SECRET}"
+      ADMIN_EMAIL: "${ADMIN_EMAIL}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
     networks:
       - app_network
     
@@ -213,6 +217,37 @@ services:
       timeout: 10s
       retries: 5
       start_period: 10s
+  technical_assessment_backend:
+    build: ./services/technical_assessment/backend
+    container_name: technical_assessment_backend
+    ports:
+      - "${TECHNICAL_ASSESSEMENT_BACKENDPORT}:4455"
+    env_file: .env
+    environment:
+      # RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
+      MONGODB_URI: "mongodb://mongo:27017/hr_db"  # Using local MongoDB
+      GEMINI_API_KEY: "${GEMINI_API_KEY}"  # Consider moving to .env
+      UPLOAD_DIR: "/shared_volume"
+      NOTIFICATION_SERVICE_URL: "http://notification:${NOTIFICATION_PORT}/api/v1/"
+      # MINIO_ROOT_USER: "${MINIO_ROOT_USER}"
+      # MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
+      # MINIO_URL: "http://s3-server:9000"
+
+    volumes:
+      - shared_volume:/shared_volume
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_started
+      # rabbitmq:
+      #   condition: service_healthy
+      # s3-server:
+      #   condition: service_healthy
+      # mc:
+      #   condition: service_started
+  
+    networks:
+      - app_network
 
   # job_portal:
   #   build: ./services/screening/job-portal

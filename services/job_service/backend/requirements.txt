@@ -10,7 +10,6 @@ nltk
 fastapi
 fastapi[all]
 uvicorn
-python-dotenv
 flask 
 flask-sqlalchemy
 

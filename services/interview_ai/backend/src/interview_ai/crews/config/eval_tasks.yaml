@@ -58,6 +58,8 @@ final_evaluation_task:
         - {role_info}
     4. User Information:
         - {user_info}
+
+      
   
   expected_output: >
     Strictly formatted JSON response without markdown:
@@ -65,9 +67,13 @@ final_evaluation_task:
       "state": "completed",
       "text": "Professional 2-3 sentence message with: 1) Thanking and Process acknowledgment 2) That they will be communicated for further steps",
       "hiring_decision": "Hire/No Hire/On Queue",
-      "reasoning": "Structured as: 1) Skill Analysis from Conversation 2) Conversation Evidence 3) Role Alignment 4) Decision Rationale",
-      "skills": "same as your input" 
+      "reasoning": "A string Structured as: 1) Skill Analysis from Conversation 2) Conversation Evidence 3) Role Alignment 4) Decision Rationale",
+      "skills": same as your input,
+      "rating": this will be your rating of overall performance out of 100. It will be an integer
     }
+
+    NOTE: the reasoning key's value is strictly formatted as a string.
+    NOTE: the skill is a JSON OBJECT PASS IT AS YOU GOT IT.
 
     **Validation Checklist:**
     - All strings use double quotes
@@ -77,3 +83,46 @@ final_evaluation_task:
     - Reasoning contains specific examples
 
   agent: final_evaluator
+
+json_formatting_task:
+   description: >
+      Ensure the response is formatted as a proper JSON object.
+      This task is responsible for ensuring the final output is structured correctly and ready for delivery.
+   expected_output: >
+      A properly formatted JSON object with the following keys:
+      - state: "completed"
+      - text: "Professional 2-3 sentence message with: 1) Thanking and Process acknowledgment 2) That they will be communicated for further steps"
+      - hiring_decision: "Hire/No Hire/On Queue"
+      - reasoning: "A string Structured as: 1) Skill Analysis from Conversation 2) Conversation Evidence 3) Role Alignment 4) Decision Rationale"
+      - skills: same as your input
+      - rating: this will be the rating of overall performance out of 100. It will be an integer. 
+
+   
+      NOTE: the reasoning key's value is strictly formatted as a string.
+      NOTE: the skill is a JSON OBJECT PASS IT AS YOU GOT IT from context. 
+      NOTE: YOUR ONLY TASK IS MAKING SURE THE OUTPUT IS PROPER JSON OBJECT WITH THE KEYS MENTIONED ABOVE. YOU SHOULDN'T CHANGE THE VALUES OF THE KEYS.
+            YOU CAN HOWEVER CHECK THE VALUES and THEIR TYPES TO MAKE SURE THEY ARE PROPERLY FORMATTED JSON OBJECTS AS THE FOLLOWING.
+      
+      You will get necessary info from the context.
+
+      Example output structur would be:
+      {
+        "state": "completed",
+        "text": "Thank you for your time. We will be in touch with you soon.",
+        "hiring_decision": "Hire",
+        "reasoning": "The candidate demonstrated exceptional problem-solving skills and technical depth in the conversation. Their communication was clear and concise, and they showed a strong alignment with the role requirements.",
+        "skills": 
+          "skill1": {
+            "rating": 8,
+            "required_level": "beginner / intermediate / advanced",
+            "questions_asked": 3,
+            "rating": 8, 
+          },
+                     },
+          "skill2": 7,
+          "skill3": 6,
+          "skill4": 5
+        },
+        "rating": 85
+      }
+   agent: json_formatter

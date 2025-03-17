@@ -1,5 +1,6 @@
 {
     "python.analysis.extraPaths": [
-        "./services/job_service/backend/app"
+        "./services/job_service/backend/app",
+        "./services/technical_assessment/backend/app"
     ]
 }

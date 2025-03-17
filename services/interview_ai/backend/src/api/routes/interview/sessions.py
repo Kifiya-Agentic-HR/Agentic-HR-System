@@ -22,7 +22,6 @@ def transform_skills(job_skills: dict) -> dict:
             "required_level": required_level,
             "rating": 0,
             "questions_asked": 0,
-            "weight": 10
         }
     return transformed
 
@@ -55,6 +54,8 @@ async def manage_session(
             if session_data:
                 try:
                     parsed_data = SessionData.model_validate_json(session_data)
+                    logger.info(f"-"*300)
+                    logger.info(f"Session data found SKills part: {parsed_data.skills}")
                     response.status_code = status.HTTP_200_OK
                     return {
                         "success": True,
@@ -85,6 +86,7 @@ async def manage_session(
         # Fetch interview data
         interview_data = await mongo_db.interviews.find_one({"_id": interview_obj_id})
         if not interview_data:
+            response.status_code = status.HTTP_400_BAD_REQUEST
             return {
                 "success": False,
                 "error": "Interview not found. Please schedule an interview first.",
@@ -113,8 +115,9 @@ async def manage_session(
             job = await mongo_db.jobs.find_one(
                 {"_id": ObjectId(interview_data["job_id"])}
             )
-            response.status_code = status.HTTP_400_BAD_REQUEST
+
             if not job:
+                response.status_code = status.HTTP_400_BAD_REQUEST
                 return {
                     "success": False,
                     "error": "Job not found. Please contact the HR team.",
@@ -177,6 +180,7 @@ async def manage_session(
 
         except Exception as e:
             logger.error(f"Session creation failed: {e.with_traceback()}")
+            response.status_code = status.HTTP_400_BAD_REQUEST
             return {
                 "success": False,
                 "error": str(e),
@@ -187,6 +191,7 @@ async def manage_session(
 
     except Exception as e:
         logger.error(f"Session management error: {str(e)}")
+        response.status_code = status.HTTP_400_BAD_REQUEST
         return {
             "success": False,
             "error": str(e),

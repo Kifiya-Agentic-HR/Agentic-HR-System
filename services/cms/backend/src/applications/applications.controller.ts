@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, UseGuards, Patch } from '@nestjs/common';
 import { ApplicationsService } from './applications.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -25,5 +25,17 @@ export class ApplicationsController {
   @Post()
   async create(@Body() appData: any) {
     return this.appsService.create(appData);
+  }
+  
+  @Patch(':id/reject')
+  @Roles(UserRole.HR, UserRole.ADMIN)
+  reject(@Param('id') id: string) {
+    return this.appsService.reject(id);
+  }
+
+  @Patch(':id/accept')
+  @Roles(UserRole.HR, UserRole.ADMIN)
+  accept(@Param('id') id: string) {
+    return this.appsService.accept(id);
   }
 }

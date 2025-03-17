@@ -150,6 +150,21 @@ const StatusPopup = ({
 
     return (
       <div className="space-y-6">
+       {application.interview.interview_status === 'completed' && application.interview.score && (
+          <div className="p-4 bg-[#364957]/5 rounded-lg">
+            <div className="flex items-center gap-2 text-lg font-semibold text-[#364957] mb-2">
+              <FileText className="w-5 h-5 text-[#FF8A00]" />
+              <h3>Interview Results</h3>
+            </div>
+            <div className="flex items-baseline gap-4">
+              <div className="text-3xl font-bold text-[#364957]">
+                {application.interview?.score?.toFixed(1) || 'N/A'}
+              </div>
+              <span className="text-[#364957]/80">Overall Score</span>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-4">
           <div className="p-4 bg-[#364957]/5 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
@@ -219,11 +234,11 @@ const StatusPopup = ({
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-medium text-[#364957] capitalize">{skill}</span>
                     <span className="text-sm text-[#364957]/80">
-                      {data.score}/10
+                      {data.rating}/10
                     </span>
                   </div>
                   <ProgressBar 
-                    value={(data.score / 10) * 100} 
+                    value={(data.rating / 10) * 100} 
                     color="#FF8A00" 
                     className="h-2 rounded-full"
                   />

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import Union
+from typing import Optional, Union
 from enum import Enum
 
 class NotificationType(str, Enum):
@@ -7,7 +7,9 @@ class NotificationType(str, Enum):
     interview_completed = "interview_completed"
     text = "text"
     application_received = "application_received"
+    application_passed = "application_passed"
     interview_flagged = "interview_flagged"
+    application_rejected = "application_rejected"
 
 from typing import Literal
 from pydantic import BaseModel, EmailStr
@@ -40,11 +42,24 @@ class ApplicationReceivedNotification(BaseNotification):
     name: str
     title: str  # Job title
 
+class ApplicationPassedNotification(BaseNotification):
+    type: Literal[NotificationType.application_passed]
+    name: str
+    title: str  # Job title
+
+class ApplicationRejectedNotification(BaseNotification):
+    type: Literal[NotificationType.application_rejected]
+    name: str
+    title: str  # Job title
+    suggestion: Optional[str] = ""
+    rejection_reason: Optional[str] = ". After careful consideration, we have decided to move forward with other candidates who more closely match our current needs. We appreciate your interest and encourage you to apply for future opportunities that align with your skills and experience."
 
 NotificationUnion = Union[
     InterviewScheduledNotification,
     InterviewCompletedNotification,
     TextNotification,
     ApplicationReceivedNotification,
-    InterviewFlaggedNotification
+    InterviewFlaggedNotification,
+    ApplicationPassedNotification,
+    ApplicationRejectedNotification
 ]
