@@ -221,7 +221,7 @@ services:
     build: ./services/technical_assessment/backend
     container_name: technical_assessment_backend
     ports:
-      - "${TECHNICAL_ASSESSEMENT_BACKENDPORT}:4455"
+      - "4455:4455"
     env_file: .env
     environment:
       # RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"

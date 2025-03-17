@@ -10,6 +10,10 @@ class NotificationType(str, Enum):
     application_passed = "application_passed"
     interview_flagged = "interview_flagged"
     application_rejected = "application_rejected"
+    interview_passed = "interview_passed"
+    technical_scheduled = "technical_scheduled"
+    technical_flagged = "technical_flagged"
+    technical_completed = "technical_completed"
 
 from typing import Literal
 from pydantic import BaseModel, EmailStr
@@ -32,6 +36,21 @@ class InterviewCompletedNotification(BaseNotification):
 
 class InterviewFlaggedNotification(BaseNotification):
     type: Literal[NotificationType.interview_flagged]
+
+class TechnicalScheduledNotification(BaseNotification):
+    type: Literal[NotificationType.technical_scheduled]
+    technical_link: str
+    name: str
+    title: str  # Job title
+
+class TechnicalCompletedNotification(BaseNotification):
+    type: Literal[NotificationType.technical_completed]
+    name: str
+    title: str  # Job title
+
+class TechnicalFlaggedNotification(BaseNotification):
+    type: Literal[NotificationType.technical_flagged]
+
 
 class TextNotification(BaseNotification):
     type: Literal[NotificationType.text]
