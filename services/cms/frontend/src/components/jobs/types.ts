@@ -1,4 +1,5 @@
 export interface Job {
+    _id?: string;
     id: string;
     title: string;
     status: 'ongoing' | 'closed';

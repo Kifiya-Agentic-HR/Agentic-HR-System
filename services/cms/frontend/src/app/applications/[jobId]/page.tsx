@@ -147,7 +147,7 @@ export default function ApplicationList() {
                       </td>
                       <td className="px-6 py-4">
                         <Link
-                          href={app.cv_link}
+                          href={app.cv_link.replace("s3-server", window.location.hostname).replace(":9000", ":9002")}
                           className="flex items-center text-secondary hover:text-[#FF6A00] transition-colors"
                           target="_blank"
                         >

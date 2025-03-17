@@ -22,7 +22,8 @@ const eslintConfig = [
       // Disable warning for using <img> instead of <Image />
       "@next/next/no-img-element": "off",
       "react/no-unescaped-entities": "off",
-      "@typescript-eslint/no-explicit-any": "off"
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-expressions": "off"
     },
   },
 ];
