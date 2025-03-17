@@ -34,10 +34,10 @@
 |  _id                |                    |  _id                 |
 |  role               |                    |  assessment_result   |
 |  first_name         |                    |  application_id      |                   
-|  last_name          |                    |  level               | //easy, medium, hard
-|  created_at         |                    |  no_of_questions     | //defaulting to 2
-|  password           |                    |  assessment_reasoning|
-|  email              |                    +----------------------+
+|  last_name          |                    |  question            | //defaulting to 2
+|  created_at         |                    |  assessment_reasoning|
+|  password           |                    +----------------------+
+|  email              |                    
 +---------------------+  
 
 Description = {
@@ -49,6 +49,14 @@ responsibilities: "", // html
 location: ""
 }
 
+question = {
+description:"",
+input:[input1,explanation1],
+output:"",
+additional description:"",
+template:{programming_language:""}, //sample code
+difficulty_level:"" //easy,medium,hard
+}
 
 ## job_id = job._id
 ## candidate_id = candidate._id
