@@ -284,3 +284,97 @@ export const updateOwnAccount = async (userData: any) => {
     return { success: false, error: "Network error occurred" };
   }
 };
+
+//get all users
+export const fetchAllUsers = async () => {
+  const token = localStorage.getItem("accessToken");
+  if (!token) return { success: false, error: "Unauthorized: No token provided" };
+
+  try {
+    const response = await fetch(`${API_BASE}/users`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error("Error fetching users:", errorData);
+      return { success: false, error: errorData.error || `HTTP error! Status: ${response.status}` };
+    }
+
+    const users = await response.json();
+    console.log("Fetched Users:", users);
+
+    storeUserIds(users); // Store user IDs locally
+
+    return { success: true, data: users };
+  } catch (error) {
+    console.error("Network error:", error);
+    return { success: false, error: "Network error occurred" };
+  }
+};
+
+// Store user IDs in localStorage
+export const storeUserIds = (users: any[]) => {
+  const userData = users.map(user => ({ id: user._id, email: user.email }));
+  localStorage.setItem("userIds", JSON.stringify(userData));
+  console.log("Stored user IDs in localStorage:", userData);
+};
+
+// Retrieve a user ID by email
+export const getUserIdByEmail = (email: string): string | undefined => {
+  const users = JSON.parse(localStorage.getItem("userIds") || "[]");
+  const user = users.find((user: any) => user.email === email);
+  return user ? user.id : undefined;
+};
+
+// Delete a user by email (admin only)
+
+
+// Delete a user by ID (admin only)
+export const deleteUser = async (userId: string, userRole: string) => {
+  if (!userId) {
+    console.error("Error: User ID is undefined");
+    return { success: false, error: "Invalid user ID" };
+  }
+
+  // Prevent admin deletion
+  if (userRole === "admin") {
+    console.warn("Admin account cannot be deleted.");
+    return { success: false, error: "Admin account cannot be deleted." };
+  }
+
+  const token = localStorage.getItem("accessToken");
+  if (!token) {
+    console.error("Unauthorized: No token provided");
+    return { success: false, error: "Unauthorized: No token provided" };
+  }
+
+  console.log(`Deleting user with ID: ${userId}`);
+
+  try {
+    const response = await fetch(`${API_BASE}/users/${userId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      console.error("Delete API Error:", data);
+      return { success: false, error: data.error || `HTTP error! Status: ${response.status}` };
+    }
+
+    console.log("User deleted successfully");
+    return { success: true, message: "User deleted successfully" };
+  } catch (error) {
+    console.error("Network error:", error);
+    return { success: false, error: "Network error occurred" };
+  }
+};
