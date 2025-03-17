@@ -2,7 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-
+@supports (backdrop-filter: blur(20px)) {
+  thead {
+    position: sticky;
+    top: 0;
+    backdrop-filter: blur(20px);
+    background: rgba(54, 73, 87, 0.9) !important;
+  }
+}
 
 @layer base {
   :root {
