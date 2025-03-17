@@ -1,24 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getJobs, getJobApplications } from "@/lib/api";
+import { getJobs } from "@/lib/api";
 import { Job } from "./types";
-import { ApplicationList } from "./ApplicationList";
+import Link from "next/link";
 import { Chatbot } from "../Chatbot";
-export const JobList = () => {
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
+import { useRouter } from "next/navigation";
 
+export const JobList = () => {
+  const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [selectedJob, setSelectedJob] = useState<string | null>(null);
-  const [selectedApps, setSelectedApps] = useState<any[]>([]);
 
   useEffect(() => {
     const loadJobs = async () => {
@@ -32,55 +23,80 @@ export const JobList = () => {
     loadJobs();
   }, []);
 
-  const handleViewApplications = async (jobId: string) => {
-    setSelectedJob(jobId);
-    const resp = await getJobApplications(jobId);
-    if (resp.success && resp.applications) {
-      setSelectedApps(resp.applications);
-    } else {
-      console.error(resp.error);
-      setSelectedApps([]);
-    }
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="ml-2 mt-8 mb-8 text-3xl font-bold text-[#364957] border-b-2 border-orange-500 pb-1">
-        Ongoing Job Postings
+      <h1 className="text-3xl font-bold text-[#364957] mb-8">
+        <span className="relative after:content-[''] after:absolute after:left-0 after:-bottom-2 after:w-full after:h-0.5 after:bg-[#FF6A00]">
+          Ongoing Job Postings
+        </span>
       </h1>
 
-      <div className="grid gap-8">
-        {jobs.map((job) => (
-          <div
-            key={job._id}
-            className="bg-[#FFF4E6] rounded-xl p-6 border border-[#364957]/20 transition-all hover:shadow-lg"
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-[#364957]">
-                {job.title}
-              </h2>
-              <div className="flex items-center gap-4">
-                <span className="px-4 py-2 bg-[#FF8A00]/10 text-[#FF8A00] rounded-full">
-                  {job.job_status}
-                </span>
-              </div>
-            </div>
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-[#364957]/20">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-[#364957]">
+              <tr className="text-left text-sm font-semibold text-white">
+                <th className="px-6 py-4">Job Title</th>
+                <th className="px-6 py-4">Date Posted</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4">Applications</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#364957]/20">
+              {jobs.map((job) => (
+                <tr
+                  key={job._id}
+                  className="hover:bg-[#FF8A00]/5 transition-colors"
+                >
+                  <td className="px-6 py-4 font-medium text-[#364957]">
+                    {job.title}
+                  </td>
+                  <td className="px-6 py-4 text-[#364957]/80">
+                    {formatDate(job.created_at)}
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="px-3 py-1 rounded-full bg-[#FF8A00]/10 text-[#FF8A00] text-sm">
+                      {job.job_status}
+                    </span>
+                  </td>
 
-            {selectedJob === job._id ? (
-              <ApplicationList applications={selectedApps} />
-            ) : (
-              <button
-                onClick={() => handleViewApplications(job._id)}
-                className="w-full py-3 text-[#364957] hover:bg-[#FF8A00]/10 rounded-xl"
-              >
-                View applications →
-              </button>
-            )}
-          </div>
-        ))}
+                  <td className="px-6 py-4">
+                    <button
+                      onClick={() => router.push(`/applications/${job._id}`)}
+                      className="text-[#FF8A00] hover:text-[#FF8A00]/80 font-medium inline-flex items-center gap-2 ml-auto"
+                    >
+                      View Applications
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Add the Chatbot component */}
       <Chatbot jobs={jobs} />
     </div>
   );
