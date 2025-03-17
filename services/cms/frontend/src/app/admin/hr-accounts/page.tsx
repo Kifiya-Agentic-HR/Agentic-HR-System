@@ -41,11 +41,7 @@ export default function CreateHrAccountForm() {
 
   useEffect(() => {
     const getUsers = async () => {
-      const timestamp = new Date().getTime();
-      const result = await fetchAllUsers({
-        cache: "no-store",
-        headers: { "X-Timestamp": timestamp.toString() },
-      });
+      const result = await fetchAllUsers();
       if (result.success) {
         setHrAccounts(
           result.data.filter((user: { role: string }) => user.role !== "admin")
@@ -59,7 +55,7 @@ export default function CreateHrAccountForm() {
 
     const intervalId = setInterval(() => {
       getUsers();
-    }, 30000);
+    }, 20000);
 
     return () => clearInterval(intervalId);
   }, []);
