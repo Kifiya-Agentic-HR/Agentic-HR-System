@@ -217,57 +217,57 @@ services:
       timeout: 10s
       retries: 5
       start_period: 10s
-  technical_assessment_backend:
-    build: ./services/technical_assessment/backend
-    container_name: technical_assessment_backend
-    ports:
-      - "${TECHNICAL_ASSESSEMENT_BACKENDPORT}:4455"
-    env_file: .env
-    environment:
-      # RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
-      MONGODB_URI: "mongodb://mongo:27017/hr_db"  # Using local MongoDB
-      GEMINI_API_KEY: "${GEMINI_API_KEY}"  # Consider moving to .env
-      UPLOAD_DIR: "/shared_volume"
-      NOTIFICATION_SERVICE_URL: "http://notification:${NOTIFICATION_PORT}/api/v1/"
-      # MINIO_ROOT_USER: "${MINIO_ROOT_USER}"
-      # MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
-      # MINIO_URL: "http://s3-server:9000"
+  # technical_assessment_backend:
+  #   build: ./services/technical_assessment/backend
+  #   container_name: technical_assessment_backend
+  #   ports:
+  #     - "${TECHNICAL_ASSESSEMENT_BACKENDPORT}:4455"
+  #   env_file: .env
+  #   environment:
+  #     # RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
+  #     MONGODB_URI: "mongodb://mongo:27017/hr_db"  # Using local MongoDB
+  #     GEMINI_API_KEY: "${GEMINI_API_KEY}"  # Consider moving to .env
+  #     UPLOAD_DIR: "/shared_volume"
+  #     NOTIFICATION_SERVICE_URL: "http://notification:${NOTIFICATION_PORT}/api/v1/"
+  #     # MINIO_ROOT_USER: "${MINIO_ROOT_USER}"
+  #     # MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
+  #     # MINIO_URL: "http://s3-server:9000"
 
-    volumes:
-      - shared_volume:/shared_volume
-    restart: unless-stopped
-    depends_on:
-      mongo:
-        condition: service_started
-      # rabbitmq:
-      #   condition: service_healthy
-      # s3-server:
-      #   condition: service_healthy
-      # mc:
-      #   condition: service_started
+  #   volumes:
+  #     - shared_volume:/shared_volume
+  #   restart: unless-stopped
+  #   depends_on:
+  #     mongo:
+  #       condition: service_started
+  #     # rabbitmq:
+  #     #   condition: service_healthy
+  #     # s3-server:
+  #     #   condition: service_healthy
+  #     # mc:
+  #     #   condition: service_started
   
-    networks:
-      - app_network
-  technical_assessment_frontend:
-    build:
-      context: ./services/technical_assessment/frontend
-      dockerfile: Dockerfile
-    container_name: technical_assessment_frontend
-    ports:
-      - "${TECHNICAL_ASSESSEMENT_FRONTENDPORT}:4000"
-    depends_on:
-      - technical_assessment_backend
-    env_file: .env
-    environment:
-      NEXT_PUBLIC_API_BASE_URL: "http://localhost:${TECHNICAL_ASSESSEMENT_FRONTENDPORT}"
-      NEXT_PUBLIC_GEMINI_API_KEY: "${GEMINI_API_KEY}"
-      TECHNICAL_ASSESSEMENT_BACKEND: "http://localhost:${TECHNICAL_ASSESSEMENT_BACKENDPORT}"
+  #   networks:
+  #     - app_network
+  # technical_assessment_frontend:
+  #   build:
+  #     context: ./services/technical_assessment/frontend
+  #     dockerfile: Dockerfile
+  #   container_name: technical_assessment_frontend
+  #   ports:
+  #     - "${TECHNICAL_ASSESSEMENT_FRONTENDPORT}:4000"
+  #   depends_on:
+  #     - technical_assessment_backend
+  #   env_file: .env
+  #   environment:
+  #     NEXT_PUBLIC_API_BASE_URL: "http://localhost:${TECHNICAL_ASSESSEMENT_FRONTENDPORT}"
+  #     NEXT_PUBLIC_GEMINI_API_KEY: "${GEMINI_API_KEY}"
+  #     TECHNICAL_ASSESSEMENT_BACKEND: "http://localhost:${TECHNICAL_ASSESSEMENT_BACKENDPORT}"
 
-    networks:
-      - app_network
-    volumes:
-      - shared_volume:/shared_volume
-    restart: unless-stopped
+  #   networks:
+  #     - app_network
+  #   volumes:
+  #     - shared_volume:/shared_volume
+  #   restart: unless-stopped
 
   # job_portal:
   #   build: ./services/screening/job-portal
