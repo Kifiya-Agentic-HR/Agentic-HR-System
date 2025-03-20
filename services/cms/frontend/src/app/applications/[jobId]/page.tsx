@@ -178,16 +178,19 @@ export default function ApplicationList() {
                             setPopupType("interview");
                           }}
                           className={`px-4 py-2 rounded-xl transition-colors ${
-                            app.interview?.hiring_decision
-                              ? app.interview.hiring_decision === "Hire"
-                                ? "bg-[#4CAF50]/10 text-[#4CAF50] hover:bg-[#4CAF50]/20"
-                                : app.interview.hiring_decision === "No Hire"
-                                ? "bg-[#F44336]/10 text-[#F44336] hover:bg-[#F44336]/20"
-                                : "bg-primary/10 text-primary hover:bg-primary/20"
-                              : "bg-secondary/10 text-secondary hover:bg-secondary/20"
+                            app.interview?.interview_status === 'flagged'
+                              ? "bg-[#F44336]/10 text-[#F44336] hover:bg-[#F44336]/20"
+                              : app.interview?.hiring_decision
+                                ? app.interview.hiring_decision === "Hire"
+                                  ? "bg-[#4CAF50]/10 text-[#4CAF50] hover:bg-[#4CAF50]/20"
+                                  : app.interview.hiring_decision === "No Hire"
+                                    ? "bg-[#F44336]/10 text-[#F44336] hover:bg-[#F44336]/20"
+                                    : "bg-primary/10 text-primary hover:bg-primary/20"
+                                : "bg-secondary/10 text-secondary hover:bg-secondary/20"
                           }`}
+                          
                         >
-                          {app.interview?.hiring_decision || "Schedule"}
+                          {app.interview?.interview_status === 'flagged' ? 'Flagged' : (app.interview?.hiring_decision || 'Schedule')}
                         </button>
                       </td>
                       <td className="pr-8 pl-6 py-4 text-center">
