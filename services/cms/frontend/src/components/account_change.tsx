@@ -52,7 +52,6 @@ export default function AccountSettingsForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     try {
-      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500));
       toast.success("Settings updated successfully", {
         description: "Your account changes have been saved",

@@ -3,6 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useState} from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,11 +14,10 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { login } from "@/lib/api"; // Adjust the import path as needed
-import { useRouter } from "next/navigation";
+import { login } from "@/lib/api"; 
+import { useRouter }  from "next/navigation";
 import { jwtDecode, JwtPayload } from "jwt-decode";
 
-console.log("AuthForm component has mounted");
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -30,6 +30,8 @@ interface TokenPayload extends JwtPayload {
 
 export default function AuthForm() {
   const router = useRouter();
+  const [loginError, setLoginError] = useState<string | null>(null);
+
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -64,15 +66,11 @@ export default function AuthForm() {
         router.push("/");
         return;
       }
-
-      // Save token and role to localStorage
+    
       localStorage.setItem("accessToken", result.token);
       localStorage.setItem("userRole", decoded.role);
 
-      console.log("Token saved to localStorage:", result.token);
-      console.log("Role saved to localStorage:", decoded.role);
 
-      // Redirect based on role
       if (decoded.role === "admin") {
         router.push("/admin");
       } else if (decoded.role === "hr") {
@@ -82,8 +80,10 @@ export default function AuthForm() {
       }
     } else {
       console.error("Login failed", result.error);
+      setLoginError("Invalid email or password. Please try again.");
     }
   };
+ 
 
   return (
     <div className="min-h-screen flex">
@@ -124,7 +124,8 @@ export default function AuthForm() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full bg-[#FF8A00] hover:bg-[#FF6A00]">Login</Button>
+              {loginError && <p className="text-red-600 text-sm text-center">{loginError}</p>}
+              <Button type="submit" className="w-full bg-[#FF8A00]/80 hover:bg-[#FF8A00]">Login</Button>
             </form>
           </Form>
         </div>
