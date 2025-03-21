@@ -164,8 +164,8 @@ export default function ApplicationList() {
                    className="text-sm rounded-md bg-[#364957] px-3 py-2 text-primary font-semibold hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FF8A00]/40"
                    >
                   <option value="none">Applied Date</option>
-                  <option value="asc">Oldest First</option>
-                  <option value="desc">Newest First</option>
+                  <option value="asc">earliest-latest</option>
+                  <option value="desc">latest-earliest</option>
                   </select>
                   </th>
 
@@ -178,8 +178,8 @@ export default function ApplicationList() {
                         className="text-sm bg-[#364957] rounded-md px-3 py-2 text-primary font-semibold hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FF8A00]/40"
                       >
                         <option value="none">Screening</option>
-                        <option value="asc">Low first</option>
-                        <option value="desc">High first</option>
+                        <option value="asc">Low-High</option>
+                        <option value="desc">High-Low</option>
                       </select>
                     </th>
                     <th className="px-6 py-5">Interview</th>
