@@ -1,22 +1,22 @@
+import datetime
 import re
-from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, File, Form, HTTPException, Response, UploadFile, status,Depends
-import logging
 import os
-import requests
+import zipfile
+import tempfile
+import logging
+from typing import Any, Dict, Optional
+from fastapi import APIRouter, File, Form, HTTPException, Response, UploadFile, status, Depends
 from app.utils.publisher import publish_application
 from app.utils.cloud_storage import upload_file
-from dotenv import load_dotenv
-import google.generativeai as genai
-from app.database.models import  ApplicationDocument, CandidateDocument, JobDocument, ScreeningResultDocument , InterviewsDocument
+from app.database.models import ApplicationDocument, CandidateDocument, JobDocument
 from app.utils.extract_applicant_information import extract_applicant_information
-
+from schemas import JobCreate
+from app.utils.extract_job_requirement import extract_job_requirement
 logger = logging.getLogger(__name__)
-
 
 def validate_job_input(
     job_id: Optional[str] = Form(None),
-    job_data: Optional[str] = Form(None),
+    job_data: Optional[JobCreate] = Form(None),
     job_file: Optional[UploadFile] = File(None)
 ):
     if not any([job_id, job_data, job_file]):
@@ -32,272 +32,197 @@ router = APIRouter()
 async def create_bulk_application(
     response: Response,
     job_inputs: dict = Depends(validate_job_input),
-    cvs: List[UploadFile] = File(...)
+    zipfolder: UploadFile = File(...)
 ):
-    job_id = job_inputs.get('job_id')
-    job_data = job_inputs.get('job_data')
-    job_file = job_inputs.get('job_file')
-
-
+    job_id = job_inputs.get("job_id")
+    job_data = job_inputs.get("job_data")
+    job_file = job_inputs.get("job_file")
+    
+    logger.info(f"Received job inputs: {job_inputs}")
+    
     if job_id:
         job = JobDocument.get_job_by_id(job_id)
-        for cv in cvs:
-            file_path = await upload_file(cv)
-            extracted_info = extract_applicant_information(file_path)
-            candidate_data = {
-            "email": extracted_info["email"],
-            "phone_number": extracted_info["phone_number"],
-            "gender": extracted_info["gender"],
-            "experience_years":extracted_info["experience_years"],
-            "full_name":extracted_info["full_name"],
-            "feedback": "",
-            "disability": extracted_info['disability'],
-            "skills":[]
-        }
-            logger.info(candidate_data)
-            candidate_id = CandidateDocument.create_candidate(candidate_data)
-            app = ApplicationDocument.get_application_by_candidate_job(candidate_id , job_id)
-            if app:
-                response.status_code = status.HTTP_409_CONFLICT
+    elif job_data:
+        try:
+            job_data = job.dict()
+            if not job_data.get("post_date"):
+                job_data["post_date"] = datetime.utcnow()
+            job = JobDocument.create_job(job_data)
+            if job is None:
+                raise Exception("Job creation failed")
+            job['_id'] = str(job['_id'])
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error creating job: {e}")
+    elif job_file:
+        allowed_file_types = {"application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}
+        if job_file.content_type not in allowed_file_types:
             
+                response.status_code=status.HTTP_400_BAD_REQUEST
                 return {
-                    
                     "sucess": False,
-                    "error" : f"application already exists"
+                    "error":"job file must be a PDF or DOCX file"
+                }
+        
+        try:
+            file_path = await upload_file(job_file)
+            extracted_job_requirement = extract_job_requirement(file_path)
+            logger.info(extract_job_requirement)
+            job = {
+                "description": extracted_job_requirement["job_requirement"],
+                "job_skills": extracted_job_requirement["job_skills"]
+            }
+        except Exception as e:
+            logging.error(f"Error creating application: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
+    else:
+        response.status_code=status.HTTP_400_BAD_REQUEST
+        return {
+                    "sucess": False,
+                    "error":"job source must be provided"
                 }
 
 
-            # Prepare application data
-            application_data = {
-                "job_id": job_id,
-                "email": extracted_info["email"],
-                "full_name": extracted_info["full_name"],
-                "phone_number": extracted_info["phone_number"],
-                "gender": extracted_info["gender"],
-                "disability": extracted_info["disability"],
-                "cv_link": file_path,  # Store local path
-                "experience_years": extracted_info["experience_years"],
-                "candidate_id": candidate_id,
-                "source":"bulk"
-            }
-            # Store in database
-            new_application = ApplicationDocument.create_application(application_data)
-            if not new_application:
-                raise HTTPException(status_code=400, detail="Application creation failed")
 
 
-            await publish_application({
-                "job_description": str(job["description"]),
-                "job_skills": str(job["skills"]),
-                "application_id": new_application,
-                "resume_path": file_path,
-            })
 
-            
+
+    
+    
+    job = JobDocument.get_job_by_id(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found.")
+    
+    if not zipfolder.filename.lower().endswith(".zip"):
+        raise HTTPException(status_code=400, detail="Uploaded file must be a ZIP file.")
+    
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        zip_path = os.path.join(tmpdirname, zipfolder.filename)
+        with open(zip_path, "wb") as f:
+            content = await zipfolder.read()
+            f.write(content)
+        
+        try:
+            with zipfile.ZipFile(zip_path, "r") as zip_ref:
+                zip_ref.extractall(tmpdirname)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Error extracting ZIP file: {str(e)}")
+        
+        resume_files = []
+        for root, dirs, files in os.walk(tmpdirname):
+            for file in files:
+                if file.lower().endswith((".pdf", ".docx", ".txt")):
+                    file_path = os.path.join(root, file)
+                    resume_files.append(file_path)
+                    
+        if not resume_files:
+            raise HTTPException(status_code=400, detail="No resume files found in the ZIP folder.")
+        
+        processed_count = 0
+        errors = []
+        
+        for file_path in resume_files:
+            try:
+                if not os.path.exists(file_path):
+                    raise Exception(f"File not found: {file_path}")
+
+                # Extract information
+                extracted_info = extract_applicant_information(file_path)
+                
+                # Determine MIME type
+                if file_path.lower().endswith(".pdf"):
+                    content_type = "application/pdf"
+                elif file_path.lower().endswith(".docx"):
+                    content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                else:
+                    content_type = "text/plain"
+
+                with open(file_path, "rb") as f:
+                    upload_file_obj = UploadFile(
+                        filename=os.path.basename(file_path),
+                        file=f,
+                        headers={"content-type": content_type}  
+                    )
+                    f.seek(0)  # Reset file pointer
+                    cv_link = await upload_file(upload_file_obj)
+
+                # Create candidate
+                candidate_data = {
+                    "email": extracted_info.get("email", "unknown@example.com"),
+                    "phone_number": extracted_info.get("phone_number", "Unknown"),
+                    "gender": extracted_info.get("gender", "Unknown"),
+                    "experience_years": extracted_info.get("experience_years", "0"),
+                    "full_name": extracted_info.get("full_name", "Unknown Candidate"),
+                    "feedback": "",
+                    "disability": extracted_info.get("disability", "Unknown"),
+                    "skills": []
+                }
+                
+                candidate_id = CandidateDocument.create_candidate(candidate_data)
+                
+                # if ApplicationDocument.get_application_by_candidate_job(candidate_id, job_id):
+                #     errors.append(f"Duplicate application for {candidate_data['email']}")
+                #     continue
+
+                # Create application
+                application_data = {
+                    "job_id": job_id,
+                    "email": candidate_data["email"],
+                    "full_name": candidate_data["full_name"],
+                    "phone_number": candidate_data["phone_number"],
+                    "gender": candidate_data["gender"],
+                    "disability": candidate_data["disability"],
+                    "cv_link": cv_link,
+                    "experience_years": candidate_data["experience_years"],
+                    "candidate_id": candidate_id,
+                    "source": "bulk"
+                }
+                
+                new_application = ApplicationDocument.create_application(application_data)
+                if not new_application:
+                    raise Exception("Application creation failed")
+
+                await publish_application({
+                    "job_description": str(job["description"]),
+                    "job_skills": str(job["skills"]),
+                    "application_id": new_application,
+                    "resume_path": cv_link,
+                })
+                
+                processed_count += 1
+
+            except Exception as e:
+                logger.error(f"Failed to process {file_path}: {str(e)}", exc_info=True)
+                errors.append(f"{os.path.basename(file_path)}: {str(e)}")
+                continue
+
         return {
-            "success" :True,
-            "error": None
+            "success": True if processed_count > 0 else False,
+            "processed_count": processed_count,
+            "error_count": len(errors),
+            "errors": errors,
+            "message": f"Processed {processed_count} resumes" + 
+                      f" with {len(errors)} errors" if errors else ""
         }
-
-    # Validate CV file type
-#     allowed_file_types = {"application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}
-#     if cv.content_type not in allowed_file_types:
+#Get all bulk applications for a specific job
+@router.get("/{job_id}/applications", response_model=dict)
+async def get_job_applications(response: Response,job_id: str):
+    try:
+        job = JobDocument.get_job_by_id(job_id)
+        if not job:
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {
+                "sucess": False,
+                "error": f"job application with id {job_id} not found"
+            }
         
-#             response.status_code=status.HTTP_400_BAD_REQUEST
-#             return {
-#                 "sucess": False,
-#                 "error":"CV must be a PDF or DOCX file"
-#             }
-    
-#     try:
-#         # Save file locally and get file path
-#         file_path = await upload_file(cv)
-#         candidate_data = {
-#             "email": email,
-#             "phone_number": phone_number,
-#             "gender": gender,
-#             "experience_years":experience_years,
-#             "full_name":full_name,
-#             "feedback": "",
-#             "disability": disability,
-#             "skills":[]
-#         }
-        
-#         try:
-#             JobDocument.get_job_by_id(job_id)
-#         except Exception as e:
-#             response.status_code = status.HTTP_404_NOT_FOUND
-#             return {
-#                 "success": False,
-#                 "error": f"Job with {job_id} is not found"
+        applications = ApplicationDocument.get_applications_by_job(job_id)
+        bulk_applications = []
+        for app in applications:
+            if app["source"] == "bulk":
+                bulk_applications.append(app)
 
-#             }
-#         candidate_id = CandidateDocument.create_candidate(candidate_data)
-
-#         app = ApplicationDocument.get_application_by_candidate_job(candidate_id , job_id)
-#         if app:
-#             response.status_code = status.HTTP_409_CONFLICT
-        
-#             return {
-                  
-#                 "sucess": False,
-#                 "error" : f"application already exists"
-#             }
-
-
-#         # Prepare application data
-#         application_data = {
-#             "job_id": job_id,
-#             "email": email,
-#             "full_name": full_name,
-#             "phone_number": phone_number,
-#             "gender": gender,
-#             "disability": disability,
-#             "cv_link": file_path,  # Store local path
-#             "experience_years": experience_years,
-#             "candidate_id": candidate_id
-#         }
-#         # Store in database
-#         new_application = ApplicationDocument.create_application(application_data)
-#         if not new_application:
-#             raise HTTPException(status_code=400, detail="Application creation failed")
-        
-#         # notify the user
-#         try:
-#             send_email_notification(
-#                 email,
-#                 "Thank you for applying!",
-#                 type="application_received",
-#                 name=full_name,
-#                 title=JobDocument.get_job_by_id(job_id)['title']
-#             )
-#         except Exception as e:
-#             logger.error(f"Error sending email notification: {str(e)}")
-
-#         job = JobDocument.get_job_by_id(job_id)
-
-#         await publish_application({
-#             "job_description": str(job["description"]),
-#             "job_skills": str(job["skills"]),
-#             "application_id": new_application,
-#             "resume_path": file_path,
-#         })
-        
-#         return {"success": True, "application": new_application}
-#     except Exception as e:
-#         logging.error(f"Error creating application: {str(e)}")
-#         raise HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
-    
-
-# @router.get("/", status_code=status.HTTP_200_OK)
-# async def get_applications():
-#     try:
-#         applications = ApplicationDocument.get_applications()
-#         return list(applications)
-#     except Exception as e:
-#         logger.error(f"Error fetching applications: {str(e)}")
-
-# @router.get("/{application_id}", response_model=dict)
-# async def get_application(response: Response,application_id: str):
-#     try:
-#         application = ApplicationDocument.get_application_by_id(application_id)
-#         candidate = CandidateDocument.get_candidate_by_id(application['candidate_id'])
-#         screening = ScreeningResultDocument.get_by_application_id(application_id) 
-#         interview = InterviewsDocument.get_interview_by_app_id(application_id)
-#         if not application:
-#             response.status_code = status.HTTP_404_NOT_FOUND
-#             return {
-#                 "success": False,
-#                 "error": f"Application  with {application_id} is not found"
-
-#             }
-#         application_response = {
-#             "_id":application_id,
-#             "candidate": candidate,
-#             "job_id": application['job_id'],
-#             "cv_link": application['cv_link'],
-#             "screening": screening,
-#             "interview": interview
-#         }
-#         return {"success": True, "application": application_response}
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Error retrieving application: {e}")
-
-# @router.patch("/{application_id}/reject", response_model=dict)
-# async def reject_application(application_id: str):
-#     """
-#     Reject the application and generate rejection_reason and suggestion from Gemini
-#     using screening and interview information.
-#     """
-#     try:
-#         # Retrieve application details first
-#         application = ApplicationDocument.get_application_by_id(application_id)
-#         if not application:
-#             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-#                                 detail=f"Application {application_id} not found.")
-        
-#         # Get candidate, job, screening, and interview data
-#         candidate = CandidateDocument.get_candidate_by_id(application['candidate_id'])
-#         job = JobDocument.get_job_by_id(application['job_id'])
-#         screening = ScreeningResultDocument.get_by_application_id(application_id)
-#         interview = InterviewsDocument.get_interview_by_app_id(application_id)
-        
-#         name = candidate['full_name']
-#         title = job['title']
-        
-#         # Generate feedback using Gemini integration
-#         rejection_reason, suggestion = generate_rejection_feedback(name, screening, interview, title)
-        
-#         # Update the application rejection status along with feedback info.
-#         # This assumes that your ApplicationDocument.reject_application can be modified
-#         # to accept rejection_reason and suggestion (or update them separately).
-#         result = ApplicationDocument.reject_application(application_id)
-#         if result:
-#             # Send an email notification with the generated feedback
-#             send_email_notification(
-#                 candidate['email'],
-#                 "Application Rejected",
-#                 type="application_rejected",
-#                 name=name,
-#                 rejection_reason=rejection_reason,
-#                 suggestion=suggestion,
-#                 title=title
-#             )
-#             return {"success": True, "message": f"Application {application_id} rejected successfully."}
-        
-#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-#                             detail=f"Application {application_id} not found.")
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Error rejecting application: {e}")
-
-
-# @router.patch("/{application_id}/accept", response_model=dict)
-# async def accept_application(application_id: str):
-#     try:
-#         # Attempt to accept (pass) the application.
-#         result = ApplicationDocument.accept_application(application_id)
-#         try:
-#             application = ApplicationDocument.get_application_by_id(application_id)
-#             job_id = application['job_id']
-#             candidate_id = application['candidate_id']
-#             job = JobDocument.get_job_by_id(job_id)
-#             candidate = CandidateDocument.get_candidate_by_id(candidate_id)
-#             name = candidate['full_name']
-#             title = job['title']
-#             send_email_notification(
-#                 candidate['email'],
-#                 "Congratulations! Your application has been accepted!",
-#                 type="application_passed",
-#                 name=name,
-#                 title=title
-#             )
-            
-#         except Exception as e:
-#             logger.error("Error fetching job or candidate data to send the email" + str(e))
-
-#         if result:
-#             return {"success": True, "message": f"Application {application_id} accepted successfully."}
-#         # In case no application was updated (optional error handling)
-#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Application {application_id} not found.")
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Error accepting application: {e}")
+        return {"success": True, "applications": bulk_applications}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving applications: {e}")
