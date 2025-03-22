@@ -76,7 +76,8 @@ class ApplicationDocument(BaseDocument):
             "created_at": datetime.utcnow(),
             "candidate_id": application_data["candidate_id"],
             "cv_link": application_data["cv_link"],
-            "application_status":"pending"
+            "application_status":"pending",
+            "source": application_data["source"]
 
 
         }
