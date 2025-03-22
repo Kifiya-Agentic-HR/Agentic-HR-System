@@ -30,6 +30,7 @@ router = APIRouter()
 
 @router.post("/", response_model=dict, status_code=status.HTTP_201_CREATED)
 async def create_bulk_application(
+    
     response: Response,
     job_inputs: dict = Depends(validate_job_input),
     zipfolder: UploadFile = File(...)
@@ -44,7 +45,7 @@ async def create_bulk_application(
         job = JobDocument.get_job_by_id(job_id)
     elif job_data:
         try:
-            job_data = job.dict()
+            job_data = job_data.dict()
             if not job_data.get("post_date"):
                 job_data["post_date"] = datetime.utcnow()
             job = JobDocument.create_job(job_data)
@@ -68,8 +69,8 @@ async def create_bulk_application(
             extracted_job_requirement = extract_job_requirement(file_path)
             logger.info(extract_job_requirement)
             job = {
-                "description": extracted_job_requirement["job_requirement"],
-                "job_skills": extracted_job_requirement["job_skills"]
+                "description": extracted_job_requirement["job_requirements"],
+                "skills": extracted_job_requirement["job_skills"]
             }
         except Exception as e:
             logging.error(f"Error creating application: {str(e)}")
@@ -88,121 +89,127 @@ async def create_bulk_application(
 
     
     
-    job = JobDocument.get_job_by_id(job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found.")
     
     if not zipfolder.filename.lower().endswith(".zip"):
         raise HTTPException(status_code=400, detail="Uploaded file must be a ZIP file.")
-    
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        zip_path = os.path.join(tmpdirname, zipfolder.filename)
-        with open(zip_path, "wb") as f:
-            content = await zipfolder.read()
-            f.write(content)
-        
-        try:
-            with zipfile.ZipFile(zip_path, "r") as zip_ref:
-                zip_ref.extractall(tmpdirname)
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Error extracting ZIP file: {str(e)}")
-        
-        resume_files = []
-        for root, dirs, files in os.walk(tmpdirname):
-            for file in files:
-                if file.lower().endswith((".pdf", ".docx", ".txt")):
-                    file_path = os.path.join(root, file)
-                    resume_files.append(file_path)
-                    
-        if not resume_files:
-            raise HTTPException(status_code=400, detail="No resume files found in the ZIP folder.")
-        
-        processed_count = 0
-        errors = []
-        
-        for file_path in resume_files:
+    try:
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            zip_path = os.path.join(tmpdirname, zipfolder.filename)
+            with open(zip_path, "wb") as f:
+                content = await zipfolder.read()
+                f.write(content)
+            
             try:
-                if not os.path.exists(file_path):
-                    raise Exception(f"File not found: {file_path}")
-
-                # Extract information
-                extracted_info = extract_applicant_information(file_path)
-                
-                # Determine MIME type
-                if file_path.lower().endswith(".pdf"):
-                    content_type = "application/pdf"
-                elif file_path.lower().endswith(".docx"):
-                    content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                else:
-                    content_type = "text/plain"
-
-                with open(file_path, "rb") as f:
-                    upload_file_obj = UploadFile(
-                        filename=os.path.basename(file_path),
-                        file=f,
-                        headers={"content-type": content_type}  
-                    )
-                    f.seek(0)  # Reset file pointer
-                    cv_link = await upload_file(upload_file_obj)
-
-                # Create candidate
-                candidate_data = {
-                    "email": extracted_info.get("email", "unknown@example.com"),
-                    "phone_number": extracted_info.get("phone_number", "Unknown"),
-                    "gender": extracted_info.get("gender", "Unknown"),
-                    "experience_years": extracted_info.get("experience_years", "0"),
-                    "full_name": extracted_info.get("full_name", "Unknown Candidate"),
-                    "feedback": "",
-                    "disability": extracted_info.get("disability", "Unknown"),
-                    "skills": []
-                }
-                
-                candidate_id = CandidateDocument.create_candidate(candidate_data)
-                
-                # if ApplicationDocument.get_application_by_candidate_job(candidate_id, job_id):
-                #     errors.append(f"Duplicate application for {candidate_data['email']}")
-                #     continue
-
-                # Create application
-                application_data = {
-                    "job_id": job_id,
-                    "email": candidate_data["email"],
-                    "full_name": candidate_data["full_name"],
-                    "phone_number": candidate_data["phone_number"],
-                    "gender": candidate_data["gender"],
-                    "disability": candidate_data["disability"],
-                    "cv_link": cv_link,
-                    "experience_years": candidate_data["experience_years"],
-                    "candidate_id": candidate_id,
-                    "source": "bulk"
-                }
-                
-                new_application = ApplicationDocument.create_application(application_data)
-                if not new_application:
-                    raise Exception("Application creation failed")
-
-                await publish_application({
-                    "job_description": str(job["description"]),
-                    "job_skills": str(job["skills"]),
-                    "application_id": new_application,
-                    "resume_path": cv_link,
-                })
-                
-                processed_count += 1
-
+                with zipfile.ZipFile(zip_path, "r") as zip_ref:
+                    zip_ref.extractall(tmpdirname)
             except Exception as e:
-                logger.error(f"Failed to process {file_path}: {str(e)}", exc_info=True)
-                errors.append(f"{os.path.basename(file_path)}: {str(e)}")
-                continue
+                raise HTTPException(status_code=400, detail=f"Error extracting ZIP file: {str(e)}")
+            
+            resume_files = []
+            for root, dirs, files in os.walk(tmpdirname):
+                for file in files:
+                    if file.lower().endswith((".pdf", ".docx", ".txt")):
+                        file_path = os.path.join(root, file)
+                        resume_files.append(file_path)
+                        
+            if not resume_files:
+                raise HTTPException(status_code=400, detail="No resume files found in the ZIP folder.")
+            
+            processed_count = 0
+            errors = []
+            
+            for file_path in resume_files:
+                try:
+                    if not os.path.exists(file_path):
+                        raise Exception(f"File not found: {file_path}")
 
+                    # Extract information
+                    extracted_info = extract_applicant_information(file_path)
+                    
+                    # Determine MIME type
+                    if file_path.lower().endswith(".pdf"):
+                        content_type = "application/pdf"
+                    elif file_path.lower().endswith(".docx"):
+                        content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    else:
+                        content_type = "text/plain"
+
+                    with open(file_path, "rb") as f:
+                        upload_file_obj = UploadFile(
+                            filename=os.path.basename(file_path),
+                            file=f,
+                            headers={"content-type": content_type}  
+                        )
+                        f.seek(0)  # Reset file pointer
+                        cv_link = await upload_file(upload_file_obj)
+
+                    # Create candidate
+                    candidate_data = {
+                        "email": extracted_info.get("email", "unknown@example.com"),
+                        "phone_number": extracted_info.get("phone_number", "Unknown"),
+                        "gender": extracted_info.get("gender", "Unknown"),
+                        "experience_years": extracted_info.get("experience_years", "0"),
+                        "full_name": extracted_info.get("full_name", "Unknown Candidate"),
+                        "feedback": "",
+                        "disability": extracted_info.get("disability", "Unknown"),
+                        "skills": []
+                    }
+                    
+                    candidate_id = CandidateDocument.create_candidate(candidate_data)
+                    
+                    # if ApplicationDocument.get_application_by_candidate_job(candidate_id, job_id):
+                    #     errors.append(f"Duplicate application for {candidate_data['email']}")
+                    #     continue
+
+                    # Create application
+                    application_data = {
+                        "job_id": job_id,
+                        "email": candidate_data["email"],
+                        "full_name": candidate_data["full_name"],
+                        "phone_number": candidate_data["phone_number"],
+                        "gender": candidate_data["gender"],
+                        "disability": candidate_data["disability"],
+                        "cv_link": cv_link,
+                        "experience_years": candidate_data["experience_years"],
+                        "candidate_id": candidate_id,
+                        "source": "bulk"
+                    }
+                    
+                    new_application = ApplicationDocument.create_application(application_data)
+                    if not new_application:
+                        raise Exception("Application creation failed")
+
+                    await publish_application({
+                        "job_description": str(job["description"]),
+                        "job_skills": str(job["skills"]),
+                        "application_id": new_application,
+                        "resume_path": cv_link,
+                    })
+                    
+                    processed_count += 1
+
+                except Exception as e:
+                    logger.error(f"Failed to process {file_path}: {str(e)}", exc_info=True)
+                    errors.append(f"{os.path.basename(file_path)}: {str(e)}")
+                    continue
+            
+            return {
+                "success": True if processed_count > 0 else False,
+                "processed_count": processed_count,
+                "error_count": len(errors),
+                "errors": errors,
+                "message": f"Processed {processed_count} resumes" + 
+                        f" with {len(errors)} errors" if errors else ""
+            }
+    except Exception as e:
+        response.status_code=status.HTTP_400_BAD_REQUEST
         return {
-            "success": True if processed_count > 0 else False,
-            "processed_count": processed_count,
-            "error_count": len(errors),
-            "errors": errors,
-            "message": f"Processed {processed_count} resumes" + 
-                      f" with {len(errors)} errors" if errors else ""
-        }
+                    "sucess": False,
+                    "error":"error occured during processing"
+                }
+
 #Get all bulk applications for a specific job
 @router.get("/{job_id}/applications", response_model=dict)
 async def get_job_applications(response: Response,job_id: str):
