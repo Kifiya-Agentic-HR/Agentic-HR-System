@@ -451,3 +451,81 @@ export const deleteUser = async (userId: string, userRole: string) => {
     return { success: false, error: "Network error occurred" };
   }
 };
+
+export async function getOpenJobs() {
+  return getJobs(); // Reuse existing getJobs function
+}
+
+interface GeminiRecommendRequest {
+  candidateSummary: string;
+  jobs: any[];
+}
+
+export async function getGeminiRecommendations(request: GeminiRecommendRequest): Promise<Recommendation[]> {
+  try {
+    const API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+
+    const prompt = `Analyze this candidate profile and open job positions to recommend suitable matches. Follow these rules:
+    1. Candidate Summary: ${request.candidateSummary}
+    2. Available Jobs: ${JSON.stringify(request.jobs.map(job => ({
+      title: job.title,
+      type: job.description.type,
+      commitment: job.description.commitment,
+      location: job.description.location,
+      required_skills: job.skills
+    })))}
+    
+    Output format (strictly follow):
+    ### Recommendations
+    {{ 1-3 job recommendations in this format }}
+    
+    | Job Title | Location | Type | Match Reason |
+    |-----------|----------|------|--------------|
+    | [Job Title] | [Location] | [Job Type] | [Brief reason (1 sentence)] |
+    
+    ### Analysis Summary
+    [1-2 sentence summary of overall fit]`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: prompt }]
+        }]
+      }),
+    });
+
+    const data = await response.json();
+    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    
+    // Parse the structured response
+    const recommendations: Recommendation[] = [];
+    const rows = rawText.split('\n').filter(line => line.startsWith('|'));
+    
+    for (const row of rows.slice(2)) { // Skip header
+      const [_, title, location, type, reason] = row.split('|').map(c => c.trim());
+      if (title && reason ) {
+        recommendations.push({
+          title,
+          location,
+          type,
+          reason
+        });
+      }
+    }
+
+    return recommendations;
+  } catch (error) {
+    console.error('Recommendation error:', error);
+    return [];
+  }
+}
+
+export interface Recommendation {
+  title: string;
+  location: string;
+  type: string;
+  reason: string;
+}
