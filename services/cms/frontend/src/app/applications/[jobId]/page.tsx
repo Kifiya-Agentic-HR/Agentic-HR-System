@@ -14,6 +14,8 @@ import {
   FiUser,
   FiBriefcase,
   FiList,
+  FiChevronUp,
+  FiChevronDown,
 } from "react-icons/fi";
 
 export default function ApplicationList() {
@@ -25,6 +27,7 @@ export default function ApplicationList() {
   const [loading, setLoading] = useState(true);
 
   const [filterType, setFilterType] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dateSortOrder, setDateSortOrder] = useState<"none" | "asc" | "desc">("none");
   const [scoreSortOrder, setScoreSortOrder] = useState<"none" | "asc" | "desc">("none");
 
@@ -59,14 +62,19 @@ export default function ApplicationList() {
     return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
   };
 
+  const toggleSortOrder = (currentOrder: "none" | "asc" | "desc") => {
+    if (currentOrder === "none") return "asc";
+    if (currentOrder === "asc") return "desc";
+    return "none";
+  };
+
   const filteredAndSortedApps = applications
     .filter((app) => {
-      if (filterType === "male") return app.candidate.gender?.toLowerCase() === "male";
-      if (filterType === "female") return app.candidate.gender?.toLowerCase() === "female";
-      if (filterType === "pending") return app.application_status === "pending";
-      if (filterType === "hired") return app.application_status === "hired";
-      if (filterType === "rejected") return app.application_status === "rejected";
-      return true;
+      const genderMatch =
+        filterType === "all" || app.candidate.gender?.toLowerCase() === filterType;
+      const statusMatch =
+        statusFilter === "all" || app.application_status === statusFilter;
+      return genderMatch && statusMatch;
     })
     .sort((a, b) => {
       const dateA = new Date(a.created_at).getTime();
@@ -131,22 +139,30 @@ export default function ApplicationList() {
           </h1>
 
           <div className="mb-6 w-full text-right">
-  <div className="inline-block w-36">
-    <select
-      className="w-full border bg-[#FF8A00]/10 text-black rounded-lg p-2 text-sm "
-      value={filterType}
-      onChange={(e) => setFilterType(e.target.value)}
-    >
-      <option value="all">All</option>
-      <option value="male">Male</option>
-      <option value="female">Female</option>
-      <option value="pending">Status: Pending</option>
-      <option value="hired">Status: Hired</option>
-      <option value="rejected">Status: Rejected</option>
-    </select>
-  </div>
-</div>
-
+            <div className="inline-block w-36 mr-4">
+              <select
+                className="w-full border bg-[#FF8A00]/10 text-black rounded-lg p-2 text-sm"
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+              >
+                <option value="all">All</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </div>
+            <div className="inline-block w-36">
+              <select
+                className="w-full border bg-[#FF8A00]/10 text-black rounded-lg p-2 text-sm"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="all">Status</option>
+                <option value="pending">Pending</option>
+                <option value="hired">Hired</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+          </div>
 
           {/* Table */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
@@ -155,32 +171,28 @@ export default function ApplicationList() {
                 <thead className="bg-primary text-white">
                   <tr className="text-left text-sm font-semibold">
                     <th className="pl-8 pr-6 py-5 rounded-tl-2xl">Candidate</th>
-
-                    
                     <th className="px-6 py-5">
-                   <select
-                   value={dateSortOrder}
-                   onChange={(e) => setDateSortOrder(e.target.value as any)}
-                   className="text-sm rounded-md bg-[#364957] px-3 py-2 text-primary font-semibold hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FF8A00]/40"
-                   >
-                  <option value="none">Applied Date</option>
-                  <option value="asc">earliest-latest</option>
-                  <option value="desc">latest-earliest</option>
-                  </select>
-                  </th>
-
-
+                      <button
+                        onClick={() => setDateSortOrder((prev) => toggleSortOrder(prev))}
+                        className="flex items-center space-x-2 text-sm font-semibold hover:text-[#FF6A00] transition-colors"
+                      >
+                        <span>Applied Date</span>
+                        {dateSortOrder === "asc" && <FiChevronUp className="w-4 h-4" />}
+                        {dateSortOrder === "desc" && <FiChevronDown className="w-4 h-4" />}
+                        {dateSortOrder === "none" && <span className="w-4 h-4" />}
+                      </button>
+                    </th>
                     <th className="px-6 py-5">CV</th>
                     <th className="px-6 py-5">
-                      <select
-                        value={scoreSortOrder}
-                        onChange={(e) => setScoreSortOrder(e.target.value as any)}
-                        className="text-sm bg-[#364957] rounded-md px-3 py-2 text-primary font-semibold hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FF8A00]/40"
+                      <button
+                        onClick={() => setScoreSortOrder((prev) => toggleSortOrder(prev))}
+                        className="flex items-center space-x-2 text-sm font-semibold hover:text-[#FF6A00] transition-colors"
                       >
-                        <option value="none">Screening</option>
-                        <option value="asc">Low-High</option>
-                        <option value="desc">High-Low</option>
-                      </select>
+                        <span>Screening</span>
+                        {scoreSortOrder === "asc" && <FiChevronUp className="w-4 h-4" />}
+                        {scoreSortOrder === "desc" && <FiChevronDown className="w-4 h-4" />}
+                        {scoreSortOrder === "none" && <span className="w-4 h-4" />}
+                      </button>
                     </th>
                     <th className="px-6 py-5">Interview</th>
                     <th className="pr-8 pl-6 py-5 rounded-tr-2xl text-center">Status</th>
