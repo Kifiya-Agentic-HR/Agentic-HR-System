@@ -1,5 +1,5 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:5050"; 
-//const INTERVIEW_BASE = process.env.NEXT_PUBLIC_INTERVIEW_BASE || "http://localhost:8080/api/v1";
+const INTERVIEW_BASE = process.env.NEXT_PUBLIC_INTERVIEW_BASE || "http://localhost:8080/api/v1";
 
 interface JobCreate {
   title: string;
@@ -16,6 +16,79 @@ interface JobCreate {
   job_status?: string;
   post_date?: Date;
   skills: Record<string, Record<string, string>>;
+}
+
+interface IngestionMetadata {
+  tag: string;
+  source: string;
+  author?: string;
+  custom_metadata?: Record<string, any>;
+}
+
+
+export async function uploadDocument(
+  file: File,
+  metadata: IngestionMetadata,
+  onProgress?: (progress: number) => void
+) {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('metadata', JSON.stringify(metadata));
+
+    const headers = {
+      ...getAuthHeaders(),
+      // Don't set Content-Type here as it's automatically set with FormData
+    };
+
+    const res = await fetch(`${INTERVIEW_BASE}/rag/ingest/documents`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.detail || 'Upload failed');
+    }
+
+    const data = await res.json();
+    return {
+      success: true,
+      data,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message || 'Failed to upload document',
+    };
+  }
+}
+
+// Add document deletion function
+export async function deleteDocument(documentId: string) {
+  try {
+    const res = await fetch(`${API_BASE}/rag/ingest/documents/${documentId}`, {
+      method: 'DELETE',
+      headers: { ...getAuthHeaders() },
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.detail || 'Deletion failed');
+    }
+
+    const data = await res.json();
+    return {
+      success: true,
+      data,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message || 'Failed to delete document',
+    };
+  }
 }
 
 const getAuthHeaders = (): Record<string, string> => {
