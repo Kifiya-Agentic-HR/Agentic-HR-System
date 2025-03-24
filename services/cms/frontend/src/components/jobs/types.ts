@@ -21,6 +21,7 @@ export interface Job {
       disability: string;
       skills: string[];
       feedback: string;
+      gender: string;
     };
     screening: {
       _id: string;
