@@ -14,6 +14,8 @@ import {
   FiUser,
   FiBriefcase,
   FiList,
+  FiChevronUp,
+  FiChevronDown,
 } from "react-icons/fi";
 
 export default function ApplicationList() {
@@ -21,20 +23,20 @@ export default function ApplicationList() {
   const params = useParams();
   const [applications, setApplications] = useState<Application[]>([]);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
-  const [popupType, setPopupType] = useState<"screening" | "interview">(
-    "screening"
-  );
+  const [popupType, setPopupType] = useState<"screening" | "interview">("screening");
   const [loading, setLoading] = useState(true);
+
+  const [filterType, setFilterType] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [dateSortOrder, setDateSortOrder] = useState<"none" | "asc" | "desc">("none");
+  const [scoreSortOrder, setScoreSortOrder] = useState<"none" | "asc" | "desc">("none");
 
   useEffect(() => {
     const loadApplications = async () => {
       console.log("Reloading applications...");
       try {
-        if (!params.jobId) {
-          throw new Error("Job ID not found");
-        }
-        // Optionally, you can add a timestamp if your API cares about cache
-        // const timestamp = new Date().getTime();
+        if (!params.jobId) throw new Error("Job ID not found");
+
         const resp = await getJobApplications(params.jobId as string);
         if (resp.success && resp.applications) {
           console.log("Applications fetched:", resp.applications);
@@ -50,15 +52,8 @@ export default function ApplicationList() {
       }
     };
 
-    // Initial load of applications
     loadApplications();
-
-    // Set up automatic reload every 30 seconds
-    const intervalId = setInterval(() => {
-      loadApplications();
-    }, 30000);
-
-    // Cleanup interval on component unmount
+    const intervalId = setInterval(() => loadApplications(), 30000);
     return () => clearInterval(intervalId);
   }, [params.jobId, router]);
 
@@ -66,6 +61,33 @@ export default function ApplicationList() {
     const date = new Date(dateString);
     return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
   };
+
+  const toggleSortOrder = (currentOrder: "none" | "asc" | "desc") => {
+    if (currentOrder === "none") return "asc";
+    if (currentOrder === "asc") return "desc";
+    return "none";
+  };
+
+  const filteredAndSortedApps = applications
+    .filter((app) => {
+      const genderMatch =
+        filterType === "all" || app.candidate.gender?.toLowerCase() === filterType;
+      const statusMatch =
+        statusFilter === "all" || app.application_status === statusFilter;
+      return genderMatch && statusMatch;
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      const scoreA = a.screening?.score ?? 0;
+      const scoreB = b.screening?.score ?? 0;
+
+      if (dateSortOrder === "asc") return dateA - dateB;
+      if (dateSortOrder === "desc") return dateB - dateA;
+      if (scoreSortOrder === "asc") return scoreA - scoreB;
+      if (scoreSortOrder === "desc") return scoreB - scoreA;
+      return 0;
+    });
 
   if (loading) {
     return (
@@ -98,6 +120,7 @@ export default function ApplicationList() {
           </Link>
         </nav>
       </div>
+
       <div className="flex-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <button
@@ -108,30 +131,75 @@ export default function ApplicationList() {
             Back to Jobs
           </button>
 
-          <h1 className="text-3xl font-bold text-primary mb-8 flex items-center">
+          <h1 className="text-3xl font-bold text-primary mb-6 flex items-center">
             <FiUser className="mr-3 w-8 h-8" />
             <span className="relative after:content-[''] after:absolute after:left-0 after:-bottom-2 after:w-full after:h-0.5 after:bg-[#FF6A00]">
               Applications Overview
             </span>
           </h1>
 
+          <div className="mb-6 w-full text-right">
+            <div className="inline-block w-36 mr-4">
+              <select
+                className="w-full border bg-[#FF8A00]/10 text-black rounded-lg p-2 text-sm"
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+              >
+                <option value="all">All</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </div>
+            <div className="inline-block w-36">
+              <select
+                className="w-full border bg-[#FF8A00]/10 text-black rounded-lg p-2 text-sm"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="all">Status</option>
+                <option value="pending">Pending</option>
+                <option value="hired">Hired</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Table */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-primary text-white">
                   <tr className="text-left text-sm font-semibold">
                     <th className="pl-8 pr-6 py-5 rounded-tl-2xl">Candidate</th>
-                    <th className="px-6 py-5">Applied Date</th>
-                    <th className="px-6 py-5">CV</th>
-                    <th className="px-6 py-5">Screening</th>
-                    <th className="px-6 py-5">Interview</th>
-                    <th className="pr-8 pl-6 py-5 rounded-tr-2xl text-center">
-                      Status
+                    <th className="px-6 py-5">
+                      <button
+                        onClick={() => setDateSortOrder((prev) => toggleSortOrder(prev))}
+                        className="flex items-center space-x-2 text-sm font-semibold hover:text-[#FF6A00] transition-colors"
+                      >
+                        <span>Applied Date</span>
+                        {dateSortOrder === "asc" && <FiChevronUp className="w-4 h-4" />}
+                        {dateSortOrder === "desc" && <FiChevronDown className="w-4 h-4" />}
+                        {dateSortOrder === "none" && <span className="w-4 h-4" />}
+                      </button>
                     </th>
+                    <th className="px-6 py-5">CV</th>
+                    <th className="px-6 py-5">
+                      <button
+                        onClick={() => setScoreSortOrder((prev) => toggleSortOrder(prev))}
+                        className="flex items-center space-x-2 text-sm font-semibold hover:text-[#FF6A00] transition-colors"
+                      >
+                        <span>Screening</span>
+                        {scoreSortOrder === "asc" && <FiChevronUp className="w-4 h-4" />}
+                        {scoreSortOrder === "desc" && <FiChevronDown className="w-4 h-4" />}
+                        {scoreSortOrder === "none" && <span className="w-4 h-4" />}
+                      </button>
+                    </th>
+                    <th className="px-6 py-5">Interview</th>
+                    <th className="pr-8 pl-6 py-5 rounded-tr-2xl text-center">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {applications.map((app) => (
+                  {filteredAndSortedApps.map((app) => (
                     <tr
                       key={app._id}
                       className="hover:bg-[#364957]/5 transition-colors group"
@@ -219,9 +287,7 @@ export default function ApplicationList() {
               application={selectedApp}
               type={popupType}
               onClose={() => setSelectedApp(null)}
-              refreshApplications={async () =>
-                console.log("Applications Refreshed")
-              }
+              refreshApplications={async () => console.log("Applications Refreshed")}
             />
           )}
         </div>
