@@ -378,3 +378,26 @@ export const deleteUser = async (userId: string, userRole: string) => {
     return { success: false, error: "Network error occurred" };
   }
 };
+
+export const bulkUpload = async (formData: FormData)=> {
+  console.log("api called")
+  console.log(formData)
+  try {
+    const response = await fetch("http:/localhost:9000/bulk", {
+      method: "POST",
+      body: formData
+      // No need to manually set Content-Type; browser handles it for FormData
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      return { success: false, error: errorData.error || "Bulk upload failed" };
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Bulk upload failed:", error);
+    return { success: false, error: "Bulk upload failed" };
+  }
+};
