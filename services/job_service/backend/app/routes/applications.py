@@ -342,6 +342,7 @@ async def reject_application(application_id: str):
         raise HTTPException(status_code=500, detail=f"Error rejecting application: {e}")
 
 
+
 @router.patch("/{application_id}/accept", response_model=dict)
 async def accept_application(application_id: str):
     try:
@@ -372,3 +373,29 @@ async def accept_application(application_id: str):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Application {application_id} not found.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error accepting application: {e}")
+
+class ShortlistUpdate(BaseModel):
+    shortlisted: bool
+    shortlist_note: str = ""
+
+@router.put("/{application_id}", response_model=dict)
+async def update_shortlist(application_id: str, update: ShortlistUpdate):
+    try:
+        # Update the application record with shortlist status and note
+        update_data = update.dict()
+        updated_app = ApplicationDocument.update_shortlist(application_id, update_data)
+        if not updated_app:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Application {application_id} not found"
+            )
+        return {
+            "success": True,
+            "message": "Shortlist status updated successfully",
+            "application": updated_app
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error updating shortlist status: {e}"
+        )
