@@ -9,13 +9,14 @@ class Settings(BaseSettings):
     
     MONGO_URI: str
     MONGO_DB: str
-    REDIS_URI: str
+    REDIS_URI: str 
     OPENAI_API_KEY: str
     MODEL: str
     MAX_CONVERSATION_HISTORY: int = 6
     NOTIFICATION_SERVICE_URL: str
     FRONTEND_BASE_URL: str
-    WEAVIATE_URL: str
+    WEAVIATE_HOST: str
+    WEAVIATE_PORT: int
 
 def get_settings():
     try:

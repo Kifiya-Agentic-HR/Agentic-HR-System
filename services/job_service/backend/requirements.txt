@@ -10,10 +10,10 @@ nltk
 fastapi
 fastapi[all]
 uvicorn
-python-dotenv
 flask 
 flask-sqlalchemy
-
+pdfminer.six==20221105
+python-docx==0.8.11
 aio_pika
 
 tenacity

@@ -1,4 +1,5 @@
 export interface Job {
+    _id?: string;
     id: string;
     title: string;
     status: 'ongoing' | 'closed';
@@ -20,6 +21,7 @@ export interface Job {
       disability: string;
       skills: string[];
       feedback: string;
+      gender: string;
     };
     screening: {
       _id: string;
@@ -42,7 +44,8 @@ export interface Job {
       conversation_history?: string[];
       score?: number;
       skill_assessment?: Record<string, {
-        score: number;
+        score?: number;
+        rating: number;
         required_level: string;
         number_of_questions: number;
         evidence: string;

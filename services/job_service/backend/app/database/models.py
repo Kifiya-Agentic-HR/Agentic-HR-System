@@ -21,7 +21,9 @@ class JobDocument(BaseDocument):
     @classmethod
     def create_job(cls, job_data):
         job_data["created_at"] = datetime.utcnow()
-        del job_data["post_date"]
+        if job_data.get("post_date", None):
+            del job_data["post_date"]
+            
         try:
             result = cls.get_collection().insert_one(job_data)
             return cls.get_collection().find_one({"_id": ObjectId(result.inserted_id)})
@@ -76,7 +78,8 @@ class ApplicationDocument(BaseDocument):
             "created_at": datetime.utcnow(),
             "candidate_id": application_data["candidate_id"],
             "cv_link": application_data["cv_link"],
-            "application_status":"pending"
+            "application_status":"pending",
+            "source": application_data["source"]
 
 
         }

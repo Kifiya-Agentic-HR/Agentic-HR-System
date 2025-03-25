@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:9000"; 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:5050"; 
 const INTERVIEW_BASE = process.env.NEXT_PUBLIC_INTERVIEW_BASE || "http://localhost:8080/api/v1";
 
 interface JobCreate {
@@ -18,10 +18,89 @@ interface JobCreate {
   skills: Record<string, Record<string, string>>;
 }
 
+interface IngestionMetadata {
+  tag: string;
+  source: string;
+  author?: string;
+  custom_metadata?: Record<string, any>;
+}
+
+
+export async function uploadDocument(
+  file: File,
+  metadata: IngestionMetadata,
+  onProgress?: (progress: number) => void
+) {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('metadata', JSON.stringify(metadata));
+
+    const headers = {
+      ...getAuthHeaders(),
+      // Don't set Content-Type here as it's automatically set with FormData
+    };
+
+    const res = await fetch(`${INTERVIEW_BASE}/rag/ingest/documents`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.detail || 'Upload failed');
+    }
+
+    const data = await res.json();
+    return {
+      success: true,
+      data,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message || 'Failed to upload document',
+    };
+  }
+}
+
+// Add document deletion function
+export async function deleteDocument(documentId: string) {
+  try {
+    const res = await fetch(`${API_BASE}/rag/ingest/documents/${documentId}`, {
+      method: 'DELETE',
+      headers: { ...getAuthHeaders() },
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.detail || 'Deletion failed');
+    }
+
+    const data = await res.json();
+    return {
+      success: true,
+      data,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message || 'Failed to delete document',
+    };
+  }
+}
+
+const getAuthHeaders = (): Record<string, string> => {
+  const token = localStorage.getItem("accessToken");
+  return token ? { "Authorization": `Bearer ${token}` } : {};
+};
+
 // ----- JOBS ENDPOINTS -----
 export async function getJobs() {
   try {
-    const res = await fetch(`${API_BASE}/jobs`);
+    const headers = { ...getAuthHeaders() };
+    const res = await fetch(`${API_BASE}/jobs`, { headers });
     const data = await res.json();
     return data; // Expected { success: boolean, jobs: Job[], error?: string }
   } catch (error: any) {
@@ -33,7 +112,7 @@ export async function createJob(jobData: any) {
   try {
     const res = await fetch(`${API_BASE}/jobs`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
       body: JSON.stringify(jobData),
     });
     const data = await res.json();
@@ -45,7 +124,7 @@ export async function createJob(jobData: any) {
 
 export async function getJobById(id: string) {
   try {
-    const res = await fetch(`${API_BASE}/jobs/${id}`);
+    const res = await fetch(`${API_BASE}/jobs/${id}`, { headers: { ...getAuthHeaders() } });
     const data = await res.json();
     return data; // Expected { success: boolean, job: Job, error?: string }
   } catch (error: any) {
@@ -57,7 +136,7 @@ export async function updateJob(id: string, jobData: any) {
   try {
     const res = await fetch(`${API_BASE}/jobs/${id}`, {
       method: "PUT", // or PATCH, depending on your backend implementation
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
       body: JSON.stringify(jobData),
     });
     const data = await res.json();
@@ -69,7 +148,7 @@ export async function updateJob(id: string, jobData: any) {
 
 export async function getJobApplications(jobId: string) {
   try {
-    const res = await fetch(`${API_BASE}/jobs/${jobId}/applications`);
+    const res = await fetch(`${API_BASE}/jobs/${jobId}/applications`, { headers: { ...getAuthHeaders() } });
     const data = await res.json();
     return data; // Expected { success: boolean, applications: Application[], error?: string }
   } catch (error: any) {
@@ -82,7 +161,7 @@ export async function createApplication(appData: any) {
   try {
     const res = await fetch(`${API_BASE}/applications`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
       body: JSON.stringify(appData),
     });
     const data = await res.json();
@@ -94,9 +173,24 @@ export async function createApplication(appData: any) {
 
 export async function getApplications() {
   try {
-    const res = await fetch(`${API_BASE}/applications`);
-    const data = await res.json();
-    return data; // Expected { success: boolean, applications: Application[], error?: string }
+    // First get all jobs
+    const jobsResponse = await getJobs();
+    if (!jobsResponse.success) {
+      return { success: false, error: jobsResponse.error || "Failed to fetch jobs" };
+    }
+
+    // Fetch applications for each job
+    let mergedApplications: any[] = [];
+    for (const job of jobsResponse.jobs) {
+      const applicationsResponse = await getJobApplications(job._id);
+      if (applicationsResponse.success) {
+        mergedApplications = mergedApplications.concat(applicationsResponse.applications);
+      } else {
+        console.error(`Failed to fetch applications for job ${job._id}:`, applicationsResponse.error);
+      }
+    }
+
+    return { success: true, applications: mergedApplications };
   } catch (error: any) {
     return { success: false, error: error.message || "Failed to fetch applications" };
   }
@@ -114,7 +208,7 @@ export async function getApplicationById(id: string) {
 
 export async function rejectApplication(id: string) {
   try {
-    const res = await fetch(`${API_BASE}/applications/${id}/reject`, { method: "PATCH" });
+    const res = await fetch(`${API_BASE}/applications/${id}/reject`, { method: "PATCH", headers: { ...getAuthHeaders() } });
     const data = await res.json();
     return data; // Expected { success: boolean, application: Application, error?: string }
   } catch (error: any) {
@@ -125,7 +219,7 @@ export async function rejectApplication(id: string) {
 export async function acceptApplication(id: string) {
   try {
     const res = await fetch(`${API_BASE}/applications/${id}/accept`,
-      { method: "PATCH" }
+      { method: "PATCH", headers: { ...getAuthHeaders() } }
         );
     const data = await res.json();
     return data; // Expected { success: boolean, application: Application, error?: string }
@@ -138,7 +232,7 @@ export async function jobPost(jobData: JobCreate) {
   try {
     const res = await fetch(`${API_BASE}/jobs`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
       body: JSON.stringify(jobData),
     });
     const data = await res.json();
@@ -165,9 +259,9 @@ export async function jobPost(jobData: JobCreate) {
 // ----- INTERVIEW ENDPOINTS -----
 export async function scheduleInterview(application_id: string) {
   try {
-    const res = await fetch(`${INTERVIEW_BASE}/interview/schedule`, {
+    const res = await fetch(`${API_BASE}/interview/schedule`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...getAuthHeaders()  },
       body: JSON.stringify({ application_id: application_id }),
     });
     const data = await res.json();
@@ -175,4 +269,287 @@ export async function scheduleInterview(application_id: string) {
   } catch (error: any) {
     return { success: false, error: error.message || "Failed to schedule interview" };
   }
+}
+
+//login 
+export async function login(authData: { email: string; password: string }): Promise<{ success: boolean; token?: string; userId?: string; role?: string; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(authData),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      return { success: false, error: errorData.error || "Failed to login" };
+    }
+
+    const data = await res.json();
+    const token = data.access_token;
+    const { sub: userId, role } = JSON.parse(atob(token.split(".")[1]));
+
+    if (!userId || !role) return { success: false, error: "Invalid token structure." };
+
+    localStorage.setItem("accessToken", token);
+    localStorage.setItem("userId", userId);
+    localStorage.setItem("userRole", role);
+
+    return { success: true, token, userId, role };
+  } catch (error) {
+    return { success: false, error: (error as Error).message || "Failed to login" };
+  }
+}
+
+//HR account creation
+export const createHRAccount = async (userData: any) => {
+  const token = localStorage.getItem("accessToken");
+  if (!token) return { success: false, error: "Unauthorized: No token provided" };
+
+  try {
+    const response = await fetch(`${API_BASE}/users/hr`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(userData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      return { success: false, error: errorData.error || `HTTP error! Status: ${response.status}` };
+    }
+
+    return { success: true, data: await response.json() };
+  } catch (error) {
+    return { success: false, error: (error as Error).message || "Network error occurred" };
+  }
+};
+
+//update account
+export const updateOwnAccount = async (userData: any) => {
+  const token = localStorage.getItem("accessToken");
+  const userId = localStorage.getItem("userId");
+  if (!token || !userId) return { success: false, error: "Unauthorized: No token or user ID provided" };
+
+  const requestData: Record<string, any> = { password: userData.newPassword };
+  if (userData.firstName) requestData.firstName = userData.firstName;
+  if (userData.lastName) requestData.lastName = userData.lastName;
+
+  try {
+    const response = await fetch(`${API_BASE}/users/${userId}/self`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(requestData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      return { success: false, error: errorData.error || `HTTP error! Status: ${response.status}` };
+    }
+
+    return { success: true, data: await response.json() };
+  } catch (error) {
+    return { success: false, error: "Network error occurred" };
+  }
+};
+
+//get all users
+export const fetchAllUsers = async () => {
+  const token = localStorage.getItem("accessToken");
+  if (!token) return { success: false, error: "Unauthorized: No token provided" };
+
+  try {
+    const response = await fetch(`${API_BASE}/users`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error("Error fetching users:", errorData);
+      return { success: false, error: errorData.error || `HTTP error! Status: ${response.status}` };
+    }
+
+    const users = await response.json();
+    console.log("Fetched Users:", users);
+
+    storeUserIds(users); // Store user IDs locally
+
+    return { success: true, data: users };
+  } catch (error) {
+    console.error("Network error:", error);
+    return { success: false, error: "Network error occurred" };
+  }
+};
+
+// Store user IDs in localStorage
+export const storeUserIds = (users: any[]) => {
+  const userData = users.map(user => ({ id: user._id, email: user.email }));
+  localStorage.setItem("userIds", JSON.stringify(userData));
+  console.log("Stored user IDs in localStorage:", userData);
+};
+
+// Retrieve a user ID by email
+export const getUserIdByEmail = (email: string): string | undefined => {
+  const users = JSON.parse(localStorage.getItem("userIds") || "[]");
+  const user = users.find((user: any) => user.email === email);
+  return user ? user.id : undefined;
+};
+
+// Delete a user by email (admin only)
+
+
+// Delete a user by ID (admin only)
+export const deleteUser = async (userId: string, userRole: string) => {
+  if (!userId) {
+    console.error("Error: User ID is undefined");
+    return { success: false, error: "Invalid user ID" };
+  }
+
+  // Prevent admin deletion
+  if (userRole === "admin") {
+    console.warn("Admin account cannot be deleted.");
+    return { success: false, error: "Admin account cannot be deleted." };
+  }
+
+  const token = localStorage.getItem("accessToken");
+  if (!token) {
+    console.error("Unauthorized: No token provided");
+    return { success: false, error: "Unauthorized: No token provided" };
+  }
+
+  console.log(`Deleting user with ID: ${userId}`);
+
+  try {
+    const response = await fetch(`${API_BASE}/users/${userId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      console.error("Delete API Error:", data);
+      return { success: false, error: data.error || `HTTP error! Status: ${response.status}` };
+    }
+
+    console.log("User deleted successfully");
+    return { success: true, message: "User deleted successfully" };
+  } catch (error) {
+    console.error("Network error:", error);
+    return { success: false, error: "Network error occurred" };
+  }
+};
+
+export const bulkUpload = async (formData: FormData)=> {
+  console.log("api called")
+  console.log(formData)
+  try {
+    const API_BASE = "http://localhost:9000";
+    const response = await fetch(`${API_BASE}/bulk`, {
+      method: "POST",
+      body: formData
+      // No need to manually set Content-Type; browser handles it for FormData
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      return { success: false, error: errorData.error || "Bulk upload failed" };
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Bulk upload failed:", error);
+    return { success: false, error: "Bulk upload failed" };
+  }
+};
+
+export async function getOpenJobs() {
+  return getJobs(); // Reuse existing getJobs function
+}
+
+interface GeminiRecommendRequest {
+  candidateSummary: string;
+  jobs: any[];
+}
+
+export async function getGeminiRecommendations(request: GeminiRecommendRequest): Promise<Recommendation[]> {
+  try {
+    const API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+
+    const prompt = `Analyze this candidate profile and open job positions to recommend suitable matches. Follow these rules:
+    1. Candidate Summary: ${request.candidateSummary}
+    2. Available Jobs: ${JSON.stringify(request.jobs.map(job => ({
+      title: job.title,
+      type: job.description.type,
+      commitment: job.description.commitment,
+      location: job.description.location,
+      required_skills: job.skills
+    })))}
+    
+    Output format (strictly follow):
+    ### Recommendations
+    {{ 1-3 job recommendations in this format }}
+    
+    | Job Title | Location | Type | Match Reason |
+    |-----------|----------|------|--------------|
+    | [Job Title] | [Location] | [Job Type] | [Brief reason (1 sentence)] |
+    
+    ### Analysis Summary
+    [1-2 sentence summary of overall fit]`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: prompt }]
+        }]
+      }),
+    });
+
+    const data = await response.json();
+    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    
+    // Parse the structured response
+    const recommendations: Recommendation[] = [];
+    const rows = rawText.split('\n').filter(line => line.startsWith('|'));
+    
+    for (const row of rows.slice(2)) { // Skip header
+      const [_, title, location, type, reason] = row.split('|').map(c => c.trim());
+      if (title && reason ) {
+        recommendations.push({
+          title,
+          location,
+          type,
+          reason
+        });
+      }
+    }
+
+    return recommendations;
+  } catch (error) {
+    console.error('Recommendation error:', error);
+    return [];
+  }
+}
+
+export interface Recommendation {
+  title: string;
+  location: string;
+  type: string;
+  reason: string;
 }

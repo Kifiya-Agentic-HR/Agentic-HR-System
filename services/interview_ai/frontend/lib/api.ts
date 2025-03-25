@@ -70,6 +70,16 @@ interface InterviewResponse {
       if (!response.ok || !data.success) {
         throw new Error(data.error || 'Failed to create session');
       }
+
+      if (data.success === false) {
+        return {
+          success: false,
+          interviewId,
+          sessionId: null,
+          chatHistory: [],
+          error: data.error || 'Failed to create session',
+        }
+      }
   
       return {
         success: true,

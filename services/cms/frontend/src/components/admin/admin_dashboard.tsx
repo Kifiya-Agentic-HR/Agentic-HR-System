@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ChartContainer,
   ChartTooltip,
@@ -30,40 +30,7 @@ import {
   BarChart,
   LineChart,
 } from "recharts";
-
-const stats = [
-  {
-    title: "Total Applications",
-    value: "2,345",
-    icon: <Users className="w-6 h-6 text-[#364957]" />,
-  },
-  {
-    title: "Job Posts",
-    value: "45",
-    icon: <Briefcase className="w-6 h-6 text-[#FF8A00]" />,
-  },
-  {
-    title: "Screened Passed",
-    value: "1,234",
-    icon: <FileCheck className="w-6 h-6 text-[#364957]" />,
-  },
-  {
-    title: "Screened Failed",
-    value: "1,111",
-    icon: <FileX className="w-6 h-6 text-[#FF8A00]" />,
-  },
-];
-
-const genderData = [
-  { name: "Female", value: 65 },
-  { name: "Male", value: 35 },
-];
-
-const screeningData = [
-  { month: "Jan", passed: 4000, failed: 2400 },
-  { month: "Feb", passed: 3000, failed: 1398 },
-  { month: "Mar", passed: 2000, failed: 9800 },
-];
+import { getJobs, getApplications } from "@/lib/api";
 
 const genderConfig = {
   female: {
@@ -88,7 +55,136 @@ const screeningConfig = {
 } as const;
 
 export default function Dashboard() {
-  const [loading] = useState(false);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [jobsResponse, applicationsResponse] = await Promise.all([
+          getJobs(),
+          getApplications(),
+        ]);
+
+        if (jobsResponse.success && jobsResponse.jobs) {
+          setJobs(jobsResponse.jobs);
+        }
+        if (applicationsResponse.success && applicationsResponse.applications) {
+          setApplications(applicationsResponse.applications);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Calculate statistics
+  const totalApplications = applications.length;
+  const jobPosts = jobs.length;
+  const screenedPassed = applications.filter(
+    (app) => app.screening?.score >= 50
+  ).length;
+  const screenedFailed = applications.filter(
+    (app) => app.screening?.score < 50
+  ).length;
+
+  // Gender distribution
+  const genderCounts = applications.reduce((acc, app) => {
+    const gender = app.candidate.gender.toLowerCase();
+    acc[gender] = (acc[gender] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const genderData = [
+    { name: "Female", value: genderCounts.female || 0 },
+    { name: "Male", value: genderCounts.male || 0 },
+  ];
+
+  // Screening data processing
+  const screeningData = applications.reduce((acc, app) => {
+    if (!app.screening) return acc;
+    const date = new Date(app.created_at);
+    const month = date.toLocaleString("default", { month: "short" });
+    const yearMonth = `${date.getFullYear()}-${date.getMonth() + 1}`;
+
+    if (!acc[yearMonth]) {
+      acc[yearMonth] = { month, passed: 0, failed: 0 };
+    }
+
+    app.screening.score >= 5
+      ? acc[yearMonth].passed++
+      : acc[yearMonth].failed++;
+    return acc;
+  }, {} as Record<string, { month: string; passed: number; failed: number }>);
+
+  const screeningDataArray = Object.values(screeningData).sort(
+    (a, b) =>
+      new Date(a.month + " 1 2023").getMonth() -
+      new Date(b.month + " 1 2023").getMonth()
+  );
+
+  // Interview data processing
+  const interviewData = applications.reduce((acc, app) => {
+    if (!app.interview?.hiring_decision) return acc;
+    const interviewDate = app.interview.interview_date
+      ? new Date(app.interview.interview_date)
+      : new Date(app.interview.created_at);
+    const month = interviewDate.toLocaleString("default", { month: "short" });
+    const yearMonth = `${interviewDate.getFullYear()}-${
+      interviewDate.getMonth() + 1
+    }`;
+
+    if (!acc[yearMonth]) {
+      acc[yearMonth] = { month, passed: 0, failed: 0 };
+    }
+
+    app.interview.hiring_decision === "Hire"
+      ? acc[yearMonth].passed++
+      : acc[yearMonth].failed++;
+    return acc;
+  }, {} as Record<string, { month: string; passed: number; failed: number }>);
+
+  const interviewDataArray = Object.values(interviewData).sort(
+    (a, b) =>
+      new Date(a.month + " 1 2023").getMonth() -
+      new Date(b.month + " 1 2023").getMonth()
+  );
+
+  // Interview status counts
+  const interviewPassed = applications.filter(
+    (app) => app.interview?.hiring_decision === "Hire"
+  ).length;
+  const interviewFailed = applications.filter(
+    (app) => app.interview?.hiring_decision === "No Hire"
+  ).length;
+
+  const stats = [
+    {
+      title: "Total Applications",
+      value: totalApplications.toString(),
+      icon: <Users className="w-6 h-6 text-[#364957]" />,
+    },
+    {
+      title: "Job Posts",
+      value: jobPosts.toString(),
+      icon: <Briefcase className="w-6 h-6 text-[#FF8A00]" />,
+    },
+    {
+      title: "Screened Passed",
+      value: screenedPassed.toString(),
+      icon: <FileCheck className="w-6 h-6 text-[#364957]" />,
+    },
+    {
+      title: "Screened Failed",
+      value: screenedFailed.toString(),
+      icon: <FileX className="w-6 h-6 text-[#FF8A00]" />,
+    },
+  ];
 
   if (loading) {
     return (
@@ -170,7 +266,7 @@ export default function Dashboard() {
           </h3>
           <ChartContainer config={screeningConfig} className="min-h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={screeningData}>
+              <BarChart data={screeningDataArray}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#36495730" />
                 <XAxis dataKey="month" stroke="#364957" />
                 <YAxis stroke="#364957" />
@@ -190,7 +286,7 @@ export default function Dashboard() {
           </h3>
           <ChartContainer config={screeningConfig} className="min-h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={screeningData}>
+              <LineChart data={interviewDataArray}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#36495730" />
                 <XAxis dataKey="month" stroke="#364957" />
                 <YAxis stroke="#364957" />
@@ -226,14 +322,14 @@ export default function Dashboard() {
                 <CalendarCheck className="w-5 h-5 text-[#364957]" />
                 <span>Interview Passed</span>
               </div>
-              <span className="font-bold">850</span>
+              <span className="font-bold">{interviewPassed}</span>
             </div>
             <div className="flex items-center justify-between text-[#FF8A00]">
               <div className="flex items-center gap-2">
                 <CalendarX className="w-5 h-5 text-[#FF8A00]" />
                 <span>Interview Failed</span>
               </div>
-              <span className="font-bold">150</span>
+              <span className="font-bold">{interviewFailed}</span>
             </div>
           </div>
         </Card>

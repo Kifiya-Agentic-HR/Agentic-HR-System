@@ -39,7 +39,7 @@ class ScheduleResponse(BaseModel):
 
 class SessionResponse(BaseModel):
     interview_id: str
-    session_id: str
+    session_id: Optional[str] = None
     chat_history: Optional[List[str]] = []
     success: bool
     error: Optional[str]

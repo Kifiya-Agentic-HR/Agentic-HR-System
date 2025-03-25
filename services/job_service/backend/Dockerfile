@@ -29,7 +29,9 @@ RUN mkdir -p /shared_volume
 # Set environment variables
 ENV TESSERACT_CMD=/usr/bin/tesseract
 ENV POPPLER_PATH=/usr/bin
+ENV PYTHONUNBUFFERED=1
 
 EXPOSE 9000
+
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "9000", "--reload"]

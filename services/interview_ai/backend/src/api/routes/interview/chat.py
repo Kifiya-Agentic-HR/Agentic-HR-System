@@ -13,14 +13,18 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 def calculate_score(skills: dict) -> int:
+    total = 0
     try:
         # Each skill has a rating out of 10
         if type(skills) is not dict:
-            return 
-        total = 0
+            return total
         for skill, data in skills.items():
+            if type(data) is not dict:
+                continue
             total += data.get("score", 0)
-        return total / len(skills)
+            total += data.get("rating", 0)
+
+        return (total / len(skills)) * 10
     except Exception as e:
         logger.error(f"Score calculation error: {str(e)}")
         return -1
@@ -45,6 +49,7 @@ async def process_chat(
             return {"success": False, "error": "Invalid session ID", "state": None, "text": ""}
 
         session_data = SessionData.model_validate_json(session_json)
+        logger.info(f"CHAT: Session data found: {session_data}")
 
         if chat_request.user_answer:
             session_data.conversation_history.append(f"User: {chat_request.user_answer}")
@@ -78,10 +83,10 @@ async def process_chat(
                         "conversation_history": session_data.conversation_history,
                         "hiring_decision": interviewer_result.get("hiring_decision", ""),
                         "interview_reasoning": interviewer_result.get("reasoning", ""),
-                        "score": calculate_score(interviewer_result.get("skills", {}))
+                        "score": interviewer_result.get('rating', calculate_score(interviewer_result.get("skills", {})))
                     }}
                 )
-                redis_client.delete(chat_request.session_id)
+                # redis_client.delete(chat_request.session_id)
                 
                 send_email_notification(
                     to=session_data.user_email,
@@ -103,6 +108,11 @@ async def process_chat(
             session_data.model_dump_json()
         )
 
+        logger.info(f"-"*300)
+        logger.info(f"On going chat skills: {session_data.skills}")
+        print("Ongoing: ", session_data.skills)
+        logger.info(f"-"*300)
+        
         return {
             "success": True,
             "error": None,

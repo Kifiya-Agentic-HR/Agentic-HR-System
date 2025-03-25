@@ -1,47 +1,42 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { VideoFeed } from "@/components/VideoFeed";
 import { ChatInterface } from "@/components/ChatInterface";
 import { PreInterviewCheck } from "@/components/PreInterviewCheck";
 import { useAntiCheat } from "@/hooks/useAntiCheat";
-import Completion from "@/pages/completion";
 import { createSession, clearSessionId } from "@/lib/api";
 import type { ChatMessage } from "@/lib/schema";
 import { useToast } from "@/hooks/use-toast";
+import dynamic from "next/dynamic";
+
+const Completion = dynamic(() => import("@/pages/completion"), {
+  ssr: false,
+});
+
 
 export default function Interview() {
   const params = useParams();
+  const videoRef = useRef<HTMLVideoElement>(null);
   const interviewId = params?.id as string;
   const { toast } = useToast();
+  const router = useRouter();
+  
   if (!interviewId) {
-    const router = useRouter();
     router.push("/");
     return null;
   }
+
   const [isCheckComplete, setIsCheckComplete] = useState(false);
   const [isInterviewStarted, setIsInterviewStarted] = useState(false);
   const [isInterviewComplete, setIsInterviewComplete] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
 
-  // Expose toggleFullScreen from the anti-cheat hook (if needed later)
-  const { violations, toggleFullScreen } = useAntiCheat(isInterviewStarted);
+  const { violations } = useAntiCheat(isInterviewStarted, videoRef);
 
-  // This function is invoked directly via the PreInterviewCheck button click.
-  // Calling requestFullscreen() synchronously here ensures it counts as a user gesture.
   const handleStartInterview = () => {
-    document.documentElement.requestFullscreen().catch((error) => {
-      toast({
-        variant: "destructive",
-        title: "Fullscreen required",
-        description:
-          "Please allow fullscreen to continue with the interview. If you are using a mobile device, please rotate your device to landscape mode.",
-        duration: 3000,
-      });
-    });
-
     setIsInterviewStarted(true);
     setIsCheckComplete(true);
   };
@@ -50,6 +45,9 @@ export default function Interview() {
     const initializeSession = async () => {
       try {
         const sessionResponse = await createSession(interviewId);
+        if (!sessionResponse.success) {
+          throw new Error(sessionResponse.error);
+        }
         if (sessionResponse.success && sessionResponse.sessionId) {
           setSessionId(sessionResponse.sessionId);
           setChatHistory(sessionResponse.chatHistory);
@@ -72,7 +70,7 @@ export default function Interview() {
 
   useEffect(() => {
     const majorViolation = violations.violations.find(
-      (v) => v.type === "MAJOR" || v.type === "CRITICAL"
+      (v) => v.type === "MAJOR" || v.type === "CRITICAL" || v.type === "MINOR"
     );
 
     if (majorViolation) {
@@ -97,7 +95,6 @@ export default function Interview() {
 
   if (isInterviewComplete) {
     clearSessionId();
-
     return (
       <Completion
         violations={violations.violations}
@@ -123,7 +120,10 @@ export default function Interview() {
             />
           )}
         </div>
-        {isInterviewStarted && <VideoFeed />}
+        {
+          // @ts-expect-error - videoRef is not null
+        isInterviewStarted && <VideoFeed videoRef={videoRef} 
+        />}
       </div>
     </div>
   );

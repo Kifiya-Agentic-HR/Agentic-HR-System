@@ -30,19 +30,21 @@ async def process_message(message: aio_pika.IncomingMessage):
             data = json.loads(message.body.decode())
 
             # Extract job details and resume_path
-            job_data = data.get("job")
+            job_description = data.get("job_description")
+            job_skills = data.get("job_skills")            
             application_id = data.get("application_id")
             resume_path = data.get("resume_path")
 
             # Offload the blocking scoreResume call to the thread pool
             loop = asyncio.get_running_loop()
             llm_output, kw_score, vec_score, parsed_resume = await loop.run_in_executor(
-                executor, scoreResume, job_data, resume_path
+                executor, scoreResume, job_description, job_skills, resume_path
             )
 
             # Calculate final score safely, defaulting overall_score to 0 if missing
             overall_score = llm_output.get("overall_score", 0)
-            final_score = (overall_score * 0.6) + kw_score + vec_score
+            final_score = (overall_score ) 
+            
 
             result = {
                 "application_id": application_id,

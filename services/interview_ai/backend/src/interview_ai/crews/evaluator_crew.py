@@ -20,11 +20,26 @@ class EvaluatorCrew:
             config=self.agents_config['final_evaluator'],
         )
 
+    @agent
+    def json_formatter(self) -> Agent:
+        """Agent to format the final evaluation output."""
+        return Agent(
+            config=self.agents_config['json_formatter'],
+        )
+    
     @task
     def final_evaluation_task(self) -> Task:
         """Task for the final evaluation."""
         return Task(
             config=self.tasks_config['final_evaluation_task'],
+        )
+
+    @task
+    def json_formatting_task(self) -> Task:
+        """Task to format the final evaluation output."""
+        return Task(
+            config=self.tasks_config['json_formatting_task'],
+            context=[self.final_evaluation_task()]
         )
 
     @crew
@@ -34,8 +49,8 @@ class EvaluatorCrew:
         of the interview.
         """
         return Crew(
-            agents=[self.final_evaluator()],
-            tasks=[self.final_evaluation_task()],
+            agents=[self.final_evaluator(), self.json_formatter()],
+            tasks=[self.final_evaluation_task(), self.json_formatting_task()],
             # verbose=True,
             output_log_file='logs/eval_crew.log'
         )
