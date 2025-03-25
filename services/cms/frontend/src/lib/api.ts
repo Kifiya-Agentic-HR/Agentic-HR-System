@@ -1,5 +1,5 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:5050"; 
-//const INTERVIEW_BASE = process.env.NEXT_PUBLIC_INTERVIEW_BASE || "http://localhost:8080/api/v1";
+const INTERVIEW_BASE = process.env.NEXT_PUBLIC_INTERVIEW_BASE || "http://localhost:8080/api/v1";
 
 interface JobCreate {
   title: string;
@@ -16,6 +16,79 @@ interface JobCreate {
   job_status?: string;
   post_date?: Date;
   skills: Record<string, Record<string, string>>;
+}
+
+interface IngestionMetadata {
+  tag: string;
+  source: string;
+  author?: string;
+  custom_metadata?: Record<string, any>;
+}
+
+
+export async function uploadDocument(
+  file: File,
+  metadata: IngestionMetadata,
+  onProgress?: (progress: number) => void
+) {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('metadata', JSON.stringify(metadata));
+
+    const headers = {
+      ...getAuthHeaders(),
+      // Don't set Content-Type here as it's automatically set with FormData
+    };
+
+    const res = await fetch(`${INTERVIEW_BASE}/rag/ingest/documents`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.detail || 'Upload failed');
+    }
+
+    const data = await res.json();
+    return {
+      success: true,
+      data,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message || 'Failed to upload document',
+    };
+  }
+}
+
+// Add document deletion function
+export async function deleteDocument(documentId: string) {
+  try {
+    const res = await fetch(`${API_BASE}/rag/ingest/documents/${documentId}`, {
+      method: 'DELETE',
+      headers: { ...getAuthHeaders() },
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.detail || 'Deletion failed');
+    }
+
+    const data = await res.json();
+    return {
+      success: true,
+      data,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message || 'Failed to delete document',
+    };
+  }
 }
 
 const getAuthHeaders = (): Record<string, string> => {
@@ -402,3 +475,81 @@ export const bulkUpload = async (formData: FormData)=> {
     return { success: false, error: "Bulk upload failed" };
   }
 };
+
+export async function getOpenJobs() {
+  return getJobs(); // Reuse existing getJobs function
+}
+
+interface GeminiRecommendRequest {
+  candidateSummary: string;
+  jobs: any[];
+}
+
+export async function getGeminiRecommendations(request: GeminiRecommendRequest): Promise<Recommendation[]> {
+  try {
+    const API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+
+    const prompt = `Analyze this candidate profile and open job positions to recommend suitable matches. Follow these rules:
+    1. Candidate Summary: ${request.candidateSummary}
+    2. Available Jobs: ${JSON.stringify(request.jobs.map(job => ({
+      title: job.title,
+      type: job.description.type,
+      commitment: job.description.commitment,
+      location: job.description.location,
+      required_skills: job.skills
+    })))}
+    
+    Output format (strictly follow):
+    ### Recommendations
+    {{ 1-3 job recommendations in this format }}
+    
+    | Job Title | Location | Type | Match Reason |
+    |-----------|----------|------|--------------|
+    | [Job Title] | [Location] | [Job Type] | [Brief reason (1 sentence)] |
+    
+    ### Analysis Summary
+    [1-2 sentence summary of overall fit]`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: prompt }]
+        }]
+      }),
+    });
+
+    const data = await response.json();
+    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    
+    // Parse the structured response
+    const recommendations: Recommendation[] = [];
+    const rows = rawText.split('\n').filter(line => line.startsWith('|'));
+    
+    for (const row of rows.slice(2)) { // Skip header
+      const [_, title, location, type, reason] = row.split('|').map(c => c.trim());
+      if (title && reason ) {
+        recommendations.push({
+          title,
+          location,
+          type,
+          reason
+        });
+      }
+    }
+
+    return recommendations;
+  } catch (error) {
+    console.error('Recommendation error:', error);
+    return [];
+  }
+}
+
+export interface Recommendation {
+  title: string;
+  location: string;
+  type: string;
+  reason: string;
+}

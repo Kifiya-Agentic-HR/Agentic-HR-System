@@ -1,4 +1,5 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from fastapi import APIRouter, UploadFile, File, HTTPException, Form
+import json
 from pydantic import BaseModel
 from typing import Dict, Optional
 import uuid
@@ -15,11 +16,15 @@ class IngestionMetadata(BaseModel):
 
 @router.post("/documents", summary="Ingest document")
 async def ingest_document(
-    metadata: IngestionMetadata,
-    file: UploadFile = File(..., description="Document to ingest (PDF, DOCX, PPTX, TXT)"),
+    file: UploadFile = File(...),
+    metadata: str = Form(...),  # Will receive JSON string
 ):
     try:
-        weaviate_client = get_weaviate_client()
+        # Parse metadata JSON string
+        metadata_dict = json.loads(metadata)
+        metadata_obj = IngestionMetadata(**metadata_dict)
+        
+        weaviate_client = await get_weaviate_client()
         file_content = await process_file(file)
         chunks = chunk_text(file_content)
         
@@ -31,10 +36,14 @@ async def ingest_document(
             data_object = {
                 "text": chunk,
                 "file_name": file.filename,
-                "tag": metadata.tag,
+                "tag": metadata_obj.tag,
                 "chunk_index": i,
                 "total_chunks": len(chunks),
-                "metadata": metadata.custom_metadata
+                "metadata": {
+                    **metadata_obj.custom_metadata,
+                    "source": metadata_obj.source,
+                    "author": metadata_obj.author,
+                }
             }
             
             weaviate_client.data_object.create(
@@ -59,7 +68,7 @@ async def ingest_document(
 @router.delete("/documents/{document_id}", summary="Delete document")
 async def delete_document(document_id: str):
     try:
-        weaviate_client = get_weaviate_client()
+        weaviate_client = await get_weaviate_client()
         # Implementation for document deletion
         return {"message": "Document deletion scheduled"}
     except Exception as e:
