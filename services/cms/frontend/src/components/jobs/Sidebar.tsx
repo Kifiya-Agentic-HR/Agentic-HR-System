@@ -26,6 +26,11 @@ export function HRSidebar() {
       label: "Account Settings",
       icon: <Settings className="h-5 w-5" />,
     },
+    {
+      href: "/hr/bulk-job-post",
+      label: "Bulk Screening",
+      icon: <Briefcase className="h-5 w-5" />,
+    },
   ];
 
   return (

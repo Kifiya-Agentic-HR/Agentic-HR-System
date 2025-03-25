@@ -12,7 +12,8 @@ fastapi[all]
 uvicorn
 flask 
 flask-sqlalchemy
-
+pdfminer.six==20221105
+python-docx==0.8.11
 aio_pika
 
 tenacity
