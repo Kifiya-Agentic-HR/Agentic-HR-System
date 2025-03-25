@@ -76,8 +76,9 @@ class ApplicationDocument(BaseDocument):
             "created_at": datetime.utcnow(),
             "candidate_id": application_data["candidate_id"],
             "cv_link": application_data["cv_link"],
-            "application_status":"pending"
-
+            "application_status":"pending",
+            "shortlisted": False,
+            "shortlist_note": "",
 
         }
         try:
@@ -183,6 +184,24 @@ class ApplicationDocument(BaseDocument):
             return True
         except errors.PyMongoError as e:
             raise Exception(f"Error accepting application: {e}")
+    @classmethod
+    def update_shortlist(cls, application_id, update_data):
+        try:
+            updated_application = cls.get_collection().find_one_and_update(
+                {"_id": ObjectId(application_id)},
+                {"$set": {
+                    "shortlisted": update_data["shortlisted"],
+                    "shortlist_note": update_data["shortlist_note"]
+                }},
+                return_document=ReturnDocument.AFTER
+            )
+            if updated_application:
+                updated_application["_id"] = str(updated_application["_id"])
+                # updated_application["job_id"] = str(updated_application["job_id"])
+            return updated_application
+        except errors.PyMongoError as e:
+            raise Exception(f"Error updating shortlist: {e}")
+
         
 class CandidateDocument(BaseDocument):
     collection_name = "candidates"

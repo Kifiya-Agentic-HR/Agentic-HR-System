@@ -242,6 +242,21 @@ export async function jobPost(jobData: JobCreate) {
   }
 }
 
+// ----- Candidate Shortlisting ----- 
+export async function updateShortlist(applicationId: string, updateData: { shortlisted: boolean; shortlist_note: string; }) {
+  try {
+    const res = await fetch(`${API_BASE}/applications/${applicationId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updateData),
+    });
+    const data = await res.json();
+    return data; 
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to update shortlist" };
+  }
+}
+
 // export async function updateApplicationStatus(id: string, updates: any) {
 //   try {
 //     const res = await fetch(`${API_BASE}/applications/${id}`, {

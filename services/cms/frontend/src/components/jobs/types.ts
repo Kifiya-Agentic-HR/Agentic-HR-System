@@ -52,4 +52,6 @@ export interface Job {
       }>;
       created_at: string;
     } | null;
+    shortlisted?: boolean;
+    shortlist_note?: string;
   }
