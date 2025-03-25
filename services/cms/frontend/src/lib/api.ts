@@ -383,7 +383,8 @@ export const bulkUpload = async (formData: FormData)=> {
   console.log("api called")
   console.log(formData)
   try {
-    const response = await fetch("http:/localhost:9000/bulk", {
+    const API_BASE = "http://localhost:9000";
+    const response = await fetch(`${API_BASE}/bulk`, {
       method: "POST",
       body: formData
       // No need to manually set Content-Type; browser handles it for FormData

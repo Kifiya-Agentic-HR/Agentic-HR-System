@@ -40,75 +40,57 @@ def extract_job_requirement(job_file_path):
     # Construct the AI prompt
     prompt = f"""
 {{
-  "task": "Extract job skills and requirements from the provided job description text and output them as a JSON object. If any information cannot be determined, use appropriate empty values.",
+  "task": "Extract job details from the provided job file text and output them as a JSON object matching the specified schema. If any field is not found, use an empty string or an empty object as appropriate. Job status should be 'open' and extract at most top 4 skills with their required levels.",
   "job_text": "{sanitized_job_text}",
   "output_format": {{
-    "job_skills": {{
-      "technical_skills": ["list", "of", "technical", "skills"],
-      "soft_skills": ["list", "of", "soft", "skills"]
+    "title": "{{string}}",
+    "description": {{
+      "summary": "{{string}}",
+      "type": "{{string}}",
+      "commitment": "{{string}}",
+      "qualification_level": "{{string}}",
+      "responsibilities": "{{string}}",
+      "location": "{{string}}"
     }},
-    "job_requirements": {{
-      "education": ["list", "of", "educational", "requirements"],
-      "experience": ["list", "of", "experience", "requirements"],
-      "certifications": ["list", "of", "required", "certifications"]
-    }}
+    "job_status": "{{string}}",
+    "skills": {{"*": {{"required_level": "{{string}}"}}}},
+    "created_at": "{{string}}"
   }},
   "instructions": [
     {{
       "step": 1,
-      "action": "Identify Technical Skills",
+      "action": "Extract Basic Fields",
       "details": [
-        "Extract hard skills related to specific technologies/tools",
-        "Focus on measurable technical capabilities",
-        "Include programming languages, software, and technical methodologies"
+        "Identify and extract the _id, title, job_status, and created_at fields from the job file.",
+        "Ensure _id is treated as a string."
       ]
     }},
     {{
       "step": 2,
-      "action": "Identify Soft Skills",
+      "action": "Extract Description Section",
       "details": [
-        "Extract interpersonal and workplace skills",
-        "Include communication, leadership, and teamwork abilities",
-        "Identify personality traits mentioned in requirements"
+        "Within the description object, extract summary, type, commitment, qualification_level, responsibilities, and location.",
+        "Preserve HTML or any formatting present in responsibilities."
       ]
     }},
     {{
       "step": 3,
-      "action": "Extract Education Requirements",
+      "action": "Extract Skills",
       "details": [
-        "Identify required degrees or educational background",
-        "Note specific fields of study if mentioned",
-        "Extract any academic achievement requirements"
-      ]
-    }},
-    {{
-      "step": 4,
-      "action": "Identify Experience Requirements",
-      "details": [
-        "Extract minimum years of experience required",
-        "Identify specific industry experience mentions",
-        "Note any special project experience requirements"
-      ]
-    }},
-    {{
-      "step": 5,
-      "action": "Identify Certifications",
-      "details": [
-        "Extract required professional certifications",
-        "Include optional preferred certifications",
-        "Note any licensing requirements"
+        "Extract each skill as a key under the skills field along with its required_level value.",
+        "If no skills are present, return an empty object."
       ]
     }}
   ],
   "rules": [
-    "Return empty lists if no relevant information is found",
-    "Do not invent or assume unspecified requirements",
-    "Maintain original phrasing from the job text",
-    "Prioritize most critical requirements first in lists",
-    "Exclude generic phrases like 'good communication skills' unless specifically stated"
+    "Return empty strings or empty objects for fields where information is not available.",
+    "Do not generate or assume data that is not present in the job file.",
+    "Maintain original formatting where applicable, especially for complex fields like responsibilities.",
+    "Ensure that the final output is valid JSON."
   ]
 }}
 """
+
 
     # Generate response using the AI model
     try:

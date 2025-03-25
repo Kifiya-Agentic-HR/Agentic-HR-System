@@ -16,15 +16,14 @@ logger = logging.getLogger(__name__)
 
 def validate_job_input(
     job_id: Optional[str] = Form(None),
-    job_data: Optional[JobCreate] = Form(None),
     job_file: Optional[UploadFile] = File(None)
 ):
-    if not any([job_id, job_data, job_file]):
+    if not any([job_id, job_file]):
         raise HTTPException(
             status_code=400,
             detail="At least one of 'job_id', 'job_data', or 'job_file' must be provided."
         )
-    return {"job_id": job_id, "job_data": job_data, "job_file": job_file}
+    return {"job_id": job_id, "job_file": job_file}
 
 router = APIRouter()
 
@@ -36,24 +35,12 @@ async def create_bulk_application(
     zipfolder: UploadFile = File(...)
 ):
     job_id = job_inputs.get("job_id")
-    job_data = job_inputs.get("job_data")
     job_file = job_inputs.get("job_file")
     
     logger.info(f"Received job inputs: {job_inputs}")
     
     if job_id:
         job = JobDocument.get_job_by_id(job_id)
-    elif job_data:
-        try:
-            job_data = job_data.dict()
-            if not job_data.get("post_date"):
-                job_data["post_date"] = datetime.utcnow()
-            job = JobDocument.create_job(job_data)
-            if job is None:
-                raise Exception("Job creation failed")
-            job['_id'] = str(job['_id'])
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Error creating job: {e}")
     elif job_file:
         allowed_file_types = {"application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}
         if job_file.content_type not in allowed_file_types:
@@ -68,10 +55,9 @@ async def create_bulk_application(
             file_path = await upload_file(job_file)
             extracted_job_requirement = extract_job_requirement(file_path)
             logger.info(extract_job_requirement)
-            job = {
-                "description": extracted_job_requirement["job_requirements"],
-                "skills": extracted_job_requirement["job_skills"]
-            }
+            job = JobDocument.create_job(extracted_job_requirement)
+            job_id = str(job["_id"])
+            job = JobDocument.get_job_by_id(job_id)
         except Exception as e:
             logging.error(f"Error creating application: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
