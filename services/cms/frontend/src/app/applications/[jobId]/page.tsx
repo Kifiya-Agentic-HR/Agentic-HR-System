@@ -1,7 +1,7 @@
 "use client";
 
 import { Application } from "@/components/jobs/types";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import StatusPopup from "@/components/jobs/StatusPopups";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -14,7 +14,121 @@ import {
   FiUser,
   FiBriefcase,
   FiList,
+  FiThumbsUp,
+  FiThumbsDown,
 } from "react-icons/fi";
+
+function ShortlistPopup({
+  application,
+  onClose,
+  refreshApplications,
+}: {
+  application: Application;
+  onClose: () => void;
+  refreshApplications: () => Promise<void>;
+}) {
+  const [note, setNote] = useState(application.shortlist_note || "");
+  const [isShortlisted, setIsShortlisted] = useState(
+    application.shortlisted ?? false
+  );
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async () => {
+    setSaving(true);
+    try {
+      const response = await fetch(`/api/applications/${application._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          shortlisted: isShortlisted,
+          shortlist_note: note,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Failed to update shortlist status");
+      }
+      await refreshApplications();
+      onClose();
+    } catch (error) {
+      console.error("Error updating shortlist status:", error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+        <h3 className="text-xl font-bold text-primary mb-4 flex items-center">
+          <FiThumbsUp className="mr-2" />
+          Shortlist Candidate
+        </h3>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Status
+          </label>
+          <div className="flex gap-4">
+            <button
+              onClick={() => setIsShortlisted(true)}
+              className={`flex-1 py-2 rounded-xl ${
+                isShortlisted
+                  ? "bg-[#4CAF50] text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              Yes
+            </button>
+            <button
+              onClick={() => setIsShortlisted(false)}
+              className={`flex-1 py-2 rounded-xl ${
+                !isShortlisted
+                  ? "bg-[#F44336] text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              No
+            </button>
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Note
+          </label>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF6A00] focus:border-transparent"
+            rows={4}
+            placeholder="Add shortlist notes..."
+          />
+        </div>
+
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+            disabled={saving}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            className="px-4 py-2 bg-[#FF6A00] text-white rounded-lg hover:bg-[#FF8A00]"
+            disabled={saving}
+          >
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function ApplicationList() {
   const router = useRouter();
@@ -24,6 +138,7 @@ export default function ApplicationList() {
   const [popupType, setPopupType] = useState<"screening" | "interview">(
     "screening"
   );
+  const [showShortlistPopup, setShowShortlistPopup] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,8 +148,6 @@ export default function ApplicationList() {
         if (!params.jobId) {
           throw new Error("Job ID not found");
         }
-        // Optionally, you can add a timestamp if your API cares about cache
-        // const timestamp = new Date().getTime();
         const resp = await getJobApplications(params.jobId as string);
         if (resp.success && resp.applications) {
           console.log("Applications fetched:", resp.applications);
@@ -50,15 +163,8 @@ export default function ApplicationList() {
       }
     };
 
-    // Initial load of applications
     loadApplications();
-
-    // Set up automatic reload every 30 seconds
-    const intervalId = setInterval(() => {
-      loadApplications();
-    }, 30000);
-
-    // Cleanup interval on component unmount
+    const intervalId = setInterval(() => loadApplications(), 30000);
     return () => clearInterval(intervalId);
   }, [params.jobId, router]);
 
@@ -123,6 +229,7 @@ export default function ApplicationList() {
                     <th className="pl-8 pr-6 py-5 rounded-tl-2xl">Candidate</th>
                     <th className="px-6 py-5">Applied Date</th>
                     <th className="px-6 py-5">CV</th>
+                    <th className="px-6 py-5">Shortlisted</th>
                     <th className="px-6 py-5">Screening</th>
                     <th className="px-6 py-5">Interview</th>
                     <th className="pr-8 pl-6 py-5 rounded-tr-2xl text-center">
@@ -154,6 +261,27 @@ export default function ApplicationList() {
                           <FiFileText className="mr-2" />
                           View CV
                         </Link>
+                      </td>
+                      <td className="px-6 py-4">
+                        <button
+                          onClick={() => {
+                            setSelectedApp(app);
+                            setShowShortlistPopup(true);
+                          }}
+                          className={`flex items-center px-4 py-2 rounded-xl transition-all ${
+                            app.shortlisted === true
+                              ? "bg-[#4CAF50]/10 text-[#4CAF50] hover:bg-[#4CAF50]/20"
+                              : app.shortlisted === false
+                              ? "bg-[#F44336]/10 text-[#F44336] hover:bg-[#F44336]/20"
+                              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                          }`}
+                        >
+                          {String(app.shortlisted) === "true"
+                            ? "Yes"
+                            : String(app.shortlisted) === "false"
+                            ? "No"
+                            : "Set Status"}
+                        </button>
                       </td>
                       <td className="px-6 py-4">
                         <button
@@ -211,14 +339,33 @@ export default function ApplicationList() {
             </div>
           </div>
 
-          {selectedApp && (
+          {selectedApp && !showShortlistPopup && (
             <StatusPopup
               application={selectedApp}
               type={popupType}
               onClose={() => setSelectedApp(null)}
-              refreshApplications={async () =>
-                console.log("Applications Refreshed")
-              }
+              refreshApplications={async () => {
+                const resp = await getJobApplications(params.jobId as string);
+                if (resp.success && resp.applications) {
+                  setApplications(resp.applications);
+                }
+              }}
+            />
+          )}
+
+          {showShortlistPopup && selectedApp && (
+            <ShortlistPopup
+              application={selectedApp}
+              onClose={() => {
+                setShowShortlistPopup(false);
+                setSelectedApp(null);
+              }}
+              refreshApplications={async () => {
+                const resp = await getJobApplications(params.jobId as string);
+                if (resp.success && resp.applications) {
+                  setApplications(resp.applications);
+                }
+              }}
             />
           )}
         </div>
