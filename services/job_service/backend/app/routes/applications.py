@@ -1,11 +1,130 @@
 import re
+from typing import Any, Dict
 from fastapi import APIRouter, File, Form, HTTPException, Response, UploadFile, status
 import logging
+import os
+import requests
 from app.utils.publisher import publish_application
 from app.utils.cloud_storage import upload_file
+from dotenv import load_dotenv
+import google.generativeai as genai
 from app.database.models import  ApplicationDocument, CandidateDocument, JobDocument, ScreeningResultDocument , InterviewsDocument
-from pydantic import BaseModel
 
+logger = logging.getLogger(__name__)
+
+email_server = os.getenv("NOTIFICATION_SERVICE_URL")
+
+if email_server is None:
+    logger.error("NOTIFICATION_SERVICE_URL environment variable not set")
+
+BASE_URL = email_server.rstrip("/") + "/notify/email"
+
+def send_email_notification(to: str, subject: str, type="application_received", **kwargs) -> Dict[str, Any]:
+    """Send an email notification via the notification service."""
+    
+    payload = {
+        "to": to,
+        "subject": subject,
+        **kwargs,
+        "type": type
+    }
+
+    logger.info(f"Sending email notification to {to} with subject: {subject}")
+
+    try:
+        response = requests.post(BASE_URL, json=payload, timeout=10)
+        logger.debug(response.json())
+        response.raise_for_status()
+        return {"status": "success", "data": response.json()}
+    except requests.exceptions.RequestException as e:
+        return {"status": "error", "message": str(e)}
+
+load_dotenv()
+
+# Load API key
+gemini_api_key = os.getenv("GEMINI_API_KEY", "")
+if not gemini_api_key: 
+    raise ValueError("GEMINI_API_KEY is not set in the environment variables!")
+
+# Configure Gemini AI
+genai.configure(api_key=gemini_api_key)
+model = genai.GenerativeModel("gemini-2.0-flash")
+
+def generate_rejection_feedback(name: str, screening: dict, interview: dict, title: str) -> (str, str):
+    """
+    Generate a rejection reason and suggestion based on screening and interview data.
+    Replace the dummy implementation with a call to your Gemini service.
+    """
+    context = f"Candidate: {name}, Position: {title}. "
+    if screening:
+        context += f"Screening Data: {screening}. "
+    if interview:
+        context += f"Interview Data: {interview}."
+    
+    # Fill in the prompts with the candidate context.
+    REJECTION_REASON_PROMPT = f"""
+Candidate Details: {context}  
+
+Generate a **clear, professional rejection reason** explaining why the candidate is not the best fit for the role **based strictly on the provided screening and interview feedback**.  
+
+- Keep it **short, direct, and evidence-based**.  
+- **DO NOT** add disclaimers like "not enough context"—if details are missing, base the response only on what is provided.  
+- Use a **formal hiring manager tone**.  
+- No Markdown Formatting, just use plain text.
+- **DO NOT** include introductions or generic statements—focus only on the reason.  
+- Use a tone as if you are speaking directly to the CANDIDATE.
+"""
+
+    
+    SUGGESTION_PROMPT = f"""
+Candidate Details: {context}  
+
+Provide **one or two specific, actionable suggestions** the candidate can follow to improve their future applications **based on the given feedback**.  
+
+- Keep the advice **brief, practical, and constructive**.  
+- **DO NOT** add disclaimers like "not enough context"—base the response on available details.  
+- Use a **hiring manager's perspective** with a **positive, professional tone**.  
+- Don't use markdown formatting. Just use plain text.  
+- **DO NOT** include introductions or generic statements—focus only on the suggestions.  
+- Use a tone as if you are speaking directly to the CANDIDATE.
+"""
+
+    
+    rejection_reason = "Based on your screening performance, your current skill set does not fully meet our requirements."
+    suggestion = "We suggest you further develop your technical skills and reapply in the future."
+    
+    try:
+        # Generate rejection reason
+        rejection_reason = model.generate_content(
+            REJECTION_REASON_PROMPT,
+            generation_config={
+                "temperature": 0.1,
+                "top_p": 0.95,
+            }
+        )
+        rejection_reason = rejection_reason.text.strip()
+    
+        if not rejection_reason:
+            raise ValueError("Gemini returned an empty response.")
+    
+        # Generate suggestion
+        suggestion = model.generate_content(
+            SUGGESTION_PROMPT,
+            generation_config={
+                "temperature": 0.1,
+                "top_p": 0.95,
+            }
+        )
+        suggestion = suggestion.text.strip()
+    
+        if not suggestion:
+            raise ValueError("Gemini returned an empty response.")
+    
+        return rejection_reason, suggestion
+    except Exception as e:
+        logger.error(f"Failed to process GEMINI: {e.__str__()}")
+        return rejection_reason, suggestion
+    
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -105,19 +224,36 @@ async def create_application(
             "disability": disability,
             "cv_link": file_path,  # Store local path
             "experience_years": experience_years,
-            "candidate_id": candidate_id
+            "candidate_id": candidate_id,
+            "source": "web"
+
         }
         # Store in database
         new_application = ApplicationDocument.create_application(application_data)
         if not new_application:
             raise HTTPException(status_code=400, detail="Application creation failed")
         
-        
+        # notify the user
+        try:
+            send_email_notification(
+                email,
+                "Thank you for applying!",
+                type="application_received",
+                name=full_name,
+                title=JobDocument.get_job_by_id(job_id)['title']
+            )
+        except Exception as e:
+            logger.error(f"Error sending email notification: {str(e)}")
+
+        job = JobDocument.get_job_by_id(job_id)
+
         await publish_application({
-            "job": str(JobDocument.get_job_by_id(job_id)),
+            "job_description": str(job["description"]),
+            "job_skills": str(job["skills"]),
             "application_id": new_application,
             "resume_path": file_path,
         })
+        
         return {"success": True, "application": new_application}
     except Exception as e:
         logging.error(f"Error creating application: {str(e)}")
@@ -160,13 +296,48 @@ async def get_application(response: Response,application_id: str):
 
 @router.patch("/{application_id}/reject", response_model=dict)
 async def reject_application(application_id: str):
+    """
+    Reject the application and generate rejection_reason and suggestion from Gemini
+    using screening and interview information.
+    """
     try:
-        # Attempt to reject the application.
+        # Retrieve application details first
+        application = ApplicationDocument.get_application_by_id(application_id)
+        if not application:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail=f"Application {application_id} not found.")
+        
+        # Get candidate, job, screening, and interview data
+        candidate = CandidateDocument.get_candidate_by_id(application['candidate_id'])
+        job = JobDocument.get_job_by_id(application['job_id'])
+        screening = ScreeningResultDocument.get_by_application_id(application_id)
+        interview = InterviewsDocument.get_interview_by_app_id(application_id)
+        
+        name = candidate['full_name']
+        title = job['title']
+        
+        # Generate feedback using Gemini integration
+        rejection_reason, suggestion = generate_rejection_feedback(name, screening, interview, title)
+        
+        # Update the application rejection status along with feedback info.
+        # This assumes that your ApplicationDocument.reject_application can be modified
+        # to accept rejection_reason and suggestion (or update them separately).
         result = ApplicationDocument.reject_application(application_id)
         if result:
+            # Send an email notification with the generated feedback
+            send_email_notification(
+                candidate['email'],
+                "Application Rejected",
+                type="application_rejected",
+                name=name,
+                rejection_reason=rejection_reason,
+                suggestion=suggestion,
+                title=title
+            )
             return {"success": True, "message": f"Application {application_id} rejected successfully."}
-        # In case no application was updated (optional error handling)
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Application {application_id} not found.")
+        
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Application {application_id} not found.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error rejecting application: {e}")
 
@@ -176,14 +347,32 @@ async def accept_application(application_id: str):
     try:
         # Attempt to accept (pass) the application.
         result = ApplicationDocument.accept_application(application_id)
+        try:
+            application = ApplicationDocument.get_application_by_id(application_id)
+            job_id = application['job_id']
+            candidate_id = application['candidate_id']
+            job = JobDocument.get_job_by_id(job_id)
+            candidate = CandidateDocument.get_candidate_by_id(candidate_id)
+            name = candidate['full_name']
+            title = job['title']
+            send_email_notification(
+                candidate['email'],
+                "Congratulations! Your application has been accepted!",
+                type="application_passed",
+                name=name,
+                title=title
+            )
+            
+        except Exception as e:
+            logger.error("Error fetching job or candidate data to send the email" + str(e))
+
         if result:
             return {"success": True, "message": f"Application {application_id} accepted successfully."}
         # In case no application was updated (optional error handling)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Application {application_id} not found.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error accepting application: {e}")
-  
-    
+
 class ShortlistUpdate(BaseModel):
     shortlisted: bool
     shortlist_note: str = ""
