@@ -224,7 +224,9 @@ async def create_application(
             "disability": disability,
             "cv_link": file_path,  # Store local path
             "experience_years": experience_years,
-            "candidate_id": candidate_id
+            "candidate_id": candidate_id,
+            "source": "web"
+
         }
         # Store in database
         new_application = ApplicationDocument.create_application(application_data)

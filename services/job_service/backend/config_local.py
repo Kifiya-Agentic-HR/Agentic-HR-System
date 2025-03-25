@@ -9,6 +9,7 @@ class Config:
     MINIO_URL = os.getenv("MINIO_URL", None)
     MINIO_ROOT_USER = os.getenv("MINIO_ROOT_USER", None)
     MINIO_ROOT_PASSWORD = os.getenv("MINIO_ROOT_PASSWORD", None)
+    GEMINI_KEY = os.getenv("GEMINI_API_KEY", None)
 
 
     @classmethod
