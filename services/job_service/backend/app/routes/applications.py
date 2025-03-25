@@ -342,6 +342,7 @@ async def reject_application(application_id: str):
         raise HTTPException(status_code=500, detail=f"Error rejecting application: {e}")
 
 
+
 @router.patch("/{application_id}/accept", response_model=dict)
 async def accept_application(application_id: str):
     try:
