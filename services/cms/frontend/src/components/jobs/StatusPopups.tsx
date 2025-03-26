@@ -17,22 +17,11 @@ import {
   acceptApplication,
   rejectApplication,
   scheduleInterview, 
-  updateScreeningScore
+  updateScreeningScore,
 } from '@/lib/api';
 import { useState } from 'react';
 
-// const updateScreeningScore = async (id: string, score: number, comment: string) => {
-//   try {
-//     const res = await fetch(`/api/applications/${id}/screening-score`, {
-//       method: 'POST',
-//       headers: { 'Content-Type': 'application/json' },
-//       body: JSON.stringify({ score, comment })
-//     });
-//     return await res.json();
-//   } catch (error) {
-//     return { success: false, error: 'Network error' };
-//   }
-// };
+
 
 const StatusPopup = ({
   application,
