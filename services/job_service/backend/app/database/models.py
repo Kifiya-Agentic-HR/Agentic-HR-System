@@ -264,6 +264,34 @@ class ScreeningResultDocument(BaseDocument):
             result["_id"] = str(result["_id"])
             result["application_id"] = str(result["application_id"])
         return result
+    @classmethod
+    def edit_score(cls, application_id: str, score: str, comment: str):
+        try:
+            # Find the existing document to check if 'score' exists
+            existing_doc = cls.get_collection().find_one({"application_id": application_id})
+            
+            update_fields = {"score": score, "comment": comment}
+            
+            # If 'score' exists, move it to 'old_score'
+            if existing_doc and "score" in existing_doc:
+                update_fields["old_score"] = existing_doc["score"]
+            
+            # Update the document
+            updated_result = cls.get_collection().find_one_and_update(
+                {"application_id": application_id},
+                {"$set": update_fields},
+                return_document=ReturnDocument.AFTER
+            )
+
+            if updated_result:
+                updated_result["_id"] = str(updated_result["_id"])
+                updated_result["application_id"] = str(updated_result["application_id"])
+
+            return updated_result
+
+        except errors.PyMongoError as e:
+            raise Exception(f"Error updating screening result: {e}")
+
 
 class InterviewsDocument(BaseDocument):
     collection_name = "interviews"
