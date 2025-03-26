@@ -568,3 +568,22 @@ export interface Recommendation {
   type: string;
   reason: string;
 }
+
+export const updateScreening = async (applicationId: string, data: {
+  score: number;
+  Comment: string;
+}) => {
+  const response = await fetch(`/api/applications/${applicationId}/screening`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to update screening');
+  }
+
+  return await response.json();
+};
