@@ -9,6 +9,7 @@ from app.utils.cloud_storage import upload_file
 from dotenv import load_dotenv
 import google.generativeai as genai
 from app.database.models import  ApplicationDocument, CandidateDocument, JobDocument, ScreeningResultDocument , InterviewsDocument
+from schemas import ShortlistUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -373,10 +374,6 @@ async def accept_application(application_id: str):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Application {application_id} not found.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error accepting application: {e}")
-
-class ShortlistUpdate(BaseModel):
-    shortlisted: bool
-    shortlist_note: str = ""
 
 @router.put("/{application_id}", response_model=dict)
 async def update_shortlist(application_id: str, update: ShortlistUpdate):
