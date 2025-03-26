@@ -531,26 +531,28 @@ export async function getGeminiRecommendations(request: GeminiRecommendRequest):
     const API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
 
-    const prompt = `Analyze this candidate profile and open job positions to recommend suitable matches. Follow these rules:
-    1. Candidate Summary: ${request.candidateSummary}
-    2. Available Jobs: ${JSON.stringify(request.jobs.map(job => ({
-      title: job.title,
-      type: job.description.type,
-      commitment: job.description.commitment,
-      location: job.description.location,
-      required_skills: job.skills
-    })))}
-    
-    Output format (strictly follow):
-    ### Recommendations
-    {{ 1-3 job recommendations in this format }}
-    
-    | Job Title | Location | Type | Match Reason |
-    |-----------|----------|------|--------------|
-    | [Job Title] | [Location] | [Job Type] | [Brief reason (1 sentence)] |
-    
-    ### Analysis Summary
-    [1-2 sentence summary of overall fit]`;
+    const prompt = `Analyze this candidate profile and the available job positions to recommend suitable matches. Follow these rules:
+1. Candidate Summary: ${request.candidateSummary}
+2. Available Jobs: ${JSON.stringify(request.jobs.map(job => ({
+  title: job.title,
+  type: job.description.type,
+  commitment: job.description.commitment,
+  location: job.description.location,
+  required_skills: job.skills
+})))}
+
+Only recommend a job if the candidate fulfills all, or at least most, of the requirements and necessary skills for the role. Do not recommend a position if the candidate lacks key requirements.
+
+Output format (strictly follow):
+### Recommendations
+{{ 1-3 job recommendations in this format }}
+
+| Job Title | Location | Type | Match Reason |
+|-----------|----------|------|--------------|
+| [Job Title] | [Location] | [Job Type] | [Brief reason (1 sentence)] |
+
+### Analysis Summary
+[1-2 sentence summary of overall fit]`;
 
     const response = await fetch(url, {
       method: 'POST',
@@ -594,4 +596,6 @@ export interface Recommendation {
   type: string;
   reason: string;
 }
+// update-score
 
+// main
