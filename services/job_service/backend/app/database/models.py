@@ -265,23 +265,22 @@ class ScreeningResultDocument(BaseDocument):
             result["application_id"] = str(result["application_id"])
         return result
     @classmethod
-    def edit_score(cls, application_id: str, score: str, comment: str):
+    def edit_score(cls, application_id: str, update_data: dict):
         try:
-            # Find the existing document to check if 'score' exists
             existing_doc = cls.get_collection().find_one({"application_id": application_id})
+            logger.info(f"existing doc {existing_doc}")
             
-            update_fields = {"score": score, "comment": comment}
+            update_fields = {"score": update_data["score"], "comment": update_data["comment"]}
             
-            # If 'score' exists, move it to 'old_score'
             if existing_doc and "score" in existing_doc:
                 update_fields["old_score"] = existing_doc["score"]
             
-            # Update the document
             updated_result = cls.get_collection().find_one_and_update(
                 {"application_id": application_id},
                 {"$set": update_fields},
                 return_document=ReturnDocument.AFTER
             )
+            logger.info(f"updated result {updated_result}")
 
             if updated_result:
                 updated_result["_id"] = str(updated_result["_id"])
