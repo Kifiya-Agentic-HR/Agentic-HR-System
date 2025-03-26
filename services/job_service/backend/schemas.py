@@ -51,3 +51,6 @@ class ApplicationResponse(BaseModel):
     date: str
     created_at: str
     source: Literal["web", "bulk"]
+class ShortlistUpdate(BaseModel):
+    shortlisted: bool
+    shortlist_note: str = ""
