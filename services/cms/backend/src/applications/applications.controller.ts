@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, UseGuards, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, UseGuards, Patch, Put, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApplicationsService } from './applications.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -38,4 +38,17 @@ export class ApplicationsController {
   accept(@Param('id') id: string) {
     return this.appsService.accept(id);
   }
+
+  @Put(':id/edit_score')
+  @Roles(UserRole.HR)
+  editScore(@Param('id') id: string) {
+    return this.appsService.editScore(id);
+  }
+
+  @Put(':id')
+  @Roles(UserRole.HR)
+  update(@Param('id') id: string, @Body() updateData: any,) {
+    return this.appsService.update(id, updateData);
+  }
+
 }
