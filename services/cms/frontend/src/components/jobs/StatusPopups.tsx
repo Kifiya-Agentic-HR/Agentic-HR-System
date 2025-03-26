@@ -38,7 +38,10 @@ const StatusPopup = ({
   const [currentAction, setCurrentAction] = useState<'hire' | 'reject' | 'schedule' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
-  const [editableScore, setEditableScore] = useState(application.screening?.score?.toFixed(1) || '');
+  const [editableScore, setEditableScore] = useState(
+    application.screening?.score ? Number(application.screening.score).toFixed(1) : ''
+  );
+  
   const [screeningComment, setScreeningComment] = useState(application.screening?.comment || '');
 
   const isActionable = application.application_status === 'pending';
@@ -166,23 +169,27 @@ const StatusPopup = ({
                   Cancel
                 </button>
                 <button
-                  onClick={async () => {
-                    const parsedScore = parseFloat(editableScore);
-                    if (isNaN(parsedScore) || parsedScore < 0 || parsedScore > 100) {
-                      setError('Please enter a valid score between 0 and 100');
-                      return;
-                    }
-                    setIsProcessing(true);
-                    setError('');
-                    const result = await updateScreeningScore(application._id, parsedScore, screeningComment);
-                    if (result.success) {
-                      setEditMode(false);
-                      await refreshApplications();
-                    } else {
-                      setError(result.error || 'Failed to update score');
-                    }
-                    setIsProcessing(false);
-                  }}
+  onClick={async () => {
+    const parsedScore = parseFloat(editableScore);
+    if (isNaN(parsedScore) || parsedScore < 0 || parsedScore > 100) {
+      setError('Please enter a valid score between 0 and 100');
+      return;
+    }
+    setIsProcessing(true);
+    setError('');
+    
+    const result = await updateScreeningScore(application._id, parsedScore, screeningComment); // ✅ THIS IS THE CALL
+
+    if (result.success) {
+      setEditMode(false);
+      await refreshApplications();
+    } else {
+      setError(result.error || 'Failed to update score');
+    }
+
+    setIsProcessing(false);
+  }}
+
                   className="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-md hover:bg-orange-600 transition-colors flex items-center justify-center min-w-20"
                   disabled={isProcessing}
                 >
@@ -199,9 +206,12 @@ const StatusPopup = ({
           ) : (
             <div className="flex items-center justify-between w-full">
               <div>
-                <div className="text-3xl font-bold text-[#364957]">
-                  {application.screening?.score?.toFixed(1) || 'N/A'}
-                </div>
+              <div className="text-3xl font-bold text-[#364957]">
+  {application.screening?.score && !isNaN(Number(application.screening.score))
+    ? Number(application.screening.score).toFixed(1)
+    : 'N/A'}
+</div>
+
                 <span className="text-[#364957]/80">Overall Score</span>
               </div>
               <button 
@@ -278,8 +288,11 @@ const StatusPopup = ({
             </div>
             <div className="flex items-baseline gap-4">
             <div className="text-3xl font-bold text-[#364957]">
-  {application.screening?.score?.toFixed(1) || 'N/A'}
+  {application.screening?.score && !isNaN(Number(application.screening.score))
+    ? Number(application.screening.score).toFixed(1)
+    : 'N/A'}
 </div>
+
 <span className="text-[#364957]/80">Overall Score</span>
 
             </div>

@@ -228,16 +228,28 @@ export async function acceptApplication(id: string) {
   }
 }
 
-export const updateScreeningScore = async (applicationId: string, score: number, comment: string) => {
+export const updateScreeningScore = async (
+  applicationId: string,
+  score: number,
+  comment: string
+) => {
   try {
-    const response = await fetch(`${API_BASE}/applications/${applicationId}/screening-score`, {
-      method: 'PUT',
-      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-      body: JSON.stringify({
-        score,
-        comment
-      })
-    });
+    const payload = {
+      score: score.toString(), 
+      comment,
+    };
+
+    const response = await fetch(
+      `${API_BASE}/applications/edit_score/${applicationId}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify(payload),
+      }
+    );
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -246,13 +258,14 @@ export const updateScreeningScore = async (applicationId: string, score: number,
 
     return await response.json();
   } catch (error) {
-    console.error('Error updating screening score:', error);
-    return { 
-      success: false, 
-      error: error.message || 'Failed to update score'
+    console.error(' Error updating screening score:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to update score',
     };
   }
 };
+
 
 export async function jobPost(jobData: JobCreate) {
   try {

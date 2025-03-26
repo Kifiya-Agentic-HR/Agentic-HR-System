@@ -108,7 +108,7 @@ export class ApplicationsService {
     this.logger.log(`Updating application with ID: ${application_id}`);
     try {
       const response = await firstValueFrom(
-        this.httpService.put(`${this.baseUrl}/applications/${application_id}`, updateData)
+        this.httpService.put(`${this.baseUrl}/applications/edit_score/${application_id}`, updateData)
       );
       this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
       return response.data; 

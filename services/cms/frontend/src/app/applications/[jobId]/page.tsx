@@ -469,7 +469,12 @@ export default function ApplicationList() {
                           }`}
                         >
                           <FiStar className="mr-2" />
-                          {app.screening?.score?.toFixed(1) || "Add Score"}
+                          {/* {app.screening?.score?.toFixed(1) || "Add Score"} */}
+                          {!isNaN(Number(app.screening?.score))
+  ? Number(app.screening?.score).toFixed(1)
+  : 'N/A'}
+
+
                         </button>
                       </td>
                       <td className="px-6 py-4">
