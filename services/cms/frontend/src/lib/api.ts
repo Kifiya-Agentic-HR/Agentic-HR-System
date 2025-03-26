@@ -228,6 +228,32 @@ export async function acceptApplication(id: string) {
   }
 }
 
+export const updateScreeningScore = async (applicationId: string, score: number, comment: string) => {
+  try {
+    const response = await fetch(`${API_BASE}/applications/${applicationId}/screening-score`, {
+      method: 'PUT',
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+      body: JSON.stringify({
+        score,
+        comment
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to update score');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error updating screening score:', error);
+    return { 
+      success: false, 
+      error: error.message || 'Failed to update score'
+    };
+  }
+};
+
 export async function jobPost(jobData: JobCreate) {
   try {
     const res = await fetch(`${API_BASE}/jobs`, {
@@ -570,3 +596,6 @@ export interface Recommendation {
   type: string;
   reason: string;
 }
+// update-score
+
+// main
