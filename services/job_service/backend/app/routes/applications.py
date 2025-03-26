@@ -9,7 +9,7 @@ from app.utils.cloud_storage import upload_file
 from dotenv import load_dotenv
 import google.generativeai as genai
 from app.database.models import  ApplicationDocument, CandidateDocument, JobDocument, ScreeningResultDocument , InterviewsDocument
-from schemas import ShortlistUpdate
+from schemas import ShortlistUpdate, EditScore
 
 logger = logging.getLogger(__name__)
 
@@ -395,4 +395,28 @@ async def update_shortlist(application_id: str, update: ShortlistUpdate):
         raise HTTPException(
             status_code=500,
             detail=f"Error updating shortlist status: {e}"
+        )
+
+@router.put("/edit_score/{application_id}", response_model=dict)
+async def edit_score(response: Response, application_id : str, update: EditScore ):
+    try:
+        update_data = update.dict()
+        # Update the application record with shortlist status and note
+        screening_item = ScreeningResultDocument.edit_score(application_id, update_data)
+        if not screening_item:
+            response.status_code=status.HTTP_404_NOT_FOUND
+            return {
+                    "sucess": False,
+                    "error":"Screening result with application id {application_id} not found"
+                }
+        response.status_code=status.HTTP_200_OK
+        return {
+            "success": True,
+            "message": "score updated successfully",
+            "updated score": screening_item
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error updating screening score: {e}"
         )

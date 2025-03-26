@@ -54,3 +54,6 @@ class ApplicationResponse(BaseModel):
 class ShortlistUpdate(BaseModel):
     shortlisted: bool
     shortlist_note: str = ""
+class EditScore(BaseModel):
+    score:str
+    comment:str
