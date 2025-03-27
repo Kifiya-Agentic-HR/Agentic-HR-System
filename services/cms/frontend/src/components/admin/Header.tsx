@@ -1,4 +1,4 @@
-"use client"; // Must be first line
+"use client"; 
 
 import Image from "next/image";
 

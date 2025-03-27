@@ -17,4 +17,3 @@ function DashboardPage() {
 const ProtectedAdminDashboard = withAuth(DashboardPage, ["admin"]);
 export default ProtectedAdminDashboard;
 
-//export default withAuth(DashboardPage, ["admin"]);

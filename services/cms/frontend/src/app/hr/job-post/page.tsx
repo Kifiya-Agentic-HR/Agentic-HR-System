@@ -325,7 +325,7 @@ export default function JobPostingForm() {
               </Button>
             </div>
 
-            {/* Responsibilities (Rich Text Editor) */}
+            {/* Responsibilities */}
             <FormField
               control={form.control}
               name="responsibilities"

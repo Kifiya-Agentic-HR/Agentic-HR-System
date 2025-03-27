@@ -46,7 +46,6 @@ export default function CreateHrAccountForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     try {
-      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500));
       toast.success("Account created successfully", {
         description: "HR credentials have been saved",

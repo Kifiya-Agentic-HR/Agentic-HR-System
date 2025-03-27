@@ -198,8 +198,7 @@ export default function AccountSettingsForm() {
         </Form>
       </div>
 
-      {/* Logout Confirmation Modal */}
-      {showLogoutConfirm && (
+           {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm space-y-4">
             <h3 className="text-xl font-bold text-[#364957]">Confirm Logout</h3>

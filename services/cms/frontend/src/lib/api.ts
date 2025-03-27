@@ -38,7 +38,7 @@ export async function uploadDocument(
 
     const headers = {
       ...getAuthHeaders(),
-      // Don't set Content-Type here as it's automatically set with FormData
+     
     };
 
     const res = await fetch(`${INTERVIEW_BASE}/rag/ingest/documents`, {
@@ -102,7 +102,7 @@ export async function getJobs() {
     const headers = { ...getAuthHeaders() };
     const res = await fetch(`${API_BASE}/jobs`, { headers });
     const data = await res.json();
-    return data; // Expected { success: boolean, jobs: Job[], error?: string }
+    return data; 
   } catch (error: any) {
     return { success: false, error: error.message || "Failed to fetch jobs" };
   }
@@ -116,7 +116,7 @@ export async function createJob(jobData: any) {
       body: JSON.stringify(jobData),
     });
     const data = await res.json();
-    return data; // Expected { success: boolean, job: Job, error?: string }
+    return data; 
   } catch (error: any) {
     return { success: false, error: error.message || "Failed to create job" };
   }
@@ -126,7 +126,7 @@ export async function getJobById(id: string) {
   try {
     const res = await fetch(`${API_BASE}/jobs/${id}`, { headers: { ...getAuthHeaders() } });
     const data = await res.json();
-    return data; // Expected { success: boolean, job: Job, error?: string }
+    return data; 
   } catch (error: any) {
     return { success: false, error: error.message || "Failed to fetch job" };
   }
@@ -135,12 +135,12 @@ export async function getJobById(id: string) {
 export async function updateJob(id: string, jobData: any) {
   try {
     const res = await fetch(`${API_BASE}/jobs/${id}`, {
-      method: "PUT", // or PATCH, depending on your backend implementation
+      method: "PUT", 
       headers: { "Content-Type": "application/json", ...getAuthHeaders() },
       body: JSON.stringify(jobData),
     });
     const data = await res.json();
-    return data; // Expected { success: boolean, job: Job, error?: string }
+    return data; 
   } catch (error: any) {
     return { success: false, error: error.message || "Failed to update job" };
   }
@@ -150,7 +150,7 @@ export async function getJobApplications(jobId: string) {
   try {
     const res = await fetch(`${API_BASE}/jobs/${jobId}/applications`, { headers: { ...getAuthHeaders() } });
     const data = await res.json();
-    return data; // Expected { success: boolean, applications: Application[], error?: string }
+    return data; 
   } catch (error: any) {
     return { success: false, error: error.message || "Failed to fetch applications for job" };
   }
@@ -165,7 +165,7 @@ export async function createApplication(appData: any) {
       body: JSON.stringify(appData),
     });
     const data = await res.json();
-    return data; // Expected { success: boolean, application: Application, error?: string }
+    return data; 
   } catch (error: any) {
     return { success: false, error: error.message || "Failed to create application" };
   }
@@ -173,7 +173,6 @@ export async function createApplication(appData: any) {
 
 export async function getApplications() {
   try {
-    // First get all jobs
     const jobsResponse = await getJobs();
     if (!jobsResponse.success) {
       return { success: false, error: jobsResponse.error || "Failed to fetch jobs" };
@@ -200,7 +199,7 @@ export async function getApplicationById(id: string) {
   try {
     const res = await fetch(`${API_BASE}/applications/${id}`);
     const data = await res.json();
-    return data; // Expected { success: boolean, application: Application, error?: string }
+    return data; 
   } catch (error: any) {
     return { success: false, error: error.message || "Failed to fetch application" };
   }
@@ -210,7 +209,7 @@ export async function rejectApplication(id: string) {
   try {
     const res = await fetch(`${API_BASE}/applications/${id}/reject`, { method: "PATCH", headers: { ...getAuthHeaders() } });
     const data = await res.json();
-    return data; // Expected { success: boolean, application: Application, error?: string }
+    return data; 
   } catch (error: any) {
     return { success: false, error: error.message || "Failed to fetch application" };
   }
@@ -222,11 +221,13 @@ export async function acceptApplication(id: string) {
       { method: "PATCH", headers: { ...getAuthHeaders() } }
         );
     const data = await res.json();
-    return data; // Expected { success: boolean, application: Application, error?: string }
+    return data; 
   } catch (error: any) {
     return { success: false, error: error.message || "Failed to fetch application" };
   }
 }
+
+// Screening endpoint
 
 export const updateScreeningScore = async (
   applicationId: string,
@@ -275,7 +276,7 @@ export async function jobPost(jobData: JobCreate) {
       body: JSON.stringify(jobData),
     });
     const data = await res.json();
-    return data; // Expected { success: boolean, job: Job, error?: string }
+    return data; 
   } catch (error: any) {
     return { success: false, error: error.message || "Failed to create job" };
   }
@@ -324,6 +325,8 @@ export async function scheduleInterview(application_id: string) {
     return { success: false, error: error.message || "Failed to schedule interview" };
   }
 }
+
+// ----- Authentication and User Management -----
 
 //login 
 export async function login(authData: { email: string; password: string }): Promise<{ success: boolean; token?: string; userId?: string; role?: string; error?: string }> {
@@ -381,6 +384,7 @@ export const createHRAccount = async (userData: any) => {
   }
 };
 
+//HM account creation
 export const createHMAccount = async (userData: any) => {
   const token = localStorage.getItem("accessToken");
   if (!token) return { success: false, error: "Unauthorized: No token provided" };
@@ -460,7 +464,7 @@ export const fetchAllUsers = async () => {
     const users = await response.json();
     console.log("Fetched Users:", users);
 
-    storeUserIds(users); // Store user IDs locally
+    storeUserIds(users); 
 
     return { success: true, data: users };
   } catch (error) {
@@ -483,7 +487,6 @@ export const getUserIdByEmail = (email: string): string | undefined => {
   return user ? user.id : undefined;
 };
 
-// Delete a user by email (admin only)
 
 
 // Delete a user by ID (admin only)
@@ -539,7 +542,6 @@ export const bulkUpload = async (formData: FormData)=> {
     const response = await fetch(`${API_BASE}/bulk`, {
       method: "POST",
       body: formData
-      // No need to manually set Content-Type; browser handles it for FormData
     });
 
     if (!response.ok) {

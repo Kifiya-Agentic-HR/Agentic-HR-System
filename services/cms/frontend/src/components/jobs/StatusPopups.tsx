@@ -178,7 +178,7 @@ const StatusPopup = ({
     setIsProcessing(true);
     setError('');
     
-    const result = await updateScreeningScore(application._id, parsedScore, screeningComment); // ✅ THIS IS THE CALL
+    const result = await updateScreeningScore(application._id, parsedScore, screeningComment); 
 
     if (result.success) {
       setEditMode(false);

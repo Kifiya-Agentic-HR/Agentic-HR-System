@@ -6,7 +6,7 @@ const generateApplications = (count: number): Application[] => {
     id: `app-${i + 1}`,
     candidateName: `Candidate ${i + 1}`,
     cvLink: `/cv/candidate-${i + 1}.pdf`,
-    appliedDate: new Date(Date.now() - i * 86400000).toISOString(), // Last i days
+    appliedDate: new Date(Date.now() - i * 86400000).toISOString(), 
     screening: {
       status: statuses[i % 3] as any,
       reasoning: i % 2 === 0 ? 'Strong technical background' : 'Missing required experience',
@@ -48,7 +48,7 @@ export const fetchOngoingJobs = async (): Promise<Job[]> => {
   ];
 };
 
-// Rest of the mockApi.ts remains the same
+
 export const updateApplicationStatus = async (
   applicationId: string, 
   type: 'screening' | 'interview', 

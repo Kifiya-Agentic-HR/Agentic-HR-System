@@ -204,7 +204,7 @@ export default function BulkJobPostingForm() {
                 type="file"
                 accept=".pdf,.docx"
                 onChange={(e) => setJobFile(e.target.files?.[0] || null)}
-                style={{ height: '48px', fontSize: '1rem' }} // Increased size
+                style={{ height: '48px', fontSize: '1rem' }} 
               />
               <p className="text-sm text-muted-foreground">
                 Upload PDF/DOCX job description
@@ -219,7 +219,7 @@ export default function BulkJobPostingForm() {
             type="file"
             accept=".zip"
             onChange={(e) => setZipFile(e.target.files?.[0] || null)}
-            style={{ height: '48px', fontSize: '1rem' }} // Increased size
+            style={{ height: '48px', fontSize: '1rem' }} 
           />
           <p className="text-sm text-muted-foreground mt-2">
             Upload ZIP file containing resumes (PDF/DOCX/TXT)

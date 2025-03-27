@@ -2,7 +2,7 @@
 
 import { Application } from "@/components/jobs/types";
 import { useState } from "react";
-import StatusPopup from "@/components/jobs/StatusPopups"; // Fixed import
+import StatusPopup from "@/components/jobs/StatusPopups"; 
 import Link from "next/link";
 
 export const ApplicationList = ({ applications }: { applications: Application[] }) => {
@@ -14,7 +14,6 @@ export const ApplicationList = ({ applications }: { applications: Application[] 
     return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
   };
 
-  // Filter out non-pending applications
   const pendingApplications = applications.filter(app => app.application_status === "pending");
 
   return (
@@ -87,7 +86,7 @@ export const ApplicationList = ({ applications }: { applications: Application[] 
           application={selectedApp}
           type={popupType}
           onClose={() => setSelectedApp(null)}
-          refreshApplications={async () => console.log("Applications Refreshed")} // Properly pass the function
+          refreshApplications={async () => console.log("Applications Refreshed")} 
         />
       )}
     </>

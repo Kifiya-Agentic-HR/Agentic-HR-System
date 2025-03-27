@@ -46,7 +46,7 @@ export default function CreateHmAccountForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     try {
-      // Simulate API call
+
       await new Promise((resolve) => setTimeout(resolve, 1500));
       toast.success("Account created successfully", {
         description: "HM credentials have been saved",

@@ -5,7 +5,7 @@ import { Job, Application } from "./jobs/types";
 import { getJobApplications } from "@/lib/api";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Initialize Gemini API
+
 const genAI = new GoogleGenerativeAI(
   process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
     "AIzaSyBOZfZH8sLc61pMRJlFB4Yt40eKqhucPCA                                                "
@@ -17,7 +17,7 @@ interface ChatMessage {
   content: string;
 }
 
-// Helper: Remove unwanted markdown artifacts (e.g., triple asterisks)
+
 const sanitizeResponse = (text: string): string => {
   return text.replace(/\*{3,}/g, "");
 };
@@ -73,7 +73,6 @@ ${interview}
     `;
   };
 
-  // Generate selection message for jobs or applicants
   const getSelectionMessage = (step: string, items: any[]): string => {
     if (step === "selectJob") {
       return (
@@ -91,7 +90,7 @@ ${interview}
     return "";
   };
 
-  // Detect user intents with exact matching for greetings
+
   const detectIntent = (message: string): string => {
     const lowerMsg = message.toLowerCase().trim();
     const changeJobCmds = ["change job", "switch job", "select new job"];
@@ -301,7 +300,7 @@ Question: ${question}
 
   return (
     <div>
-      {/* Chatbot Icon/Button */}
+
       <button
         onClick={() => setIsOpen(true)}
         className="fixed bottom-4 right-4 bg-[#FF8A00] text-white p-3 rounded-full shadow-lg hover:bg-[#FF8A00]/90"
