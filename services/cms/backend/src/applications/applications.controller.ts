@@ -39,11 +39,11 @@ export class ApplicationsController {
     return this.appsService.accept(id);
   }
 
-  // @Put(':id/edit_score')
-  // @Roles(UserRole.HR)
-  // editScore(@Param('id') id: string) {
-  //   return this.appsService.editScore(id);
-  // }
+  @Put(':id')
+  @Roles(UserRole.HR)
+  update(@Param('id') id: string, @Body() updateData: any,) {
+    return this.appsService.update(id, updateData);
+  }
 
   @Put('edit_score/:id')
   @Roles(UserRole.HR)
