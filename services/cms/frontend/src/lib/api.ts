@@ -381,6 +381,31 @@ export const createHRAccount = async (userData: any) => {
   }
 };
 
+export const createHMAccount = async (userData: any) => {
+  const token = localStorage.getItem("accessToken");
+  if (!token) return { success: false, error: "Unauthorized: No token provided" };
+
+  try {
+    const response = await fetch(`${API_BASE}/users/hm`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(userData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      return { success: false, error: errorData.error || `HTTP error! Status: ${response.status}` };
+    }
+
+    return { success: true, data: await response.json() };
+  } catch (error) {
+    return { success: false, error: (error as Error).message || "Network error occurred" };
+  }
+};
+
 //update account
 export const updateOwnAccount = async (userData: any) => {
   const token = localStorage.getItem("accessToken");
