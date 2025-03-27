@@ -27,27 +27,40 @@ export default function UserManagementPage() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  useEffect(() => {
-    const getUsers = async () => {
-      const result = await fetchAllUsers();
-      if (result.success) {
-        const filtered = result.data.filter(
-          (user: { role: string }) => user.role !== "admin"
-        );
-        setUsers(filtered);
-      } else {
-        toast.error("Failed to fetch users", { description: result.error });
-      }
-      setLoading(false);
-    };
+  const fetchUsers = async () => {
+    const result = await fetchAllUsers();
+    if (result.success) {
+      const filtered = result.data.filter(
+        (user: { role: string }) => user.role !== "admin"
+      );
+      setUsers(filtered);
+    } else {
+      toast.error("Failed to fetch users", { description: result.error });
+    }
+    setLoading(false);
+  };
 
-    getUsers();
-    const interval = setInterval(getUsers, 20000);
+  useEffect(() => {
+    fetchUsers();
+    const interval = setInterval(fetchUsers, 20000);
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchUsers();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   const handleCreate = (role: "hr" | "hm") => {
-    router.push(`/users/create/${role}`);
+    router.push(`${role}-accounts`);
     setDropdownOpen(false);
   };
 
@@ -71,7 +84,6 @@ export default function UserManagementPage() {
     setSelectedUser(null);
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -85,7 +97,6 @@ export default function UserManagementPage() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-  
 
   const hrUsers = users.filter((u) => u.role === "hr");
   const hmUsers = users.filter((u) => u.role === "hm");
@@ -195,7 +206,7 @@ export default function UserManagementPage() {
                 <strong>
                   {selectedUser.firstName} {selectedUser.lastName}
                 </strong>
-                ’s account?
+                's account?
               </p>
               <div className="flex justify-end gap-4">
                 <Button

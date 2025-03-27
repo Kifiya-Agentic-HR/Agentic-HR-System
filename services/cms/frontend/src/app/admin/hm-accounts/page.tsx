@@ -6,6 +6,8 @@ import * as z from "zod";
 import { toast } from "sonner";
 import { useState } from "react";
 import { createHMAccount } from "@/lib/api";
+import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 
 import {
   Form,
@@ -36,6 +38,7 @@ const formSchema = z.object({
 
 export default function CreateHmAccountForm() {
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -50,7 +53,7 @@ export default function CreateHmAccountForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     try {
-      const response = await createHMAccount({
+      await createHMAccount({
         ...values,
         role: "hm",
       });
@@ -60,6 +63,7 @@ export default function CreateHmAccountForm() {
       });
 
       form.reset();
+      router.push("/users"); // Redirect back to user management
     } catch (error: any) {
       toast.error("Creation failed", {
         description: error || "There was an error creating the account",
@@ -72,12 +76,20 @@ export default function CreateHmAccountForm() {
   return (
     <div className="w-full max-w-2xl mx-auto px-4">
       <div className="bg-white rounded-xl shadow-2xl p-8 transition-all duration-300 hover:shadow-3xl hover:-translate-y-1">
-        <h2 className="text-3xl font-bold text-[#364957] mb-8 border-b-2 border-[#FF8A00]/30 pb-4">
-          Create HM Account
-        </h2>
+        <div className="flex items-center gap-4 mb-8 border-b-2 border-[#FF8A00]/30 pb-4">
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/admin/user-management")}
+            className="p-2 rounded-full hover:bg-[#FF8A00]/10 text-[#364957]"
+          >
+            <ArrowLeft className="h-6 w-6" />
+          </Button>
+          <h2 className="text-3xl font-bold text-[#364957]">
+            Create Hiring Manager
+          </h2>
+        </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* First Name */}
             <FormField
               control={form.control}
               name="firstName"
@@ -100,7 +112,6 @@ export default function CreateHmAccountForm() {
               )}
             />
 
-            {/* Last Name */}
             <FormField
               control={form.control}
               name="lastName"
@@ -123,7 +134,6 @@ export default function CreateHmAccountForm() {
               )}
             />
 
-            {/* Email */}
             <FormField
               control={form.control}
               name="email"
@@ -147,7 +157,6 @@ export default function CreateHmAccountForm() {
               )}
             />
 
-            {/* Password */}
             <FormField
               control={form.control}
               name="password"
@@ -174,16 +183,18 @@ export default function CreateHmAccountForm() {
               )}
             />
 
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-[#FF8A00] hover:bg-[#FF8A00]/90 text-[#364957] font-bold
-                text-lg py-6 transition-all duration-300 hover:scale-[1.02] shadow-lg
-                hover:shadow-xl"
-            >
-              {loading ? "Creating..." : "Create Account"}
-            </Button>
+            <div className="flex gap-4">
+            
+              <Button
+                type="submit"
+                disabled={loading}
+                className="flex-1 bg-[#FF8A00] hover:bg-[#FF8A00]/90 text-white
+                  text-lg py-6 transition-all duration-300 hover:scale-[1.02] shadow-lg
+                  hover:shadow-xl"
+              >
+                {loading ? "Creating..." : "Create Account"}
+              </Button>
+            </div>
           </form>
         </Form>
       </div>

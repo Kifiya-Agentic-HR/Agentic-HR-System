@@ -33,13 +33,8 @@ export function Sidebar() {
       icon: <BookOpen className="h-5 w-5" />,
     },
     {
-      href: "/admin/hr-accounts",
-      label: "HR Accounts",
-      icon: <Users className="h-5 w-5" />,
-    },
-    {
-      href: "/admin/hm-accounts",
-      label: "HM Accounts",
+      href: "/admin/user-management",
+      label: "User management",
       icon: <Users className="h-5 w-5" />,
     },
     {
@@ -47,11 +42,7 @@ export function Sidebar() {
       label: "Account Settings",
       icon: <Settings className="h-5 w-5" />,
     },
-    {
-      href: "/admin/user-management",
-      label: "User management",
-      icon: <Settings className="h-5 w-5" />,
-    },
+    
   ];
 
   return (

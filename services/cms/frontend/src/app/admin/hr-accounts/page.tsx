@@ -4,8 +4,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
-import { useState, useEffect } from "react";
-import { createHRAccount, fetchAllUsers, deleteUser } from "@/lib/api";
+import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 
 import {
   Form,
@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
+import { createHRAccount } from "@/lib/api";
 
 const formSchema = z.object({
   firstName: z.string().min(2, {
@@ -36,30 +36,7 @@ const formSchema = z.object({
 });
 
 export default function CreateHrAccountForm() {
-  const [loading, setLoading] = useState(false);
-  const [hrAccounts, setHrAccounts] = useState<any[]>([]);
-
-  useEffect(() => {
-    const getUsers = async () => {
-      const result = await fetchAllUsers();
-      if (result.success) {
-        setHrAccounts(
-          result.data.filter((user: { role: string }) => user.role !== "admin"  && user.role !== "hm")
-        );
-      } else {
-        console.error("Error fetching users:", result.error);
-      }
-    };
-
-    getUsers();
-
-    const intervalId = setInterval(() => {
-      getUsers();
-    }, 20000);
-
-    return () => clearInterval(intervalId);
-  }, []);
-
+  const router = useRouter();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -71,9 +48,8 @@ export default function CreateHrAccountForm() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setLoading(true);
     try {
-      const response = await createHRAccount({
+      await createHRAccount({
         firstName: values.firstName,
         lastName: values.lastName,
         email: values.email,
@@ -84,37 +60,29 @@ export default function CreateHrAccountForm() {
       toast.success("Account created successfully", {
         description: `HR ${values.firstName} ${values.lastName} has been registered`,
       });
-      setHrAccounts((prev) => [...prev, response.data]);
       form.reset();
     } catch (error: any) {
       toast.error("Creation failed", {
         description: error || "There was an error creating the account",
       });
-    } finally {
-      setLoading(false);
     }
   }
-
-  const removeAccount = async (userId: string, userRole: string) => {
-    const result = await deleteUser(userId, userRole);
-    if (result.success) {
-      toast.success("Account deleted successfully");
-
-      // Update state without refreshing
-      setHrAccounts((prev) => prev.filter((acc) => acc.id !== userId));
-    } else {
-      toast.error("Error deleting account", {
-        description: result.error,
-      });
-    }
-  };
 
   return (
     <div className="w-full max-w-2xl mx-auto px-4">
       <div className="bg-white rounded-xl shadow-2xl p-8 transition-all duration-300 hover:shadow-3xl hover:-translate-y-1">
-        <h2 className="text-3xl font-bold text-[#364957] mb-8 border-b-2 border-[#FF8A00]/30 pb-4">
-          Create HR Account
-        </h2>
+        <div className="flex items-center gap-4 mb-8 border-b-2 border-[#FF8A00]/30 pb-4">
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/admin/user-management")}
+            className="p-2 rounded-full hover:bg-[#FF8A00]/20"
+          >
+            <ArrowLeft className="w-6 h-6 text-[#364957]" />
+          </Button>
+          <h2 className="text-3xl font-bold text-[#364957]">
+            Create HR Account
+          </h2>
+        </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* First Name Field */}
@@ -213,10 +181,11 @@ export default function CreateHrAccountForm() {
                 </FormItem>
               )}
             />
+            
             {/* Submit Button */}
             <Button
               type="submit"
-              className="w-full bg-[#FF8A00] hover:bg-[#FF8A00]/90 text-[#364957] font-bold
+              className="w-full bg-[#FF8A00] hover:bg-[#FF8A00]/90 text-white
                 text-lg py-6 transition-all duration-300 hover:scale-[1.02] shadow-lg
                 hover:shadow-xl"
             >
@@ -225,32 +194,6 @@ export default function CreateHrAccountForm() {
           </form>
         </Form>
       </div>
-      {hrAccounts.length > 0 && (
-        <div className="space-y-4 mt-6">
-          <h3 className="text-2xl font-bold text-[#364957]">
-            Created HR Accounts
-          </h3>
-          {hrAccounts.map((acc) => (
-            <div
-              key={acc.id}
-              className="flex items-center justify-between bg-white rounded-xl shadow p-4 border border-[#364957]/20 transition-all duration-200 hover:shadow-xl"
-            >
-              <div>
-                <p className="text-lg font-semibold text-[#364957]">
-                  {acc.firstName} {acc.lastName}
-                </p>
-                <p className="text-sm text-[#364957]/70">{acc.email}</p>
-              </div>
-              <Button
-                onClick={() => removeAccount(acc._id, acc.role)}
-                className="bg-[#F44336] hover:bg-[#F44336]/90 text-white px-4 py-2 rounded-lg"
-              >
-                Remove
-              </Button>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
