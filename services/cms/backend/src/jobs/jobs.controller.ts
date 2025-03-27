@@ -10,25 +10,30 @@ import { UserRole } from '../users/schemas/user.schema';
 export class JobsController {
   constructor(private readonly jobsService: JobsService) {}
 
-  // GET /jobs
   @Get()
   async findAll() {
     return this.jobsService.findAll();
   }
 
-  // GET /jobs/:id
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.jobsService.findOne(id);
   }
 
-  // GET /jobs/:id/applications
   @Get(':id/applications')
   async findApplicationsByJob(@Param('id') id: string) {
     return this.jobsService.findApplicationsByJob(id);
   }
 
-  // POST /jobs => Only HR can create
+  @Get('short_list_request/:hr_manager_id')
+  @Roles(UserRole.HR)
+  async getRequests(@Req() req: any) {
+    const hr_manager_id = req.user.sub;
+    if (!hr_manager_id) {
+      return { success: false, error: 'No hm id found in the token' };
+    }
+    return this.jobsService.getRequests(hr_manager_id );}
+
   @Post()
   @Roles(UserRole.HR)
   async create(@Body() jobData: any, @Req() req: any) {
@@ -38,17 +43,34 @@ export class JobsController {
     
     }
     return this.jobsService.create(jobData, id );}
-  // PUT /jobs/:id => Only HR can update
+  
+  @Post('short_list_request/:hr_manager_id')
+  @Roles(UserRole.HR)
+  async createShortList(@Param('id') id: string, @Req() req: any) {
+    const hr_manager_id = req.user.sub;
+    if (!hr_manager_id) {
+      return { success: false, error: 'No hm id found in the token' };
+    }
+    return this.jobsService.createShortList(id, hr_manager_id );}
+
   @Put(':id')
   @Roles(UserRole.HR)
   async update(@Param('id') id: string, @Body() jobData: any) {
     return this.jobsService.update(id, jobData);
   }
 
-  // DELETE /jobs/:id => Only HR can delete
   @Delete(':id')
   @Roles(UserRole.HR)
   async remove(@Param('id') id: string) {
     return this.jobsService.remove(id);
   }
+
+  @Delete('short_list_request')
+  @Roles(UserRole.HR)
+  async deleteRequest(@Param('id') id: string, @Req() req: any) {
+    const hr_manager_id = req.user.sub;
+    if (!hr_manager_id) {
+      return { success: false, error: 'No hm id found in the token' };
+    }
+    return this.jobsService.deleteRequest(id, hr_manager_id );}
 }

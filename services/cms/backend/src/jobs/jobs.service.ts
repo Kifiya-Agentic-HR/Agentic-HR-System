@@ -13,15 +13,15 @@ export class JobsService {
 
   async findAll() {
     try {
-      this.logger.debug(`Calling GET ${this.baseUrl}/jobs`); // <-- 2) Log the call
+      this.logger.debug(`Calling GET ${this.baseUrl}/jobs`); 
       const response = await firstValueFrom(
         this.httpService.get(`${this.baseUrl}/jobs`),
       );
-      this.logger.debug(`Got response: ${JSON.stringify(response.data)}`); // <-- 3) Log the result
+      this.logger.debug(`Got response: ${JSON.stringify(response.data)}`);
       return response.data;
     } catch (error) {
-      this.logger.error(`Error fetching jobs`, error.stack); // <-- 4) Log the error
-      this.logger.error(error?.response?.data || error?.message); // Print the actual error data
+      this.logger.error(`Error fetching jobs`, error.stack); 
+      this.logger.error(error?.response?.data || error?.message);
       return { success: false, error: 'Error fetching jobs' };
     }
   }
@@ -38,6 +38,25 @@ export class JobsService {
       this.logger.error(`Error in findOne(${id})`, error.stack);
       this.logger.error(error?.response?.data || error?.message);
       return { success: false, error: `Error fetching job ${id}` };
+    }
+  }
+
+  async getRequests(hr_manager_id: string) {
+    this.logger.debug(
+      `Calling get ${this.baseUrl}/jobs/short_list_request/${hr_manager_id}`
+    );
+    try {
+      const payload = { hr_manager_id};
+  
+      const response = await firstValueFrom(
+        this.httpService.get(`${this.baseUrl}/jobs/short_list_request/${hr_manager_id}`, payload)
+      );
+      this.logger.debug(`Success`);
+      return response.data;
+    } catch (error) {
+      this.logger.error(`Error in get()`, error.stack);
+      this.logger.error(error?.response?.data || error?.message);
+      return { success: false, error: 'Error getting requests' };
     }
   }
 
@@ -58,6 +77,25 @@ export class JobsService {
       this.logger.error(`Error in create()`, error.stack);
       this.logger.error(error?.response?.data || error?.message);
       return { success: false, error: 'Error creating job' };
+    }
+  }
+
+  async createShortList(hr_manager_id: string, id: string) {
+    this.logger.debug(
+      `Calling post ${this.baseUrl}/jobs/short_list_request/${hr_manager_id}`
+    );
+    try {
+      const payload = { hr_manager_id, id};
+  
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/jobs/short_list_request/${hr_manager_id}`, payload)
+      );
+      this.logger.debug(`Success`);
+      return response.data;
+    } catch (error) {
+      this.logger.error(`Error in post()`, error.stack);
+      this.logger.error(error?.response?.data || error?.message);
+      return { success: false, error: 'Error posting short list' };
     }
   }
 
@@ -88,6 +126,25 @@ export class JobsService {
       this.logger.error(`Error in remove(${id})`, error.stack);
       this.logger.error(error?.response?.data || error?.message);
       return { success: false, error: `Error deleting job ${id}` };
+    }
+  }
+
+  async deleteRequest(hr_manager_id: string, id: string) {
+    this.logger.debug(
+      `Calling delete ${this.baseUrl}/jobs/short_list_request with id: ${hr_manager_id} and job id: ${id}`
+    );
+    try {
+      const payload = { hr_manager_id, id };
+  
+      const response = await firstValueFrom(
+        this.httpService.delete(`${this.baseUrl}/jobs/short_list_request`, payload)
+      );
+      this.logger.debug(`Success [delete()]: ${id}`);
+      return response.data;
+    } catch (error) {
+      this.logger.error(`Error in delete()`, error.stack);
+      this.logger.error(error?.response?.data || error?.message);
+      return { success: false, error: 'Error deleting job' };
     }
   }
 
