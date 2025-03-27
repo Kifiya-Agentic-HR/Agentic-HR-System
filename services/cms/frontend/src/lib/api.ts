@@ -286,7 +286,7 @@ export async function updateShortlist(applicationId: string, updateData: { short
   try {
     const res = await fetch(`${API_BASE}/applications/${applicationId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
       body: JSON.stringify(updateData),
     });
     const data = await res.json();
@@ -545,16 +545,27 @@ export async function getGeminiRecommendations(request: GeminiRecommendRequest):
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
 
     const prompt = `Analyze this candidate profile and the available job positions to recommend suitable matches. Follow these rules:
+    
+    
+**Instructions:**
+
+1.  **STRICT REQUIREMENT MATCHING:** Only recommend jobs where the candidate possesses the **key required skills**. If the candidate does not have a clear overlap with the essential skills, do not recommend the job.
+2.  **Prioritize strong, complete matches:** Favor jobs where the candidate meets a significant portion, ideally all, of the **key required skills**.
+3.  **Consider all aspects (but key skills are paramount):** While title, type, commitment, and location are important, the fulfillment of **key required skills** is the primary factor for recommendation.
+4.  **Provide specific justification based on key skills:** For each recommendation, explicitly state which of the candidate's skills directly match the **key required skills** of the job.
+5.  **Strict Output Format:** You MUST adhere to the following output format. If no jobs meet the strict criteria, you can indicate that in the "Analysis Summary."
+
+
+**Candidate Profile:**
 1. Candidate Summary: ${request.candidateSummary}
 2. Available Jobs: ${JSON.stringify(request.jobs.map(job => ({
   title: job.title,
   type: job.description.type,
   commitment: job.description.commitment,
   location: job.description.location,
-  required_skills: job.skills
+  required_skills: job.skills,
+  responsibilities: job.description.responsibilities
 })))}
-
-Only recommend a job if the candidate fulfills all, or at least most, of the requirements and necessary skills for the role. Do not recommend a position if the candidate lacks key requirements.
 
 Output format (strictly follow):
 ### Recommendations
