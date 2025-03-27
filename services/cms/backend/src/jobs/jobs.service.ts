@@ -41,11 +41,16 @@ export class JobsService {
     }
   }
 
-  async create(jobData: any) {
-    this.logger.debug(`Calling POST ${this.baseUrl}/jobs [create()] with data: ${JSON.stringify(jobData)}`);
+  async create(jobData: any, id: string) {
+    this.logger.debug(
+      `Calling POST ${this.baseUrl}/jobs [create()] with data: ${JSON.stringify(jobData)} and id: ${id}`
+    );
     try {
+      // Add the creator's email to the job data
+      const payload = { ...jobData, id };
+  
       const response = await firstValueFrom(
-        this.httpService.post(`${this.baseUrl}/jobs`, jobData),
+        this.httpService.post(`${this.baseUrl}/jobs`, payload)
       );
       this.logger.debug(`Success [create()]: ${JSON.stringify(response.data)}`);
       return response.data;
