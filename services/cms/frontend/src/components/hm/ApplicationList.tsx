@@ -1,8 +1,8 @@
 "use client";
 
-import { Application } from "./types";
+import { Application } from "@/components/jobs/types";
 import { useState } from "react";
-import StatusPopup from "./StatusPopups"; // Fixed import
+import StatusPopup from "@/components/jobs/StatusPopups"; // Fixed import
 import Link from "next/link";
 
 export const ApplicationList = ({ applications }: { applications: Application[] }) => {
@@ -13,6 +13,9 @@ export const ApplicationList = ({ applications }: { applications: Application[] 
     const date = new Date(dateString);
     return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
   };
+
+  // Filter out non-pending applications
+  const pendingApplications = applications.filter(app => app.application_status === "pending");
 
   return (
     <>
@@ -27,7 +30,7 @@ export const ApplicationList = ({ applications }: { applications: Application[] 
             <div className="text-center">Application Status</div>
           </div>
 
-          {applications.map((app) => (
+          {pendingApplications.map((app) => (
             <div
               key={app._id}
               className="grid grid-cols-7 gap-4 items-center bg-white border-b p-4 hover:bg-gray-50 transition-all"
@@ -81,11 +84,11 @@ export const ApplicationList = ({ applications }: { applications: Application[] 
 
       {selectedApp && (
         <StatusPopup
-        application={selectedApp}
-        type={popupType}
-        onClose={() => setSelectedApp(null)}
-        refreshApplications={async () => console.log("Applciations Refreshed")} // Properly pass the function
-      />
+          application={selectedApp}
+          type={popupType}
+          onClose={() => setSelectedApp(null)}
+          refreshApplications={async () => console.log("Applications Refreshed")} // Properly pass the function
+        />
       )}
     </>
   );

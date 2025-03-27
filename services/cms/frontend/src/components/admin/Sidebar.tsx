@@ -47,6 +47,11 @@ export function Sidebar() {
       label: "Account Settings",
       icon: <Settings className="h-5 w-5" />,
     },
+    {
+      href: "/admin/user-management",
+      label: "User management",
+      icon: <Settings className="h-5 w-5" />,
+    },
   ];
 
   return (

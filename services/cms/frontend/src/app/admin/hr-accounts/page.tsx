@@ -44,7 +44,7 @@ export default function CreateHrAccountForm() {
       const result = await fetchAllUsers();
       if (result.success) {
         setHrAccounts(
-          result.data.filter((user: { role: string }) => user.role !== "admin")
+          result.data.filter((user: { role: string }) => user.role !== "admin"  && user.role !== "hm")
         );
       } else {
         console.error("Error fetching users:", result.error);
