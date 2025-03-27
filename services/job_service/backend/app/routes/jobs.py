@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status, Response
 from schemas import JobCreate, JobUpdate
-from app.database.models import JobDocument, ApplicationDocument
+from app.database.models import JobDocument, ApplicationDocument, ShortListDocument
 from datetime import datetime
 
 router = APIRouter()
@@ -14,12 +14,12 @@ async def get_jobs():
         raise HTTPException(status_code=500, detail=f"Error retrieving jobs: {e}")
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=dict)
-async def create_job(job: JobCreate):
+async def create_job(job: JobCreate, hr_id: str):
     try:
         job_data = job.dict()
         if not job_data.get("post_date"):
             job_data["post_date"] = datetime.utcnow()
-        new_job = JobDocument.create_job(job_data)
+        new_job = JobDocument.create_job(job_data, hr_id)
         if new_job is None:
             raise Exception("Job creation failed")
         new_job['_id'] = str(new_job['_id'])
@@ -80,3 +80,40 @@ async def get_job_applications(response: Response,job_id: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving applications: {e}")
+    
+
+
+@router.post("/short_list_request/{hr_manager_id}", status_code=status.HTTP_201_CREATED, response_model=dict)
+async def short_list_request(response: Response, job_id: str, hr_manager_id: str):
+    try:
+        short_list = ShortListDocument.create_request(job_id, hr_manager_id)
+        if short_list is None:
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return {"success": False, "error": "Short list request failed"}
+        short_list['_id'] = str(short_list['_id'])
+        return {"success": True, "short_list": short_list}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating short list request: {e}")
+    
+
+
+@router.get("/short_list_request/{hr_manager_id}", response_model=dict)
+async def get_short_list_requests(response: Response, hr_manager_id: str):
+    try:
+        short_list = ShortListDocument.get_request_by_hr_manager(hr_manager_id)
+        response.status_code = status.HTTP_200_OK
+        return {"success": True, "short_list": short_list}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving short list requests: {e}")
+
+@router.delete("/short_list_request/", response_model=dict)
+async def delete_short_list_request(response: Response, hr_manager_id: str, job_id: str):
+    try:
+        short_list = ShortListDocument.delete_request(hr_manager_id, job_id)
+   
+        if not short_list:
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {"success": False, "error": "The request does not exist"}
+        return {"success": True, "short_list": short_list}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting short list request: {e}")
