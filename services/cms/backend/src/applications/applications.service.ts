@@ -87,28 +87,28 @@ export class ApplicationsService {
     }
   }
 
-  // async editScore(application_id: string): Promise<any> {
-  //   this.logger.log(`Editing application with ID: ${application_id}`);
-  //   try {
-  //     const response = await firstValueFrom(
-  //       this.httpService.put(`${this.baseUrl}/applications/${application_id}/edit_score`)
-  //     );
-  //     this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
-  //     return response.data; 
-  //   } catch (error) {
-  //     this.logger.error(`Error editing application ${application_id}: ${error.message}`, error.stack);
-  //     return {
-  //       success: false,
-  //       error: error?.response?.data?.error || 'Error editing application',
-  //     };
-  //   }
-  // }
-
   async editScore(application_id: string, updateData: any): Promise<any> {
-    this.logger.log(`Updating application with ID: ${application_id}`);
+    this.logger.log(`editing application with ID: ${application_id}`);
     try {
       const response = await firstValueFrom(
         this.httpService.put(`${this.baseUrl}/applications/edit_score/${application_id}`, updateData)
+      );
+      this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
+      return response.data; 
+    } catch (error) {
+      this.logger.error(`Error editing application ${application_id}: ${error.message}`, error.stack);
+      return {
+        success: false,
+        error: error?.response?.data?.error || 'Error editing application',
+      };
+    }
+  }
+
+  async update(application_id: string, updateData: any): Promise<any> {
+    this.logger.log(`Updating application with ID: ${application_id}`);
+    try {
+      const response = await firstValueFrom(
+        this.httpService.put(`${this.baseUrl}/applications/${application_id}`, updateData)
       );
       this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
       return response.data; 
