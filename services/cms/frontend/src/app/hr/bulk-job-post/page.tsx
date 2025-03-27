@@ -159,7 +159,9 @@ export default function BulkJobPostingForm() {
     <motion.div className="w-full max-w-4xl mx-auto px-4" style={{ backgroundColor: '#fff' }}>
       <div className="rounded-xl shadow-2xl p-8 bg-white">
         <h2 className="text-3xl font-bold text-[#364957] mb-8">
+        <span className="relative after:content-[''] after:absolute after:left-0 after:-bottom-2 after:w-full after:h-0.5 after:bg-[#FF6A00]">
           Bulk Resume Processing
+          </span>
         </h2>
 
         {/* Job Input Options */}
@@ -229,7 +231,7 @@ export default function BulkJobPostingForm() {
           <Button
             onClick={handleBulkUpload}
             disabled={isProcessing}
-            className="bg-[#FF8A00] hover:bg-[#FF8A00]/90"
+            className="bg-[#FF8A00] hover:bg-[#FF8A00]/90 text-white"
           >
             {isProcessing ? "Processing Resumes..." : "Process Resumes"}
           </Button>

@@ -190,7 +190,7 @@ export default function AccountSettingsForm() {
 
             <Button
               type="submit"
-              className="w-full bg-[#FF8A00] hover:bg-[#FF8A00]/90 text-[#364957] font-bold text-lg py-6 transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl"
+              className="w-full bg-[#FF8A00] hover:bg-[#FF8A00]/90 text-white text-lg py-6 transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl"
             >
               Update Account
             </Button>
