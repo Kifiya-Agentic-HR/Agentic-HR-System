@@ -4,6 +4,7 @@ import { Document } from 'mongoose';
 export enum UserRole {
   ADMIN = 'admin',
   HR = 'hr',
+  HM = 'hm' //hm is hiring manager
 }
 
 @Schema()
@@ -12,7 +13,7 @@ export class User extends Document {
   email: string;
 
   @Prop({ required: true })
-  password: string; // hashed
+  password: string;
 
   @Prop({
     type: String,

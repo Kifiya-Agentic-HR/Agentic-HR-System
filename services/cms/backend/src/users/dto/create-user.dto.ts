@@ -9,7 +9,7 @@ export class CreateUserDto {
   password: string;
 
   @IsEnum(UserRole)
-  role: UserRole; // 'admin' or 'hr'
+  role: UserRole;
 
   @IsString()
   @IsOptional()

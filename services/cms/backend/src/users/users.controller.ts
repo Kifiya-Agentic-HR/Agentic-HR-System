@@ -13,13 +13,18 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   /**
-   * Admin creates HR accounts.
-   * Must pass { email, password, role: 'hr', ... } in body.
+   * Admin creates accounts.
    */
   @Post('hr')
   @Roles(UserRole.ADMIN)
   createHR(@Body() dto: CreateUserDto) {
     return this.usersService.createHRUser(dto);
+  }
+
+  @Post('hm')
+  @Roles(UserRole.ADMIN)
+  createHM(@Body() dto: CreateUserDto) {
+    return this.usersService.createHMUser(dto);
   }
 
   /**
@@ -42,20 +47,20 @@ export class UsersController {
   }
 
   /**
-   * HR (or admin) can read their own profile.
+   * users can read their own profile.
    * 'req.user.sub' is the userId from JWT.
    */
   @Get('me')
-  @Roles(UserRole.HR, UserRole.ADMIN)
+  @Roles(UserRole.HR,UserRole.HM, UserRole.ADMIN)
   getMe(@Req() req) {
     return this.usersService.findOne(req.user.sub);
   }
 
   /**
-   * HR (or admin) can update their own password, first/last name, etc.
+   * users can update their own password, first/last name, etc.
    */
   @Patch('me')
-  @Roles(UserRole.HR, UserRole.ADMIN)
+  @Roles(UserRole.HR, UserRole.HM, UserRole.ADMIN)
   updateMe(@Req() req, @Body() dto: UpdateUserDto) {
     return this.usersService.updateOwnAccount(req.user.sub, dto);
   }

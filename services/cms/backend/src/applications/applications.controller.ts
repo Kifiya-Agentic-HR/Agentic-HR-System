@@ -40,7 +40,7 @@ export class ApplicationsController {
   }
 
   @Put(':id')
-  @Roles(UserRole.HR)
+  @Roles(UserRole.HM)
   update(@Param('id') id: string, @Body() updateData: any,) {
     return this.appsService.update(id, updateData);
   }

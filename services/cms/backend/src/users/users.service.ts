@@ -34,6 +34,15 @@ export class UsersService {
     return user.save();
   }
 
+  async createHMUser(dto: CreateUserDto): Promise<User> {
+    // Force the role to 'hm'
+    dto.role = UserRole.HM;
+
+    const hashed = await bcrypt.hash(dto.password, 10);
+    const user = new this.userModel({ ...dto, password: hashed });
+    return user.save();
+  }
+
   /**
    * Find user by email.
    */
@@ -73,7 +82,7 @@ export class UsersService {
   }
 
   /**
-   * Update own account (HR or admin).
+   * Update own account (HR, HM or admin).
    * Only allow firstName, lastName, password changes.
    */
   async updateOwnAccount(userId: string, dto: UpdateUserDto): Promise<User> {
@@ -92,16 +101,14 @@ export class UsersService {
   }
 
   /**
-   * Delete an HR user's account by ID (admin usage).
-   * The admin can remove HR accounts, but cannot remove the admin itself if you want that restriction.
+   * Delete HR or HM's account by ID (admin usage).
+   * The admin can remove HR and HM accounts, but cannot remove the admin itself.
    */
   async deleteUserByAdmin(userId: string): Promise<{ deleted: boolean }> {
-    // Optional: check if this is the admin user
     const user = await this.userModel.findById(userId).exec();
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    // If you want to forbid deleting an admin, do:
     if (user.role === UserRole.ADMIN) {
       throw new UnauthorizedException('Cannot delete the admin account');
     }
