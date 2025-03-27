@@ -45,7 +45,7 @@ export class ApplicationsController {
   //   return this.appsService.editScore(id);
   // }
 
-  @Put(':id')
+  @Put('edit_score/:id')
   @Roles(UserRole.HR)
   editScore(@Param('id') id: string, @Body() updateData: any,) {
     return this.appsService.editScore(id, updateData);
