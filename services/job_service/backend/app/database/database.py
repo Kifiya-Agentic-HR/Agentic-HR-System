@@ -26,6 +26,7 @@ class Database:
         self.candidates_collection = self.db["candidates"]
         self.interviews_collection = self.db["interviews"]
         self.screening_results_collection = self.db["screening_results"]
+        self.short_list = self.db["short_list"]
 
     def get_collection(self, name: str):
         return self.db[name]

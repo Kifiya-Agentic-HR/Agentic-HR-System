@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { JobsService } from './jobs.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -31,10 +31,13 @@ export class JobsController {
   // POST /jobs => Only HR can create
   @Post()
   @Roles(UserRole.HR)
-  async create(@Body() jobData: any) {
-    return this.jobsService.create(jobData);
-  }
-
+  async create(@Body() jobData: any, @Req() req: any) {
+    const id = req.user.sub;
+    if (!id) {
+      return { success: false, error: 'No id found in the token' };
+    
+    }
+    return this.jobsService.create(jobData, id );}
   // PUT /jobs/:id => Only HR can update
   @Put(':id')
   @Roles(UserRole.HR)
