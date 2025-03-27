@@ -75,6 +75,8 @@ export default function AuthForm() {
         router.push("/admin");
       } else if (decoded.role === "hr") {
         router.push("/hr");
+      } else if (decoded.role === "hm") {
+        router.push("/hm");
       } else {
         router.push("/");
       }

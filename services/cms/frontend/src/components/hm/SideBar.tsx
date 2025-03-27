@@ -5,45 +5,20 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import {
-  LayoutDashboard,
-  Settings,
-  Users,
-  BookOpen,
-  MessageSquareText,
-} from "lucide-react";
+import { LayoutDashboard, Briefcase, Settings } from "lucide-react";
 
-export function Sidebar() {
+export function HRSidebar() {
   const pathname = usePathname();
 
   const navItems = [
     {
-      href: "/admin",
+      href: "/hm",
       label: "Dashboard",
       icon: <LayoutDashboard className="h-5 w-5" />,
     },
+
     {
-      href: "/admin/prompt-settings",
-      label: "AI Agent Settings",
-      icon: <MessageSquareText className="h-5 w-5" />,
-    },
-    {
-      href: "/admin/knowledge-base",
-      label: "Knowledge Base",
-      icon: <BookOpen className="h-5 w-5" />,
-    },
-    {
-      href: "/admin/hr-accounts",
-      label: "HR Accounts",
-      icon: <Users className="h-5 w-5" />,
-    },
-    {
-      href: "/admin/hm-accounts",
-      label: "HM Accounts",
-      icon: <Users className="h-5 w-5" />,
-    },
-    {
-      href: "/admin/account-settings",
+      href: "/hm/account-settings",
       label: "Account Settings",
       icon: <Settings className="h-5 w-5" />,
     },
@@ -52,6 +27,9 @@ export function Sidebar() {
   return (
     <div className="hidden lg:block fixed left-0 top-0 h-screen w-64 border-r bg-white">
       <ScrollArea className="h-full p-4">
+        <div className="mb-6 ml-4">
+          <img src="/logo.svg" alt="Logo" className="h-12" />
+        </div>
         <div className="space-y-1">
           {navItems.map((item) => (
             <Button
