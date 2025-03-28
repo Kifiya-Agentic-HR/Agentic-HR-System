@@ -1,6 +1,6 @@
 import json
 import re
-from config_local import Config
+from app.utils.config_local import Config
 from dotenv import load_dotenv
 import google.generativeai as genai
 from app.utils.job_file_reader import extract_text_from_file
