@@ -77,24 +77,6 @@ export class JobsService {
     }
   }
 
-  async createShortList(id: string, hiringManagerId: string) {
-    this.logger.debug(
-      `Calling post ${this.baseUrl}/jobs/short_list_request/${hiringManagerId} from job: ${id}`
-    );
-    try {
-      const payload = { id, hiringManagerId};
-      const response = await firstValueFrom(
-        this.httpService.post(`${this.baseUrl}/jobs/short_list_request/${hiringManagerId}`, payload)
-      );
-      this.logger.debug(`Success [createShortList()]`);
-      return response.data;
-    } catch (error) {
-      this.logger.error(`Error in createShortList()`, error.stack);
-      this.logger.error(error?.response?.data || error?.message);
-      return { success: false, error: 'Error posting short list' };
-    }
-  }
-
   async update(id: string, jobData: any) {
     this.logger.debug(`Calling PUT ${this.baseUrl}/jobs/${id} [update()] with data: ${JSON.stringify(jobData)}`);
     try {
@@ -122,25 +104,6 @@ export class JobsService {
       this.logger.error(`Error in remove(${id})`, error.stack);
       this.logger.error(error?.response?.data || error?.message);
       return { success: false, error: `Error deleting job ${id}` };
-    }
-  }
-
-  async deleteRequest(id: string, hrManagerId: string) {
-    this.logger.debug(
-      `Calling DELETE ${this.baseUrl}/jobs/short_list_request with hr_manager_id: ${hrManagerId} and job id: ${id}`
-    );
-    try {
-      const response = await firstValueFrom(
-        this.httpService.delete(`${this.baseUrl}/jobs/short_list_request`, {
-          params: { hrManagerId, id },
-        })
-      );
-      this.logger.debug(`Success [deleteRequest]`);
-      return response.data;
-    } catch (error) {
-      this.logger.error(`Error in deleteRequest()`, error.stack);
-      this.logger.error(error?.response?.data || error?.message);
-      return { success: false, error: 'Error deleting short list request' };
     }
   }
   
