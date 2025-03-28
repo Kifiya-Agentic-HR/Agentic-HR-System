@@ -5,7 +5,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/schemas/user.schema';
 
-@Controller('short-list')
+@Controller('short_list')
 @UseGuards(AuthGuard, RolesGuard)
 export class ShortListController {
   constructor(private readonly shortListService: ShortListService) {}
