@@ -5,6 +5,15 @@ export interface Job {
     status: 'ongoing' | 'closed';
     applications: Application[];
   }
+
+  export type User = {
+    id: string;
+    _id: string;
+    role: "hr" | "hm" | "admin";
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
   
   export interface Application {
     _id: string;

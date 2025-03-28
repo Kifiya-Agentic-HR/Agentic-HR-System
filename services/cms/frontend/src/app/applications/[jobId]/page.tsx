@@ -1,11 +1,11 @@
 "use client";
 
-import { Application } from "@/components/jobs/types";
+import { Application, User} from "@/components/jobs/types";
 import { useState, useEffect } from "react";
 import StatusPopup from "@/components/jobs/StatusPopups";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { getGeminiRecommendations, getJobApplications, getOpenJobs, Recommendation, updateShortlist } from "@/lib/api";
+import { getGeminiRecommendations, getJobApplications, getOpenJobs, Recommendation, updateShortlist, fetchAllUsers } from "@/lib/api";
 import {
   FiChevronLeft,
   FiFileText,
@@ -22,6 +22,7 @@ import {
   FiCheckCircle,
   FiMapPin,
 } from "react-icons/fi";
+import { toast } from "sonner";
 
 function ShortlistPopup({
   application,
@@ -150,15 +151,24 @@ export default function ApplicationList() {
 
   // Reviewing
   const [reviewOpen, setReviewOpen] = useState(false);
-const [availableReviewers, setAvailableReviewers] = useState<string[]>([]);
+const [availableReviewers, setAvailableReviewers] = useState<User[]>([]);
 const [selectedReviewer, setSelectedReviewer] = useState<string>("");
 
 // Mocked API functions for example purposes
 const fetchReviewerEmails = async () => {
-  const response = await fetch("/api/reviewers");
-  const data = await response.json();
-  if (data.success) setAvailableReviewers(data.emails);
+  const data = await fetchAllUsers();
+  if (data.success) {
+    const filtered = data.data.filter(
+      (user: User) =>  user.role !== "hr" && user.role !== "admin"
+    );
+    setAvailableReviewers(filtered);
+  } else {
+    toast.error("Failed to fetch users", { description: data.error });
+  }
+  setLoading(false);
 };
+ 
+
 
 const assignReviewer = async (email: string) => {
   const response = await fetch("/api/assign-reviewer", {
@@ -316,7 +326,7 @@ const assignReviewer = async (email: string) => {
             {/* reviewing */}
             <div className="relative">
   <button
-    onClick={() => setReviewOpen(!reviewOpen)}
+    onFocus={() => setReviewOpen(!reviewOpen)}
     className="flex items-center gap-2 bg-gray-100 p-2 rounded-xl"
   >
     <span className="text-sm text-gray-600 mr-2">Review</span>
@@ -333,7 +343,31 @@ const assignReviewer = async (email: string) => {
 
   {reviewOpen && (
     <div className="absolute right-0 mt-2 w-64 bg-white shadow-lg rounded-xl z-10 p-4">
-      <label className="block text-sm text-gray-700 mb-2">Choose a reviewer</label>
+      <div className="flex justify-around items-center mb-2">
+        <button
+          onClick={() => setReviewOpen(false)}
+          className="text-gray-500 hover:text-gray-700"
+          aria-label="Close"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </button>
+        <label className="block text-sm text-gray-700">Choose a reviewer</label>
+        <div className="w-5"></div> 
+      </div>
+
       <select
         onClick={fetchReviewerEmails}
         value={selectedReviewer}
@@ -341,28 +375,39 @@ const assignReviewer = async (email: string) => {
         className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
       >
         <option value="">-- choose a reviewer --</option>
-        {availableReviewers.map((email) => (
-          <option key={email} value={email}>
-            {email}
+        {availableReviewers.map((user) => (
+          <option key={user.id} value={user.email}>
+            {user.email}
           </option>
         ))}
       </select>
 
-      <button
-        disabled={!selectedReviewer}
-        onClick={async () => {
-          await assignReviewer(selectedReviewer);
-          setReviewOpen(false);
-          setSelectedReviewer("");
-        }}
-        className={`mt-4 w-full py-2 text-sm font-medium rounded-md ${
-          selectedReviewer
-            ? "bg-[#FF6A00] text-white"
-            : "bg-gray-300 text-gray-600 cursor-not-allowed"
-        }`}
-      >
-        Assign
-      </button>
+      <div className="flex gap-2 mt-4">
+        <button
+          onClick={() => {
+            setReviewOpen(false);
+            setSelectedReviewer("");
+          }}
+          className="flex-1 py-2 text-sm font-medium rounded-md border border-gray-300 text-gray-700"
+        >
+          Cancel
+        </button>
+        <button
+          disabled={!selectedReviewer}
+          onClick={async () => {
+            await assignReviewer(selectedReviewer);
+            setReviewOpen(false);
+            setSelectedReviewer("");
+          }}
+          className={`flex-1 py-2 text-sm font-medium rounded-md ${
+            selectedReviewer
+              ? "bg-[#FF6A00] text-white"
+              : "bg-gray-300 text-gray-600 cursor-not-allowed"
+          }`}
+        >
+          Assign
+        </button>
+      </div>
     </div>
   )}
 </div>
