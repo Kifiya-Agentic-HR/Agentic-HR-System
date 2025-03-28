@@ -9,7 +9,7 @@ import { fetchAllUsers, deleteUser } from "@/lib/api";
 import { toast } from "sonner";
 import { Dialog } from "@/components/ui/dialog";
 
-type User = {
+export type User = {
   id: string;
   _id: string;
   role: "hr" | "hm";
@@ -31,8 +31,7 @@ export default function UserManagementPage() {
     const result = await fetchAllUsers();
     if (result.success) {
       const filtered = result.data.filter(
-        (user: { role: string }) => user.role !== "admin"
-      );
+        (user: { role: string }) => user.role !== "admin" && user.role !== "hr"      );
       setUsers(filtered);
     } else {
       toast.error("Failed to fetch users", { description: result.error });
