@@ -49,7 +49,7 @@ export class JobsService {
       const payload = { hr_manager_id};
   
       const response = await firstValueFrom(
-        this.httpService.get(`${this.baseUrl}/jobs/short_list_request/${hr_manager_id}`, payload)
+        this.httpService.get(`${this.baseUrl}/jobs/short_list_request/${hr_manager_id}`)
       );
       this.logger.debug(`Success`);
       return response.data;
@@ -65,7 +65,6 @@ export class JobsService {
       `Calling POST ${this.baseUrl}/jobs [create()] with data: ${JSON.stringify(jobData)} and id: ${id}`
     );
     try {
-      // Add the creator's email to the job data
       const payload = { ...jobData, id };
   
       const response = await firstValueFrom(
@@ -129,25 +128,25 @@ export class JobsService {
     }
   }
 
-  async deleteRequest(hr_manager_id: string, id: string) {
+  async deleteRequest(id: string, hr_manager_id: string) {
     this.logger.debug(
-      `Calling delete ${this.baseUrl}/jobs/short_list_request with id: ${hr_manager_id} and job id: ${id}`
+      `Calling DELETE ${this.baseUrl}/jobs/short_list_request with hr_manager_id: ${hr_manager_id} and job id: ${id}`
     );
     try {
-      const payload = { hr_manager_id, id };
-  
       const response = await firstValueFrom(
-        this.httpService.delete(`${this.baseUrl}/jobs/short_list_request`, payload)
+        this.httpService.delete(`${this.baseUrl}/jobs/short_list_request`, {
+          params: { hr_manager_id, id },
+        })
       );
-      this.logger.debug(`Success [delete()]: ${id}`);
+      this.logger.debug(`Success [deleteRequest]: ${JSON.stringify(response.data)}`);
       return response.data;
     } catch (error) {
-      this.logger.error(`Error in delete()`, error.stack);
+      this.logger.error(`Error in deleteRequest`, error.stack);
       this.logger.error(error?.response?.data || error?.message);
-      return { success: false, error: 'Error deleting job' };
+      return { success: false, error: 'Error deleting short list request' };
     }
   }
-
+  
   async findApplicationsByJob(jobId: string) {
     this.logger.debug(`Calling GET ${this.baseUrl}/jobs/${jobId}/applications [findApplicationsByJob()]`);
     try {
