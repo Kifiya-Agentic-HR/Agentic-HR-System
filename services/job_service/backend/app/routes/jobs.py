@@ -83,10 +83,10 @@ async def get_job_applications(response: Response,job_id: str):
     
 
 
-@router.post("/short_list_request/{hr_manager_id}", status_code=status.HTTP_201_CREATED, response_model=dict)
-async def short_list_request(response: Response, job_id: str, hr_manager_id: str):
+@router.post("/short_list/{hiring_manager_id}", status_code=status.HTTP_201_CREATED, response_model=dict)
+async def short_list_request(response: Response, job_id: str, hiring_manager_id: str):
     try:
-        short_list = ShortListDocument.create_request(job_id, hr_manager_id)
+        short_list = ShortListDocument.create_request(job_id, hiring_manager_id)
         if short_list is None:
             response.status_code = status.HTTP_400_BAD_REQUEST
             return {"success": False, "error": "Short list request failed"}
@@ -97,19 +97,19 @@ async def short_list_request(response: Response, job_id: str, hr_manager_id: str
     
 
 
-@router.get("/short_list_request/{hr_manager_id}", response_model=dict)
-async def get_short_list_requests(response: Response, hr_manager_id: str):
+@router.get("/short_list/{hiring_manager_id}", response_model=dict)
+async def get_short_list_requests(response: Response, hiring_manager_id: str):
     try:
-        short_list = ShortListDocument.get_request_by_hr_manager(hr_manager_id)
+        short_list = ShortListDocument.get_request_by_hr_manager(hiring_manager_id)
         response.status_code = status.HTTP_200_OK
         return {"success": True, "short_list": short_list}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving short list requests: {e}")
 
-@router.delete("/short_list_request/", response_model=dict)
-async def delete_short_list_request(response: Response, hr_manager_id: str, job_id: str):
+@router.delete("/short_list/", response_model=dict)
+async def delete_short_list_request(response: Response, hiring_manager_id: str, job_id: str):
     try:
-        short_list = ShortListDocument.delete_request(hr_manager_id, job_id)
+        short_list = ShortListDocument.delete_request(hiring_manager_id, job_id)
    
         if not short_list:
             response.status_code = status.HTTP_404_NOT_FOUND
