@@ -77,13 +77,12 @@ export class JobsService {
     }
   }
 
-  async createShortList(hrId: string, hiringManagerId: string) {
+  async createShortList(id: string, hiringManagerId: string) {
     this.logger.debug(
-      `Calling post ${this.baseUrl}/jobs/short_list_request/${hiringManagerId} from HR: ${hrId}`
+      `Calling post ${this.baseUrl}/jobs/short_list_request/${hiringManagerId} from job: ${id}`
     );
     try {
-      const payload = { hr_id: hrId, hiring_manager_id: hiringManagerId};
-  
+      const payload = { id, hiringManagerId};
       const response = await firstValueFrom(
         this.httpService.post(`${this.baseUrl}/jobs/short_list_request/${hiringManagerId}`, payload)
       );
