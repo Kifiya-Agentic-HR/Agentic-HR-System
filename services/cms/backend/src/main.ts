@@ -39,7 +39,7 @@ async function bootstrapAdminUser(usersService: UsersService) {
     await usersService.createAdminUser({
       email: adminEmail,
       password: adminPassword,
-      role: UserRole.ADMIN, // forced
+      role: UserRole.ADMIN,
     });
     console.log('Admin user created.');
   } else {

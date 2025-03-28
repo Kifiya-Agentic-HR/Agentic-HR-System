@@ -1,6 +1,6 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';
-import { firstValueFrom, lastValueFrom } from 'rxjs';
+import { Injectable, Logger} from '@nestjs/common';
+import { HttpService} from '@nestjs/axios';
+import { firstValueFrom} from 'rxjs';
 
 @Injectable()
 export class ApplicationsService {
