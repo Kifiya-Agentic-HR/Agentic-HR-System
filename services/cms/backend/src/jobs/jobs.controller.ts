@@ -66,6 +66,7 @@ export class JobsController {
   @Roles(UserRole.HR)
   async remove(@Param('id') id: string) {
     return this.jobsService.remove(id);
+
   }
 
   @Delete('short_list_request/:id')
