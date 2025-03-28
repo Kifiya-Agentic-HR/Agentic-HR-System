@@ -57,13 +57,13 @@ class ShortListDocument(BaseDocument):
         except errors.PyMongoError as e:    
             raise Exception(f"Error fetching shortlist request: {e}")
     @classmethod
-    def delete_request(cls, hr_manager_id, job_id):
+    def delete_request(cls, short_list_id):
         try:
             # Check if the document exists before attempting to delete
-            existing_request = cls.get_collection().find_one({"job_id": job_id, "hr_manager_id": hr_manager_id})
+            existing_request = cls.get_collection().find_one({"_id": ObjectId(short_list_id)})
             if not existing_request:
                 raise Exception("Shortlist request does not exist.")
-            cls.get_collection().delete_one({"job_id": job_id, "hr_manager_id": hr_manager_id})
+            cls.get_collection().delete_one({"_id": ObjectId(short_list_id)})
             return True
         except errors.PyMongoError as e:
             raise Exception(f"Error deleting shortlist request: {e}")
