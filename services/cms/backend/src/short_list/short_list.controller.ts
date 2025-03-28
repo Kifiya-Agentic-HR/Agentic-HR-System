@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Delete, UseGuards, Req} from '@nestjs/common';
+import { Controller, Get, Post, Param, Delete, UseGuards, Req, Query} from '@nestjs/common';
 import { ShortListService } from './short_list.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -10,34 +10,35 @@ import { UserRole } from '../users/schemas/user.schema';
 export class ShortListController {
   constructor(private readonly shortListService: ShortListService) {}
 
-  private extractUserId(req: any): string | null {
-    return req?.user?.sub || null;
-  }
-
-  @Get(':hr_manager_id')
+  @Get(':hiring_manager_id')
   @Roles(UserRole.HR)
-  async getRequests(@Param('hr_manager_id') hr_manager_id: string) {
-    if (!hr_manager_id) {
+  async getRequests(@Param('hiring_manager_id') hiring_manager_id: string) {
+    if (!hiring_manager_id) {
       return { success: false, error: 'No hm id found' };
     }
-    return this.shortListService.getRequests(hr_manager_id );}
+    return this.shortListService.getRequests(hiring_manager_id )
+  }
 
   @Post(':hiring_manager_id')
   @Roles(UserRole.HR)
-  async createShortList(@Param('hiring_manager_id') hiringManagerId: string, @Req() req: any) {
-    const hrId = this.extractUserId(req);
-    if (!hrId) {
-      return { success: false, error: 'No hr id found in the token' };
+  async createShortList(@Param('hiring_manager_id') hiring_manager_id: string, @Query('job_id') job_id: string) {
+    if (!job_id || !hiring_manager_id) {
+      return { success: false, error: 'Missing hr_manager_id or job_id' };
     }
-    return this.shortListService.createShortList(hrId, hiringManagerId);}
+    return this.shortListService.createShortList({job_id, hiring_manager_id});
+  }
 
   @Delete(':id')
   @Roles(UserRole.HR)
-  async deleteRequest(@Param('id') id: string, @Req() req: any) {
-    const hrManagerId = this.extractUserId(req);
-    if (!hrManagerId) {
-      return { success: false, error: 'No hr_manager_id found in the token' };
-    }
-    return this.shortListService.deleteRequest(id, hrManagerId);
+  async deleteRequest(@Param('id') id: string, @Query('hiring_manager_id') hiring_manager_id: string,
+  @Query('job_id') job_id: string,) {    
+  if (!id || !job_id || !hiring_manager_id) {
+    return {
+      success: false,
+      error: 'Missing one or more required parameters',
+    };
+  }
+    
+  return this.shortListService.deleteRequest(id, {job_id, hiring_manager_id});
   }
 }

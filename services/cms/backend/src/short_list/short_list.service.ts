@@ -12,14 +12,14 @@ export class ShortListService {
     this.baseUrl = process.env.JOB_SERVICE_URL || 'http://job_service_backend:9000';
   }
   
-  async createShortList(id: string, hiringManagerId: string) {
+  async createShortList({job_id, hiring_manager_id}: { job_id: string; hiring_manager_id: string}) {
       this.logger.debug(
-        `Calling post ${this.baseUrl}/jobs/short_list_request/${hiringManagerId} from job: ${id}`
+        `Calling post ${this.baseUrl}/short_list/${hiring_manager_id} from job: ${job_id}`
       );
       try {
-        const payload = { id, hiringManagerId};
+        const payload = { job_id, hiring_manager_id};
         const response = await firstValueFrom(
-          this.httpService.post(`${this.baseUrl}/jobs/short_list_request/${hiringManagerId}`, payload)
+          this.httpService.post(`${this.baseUrl}/short_list/${hiring_manager_id}`, payload)
         );
         this.logger.debug(`Success [createShortList()]`);
         return response.data;
@@ -30,41 +30,49 @@ export class ShortListService {
       }
     }
 
-  async getRequests(hiringManagerId: string) {
+  async getRequests(hiring_manager_id: string) {
     this.logger.debug(
-      `Calling get ${this.baseUrl}/jobs/short_list_request/${hiringManagerId}`
+      `Calling get ${this.baseUrl}/short_list/${hiring_manager_id}`
     );
     try {
       const response = await firstValueFrom(
-        this.httpService.get(`${this.baseUrl}/jobs/short_list_request/${hiringManagerId}`)
+        this.httpService.get(`${this.baseUrl}/short_list/${hiring_manager_id}`)
       );
-      this.logger.debug(`Success [getRequests(${hiringManagerId})]`);
+      this.logger.debug(`Success [getRequests(${hiring_manager_id})]`);
       return response.data;
     } catch (error) {
-      this.logger.error(`Error in getRequests(${hiringManagerId})`, error.stack);
+      this.logger.error(`Error in getRequests(${hiring_manager_id
+      })`, error.stack);
       this.logger.error(error?.response?.data || error?.message);
       return { success: false, error: 'Error getting short list requests' };
     }
   }
 
-  async deleteRequest(id: string, hrManagerId: string) {
+  async deleteRequest(id: string, {job_id, hiring_manager_id}: { job_id: string; hiring_manager_id: string}) {
     this.logger.debug(
-      `Calling DELETE ${this.baseUrl}/jobs/short_list_request with hr_manager_id: ${hrManagerId} and job id: ${id}`
+      `Calling DELETE ${this.baseUrl}/short_list with:
+        shortlist_id: ${id},
+        job_id: ${job_id},
+        hiring_manager_id: ${hiring_manager_id}`
     );
+  
     try {
       const response = await firstValueFrom(
-        this.httpService.delete(`${this.baseUrl}/jobs/short_list_request`, {
-          params: { hrManagerId, id },
+        this.httpService.delete(`${this.baseUrl}/short_list`, {
+          params: {
+            id,
+            job_id: job_id,
+            hiring_manager_id: hiring_manager_id,
+          },
         })
       );
-      this.logger.debug(`Success [deleteRequest]`);
+  
+      this.logger.debug(`Success [deleteRequest()]`);
       return response.data;
     } catch (error) {
       this.logger.error(`Error in deleteRequest()`, error.stack);
       this.logger.error(error?.response?.data || error?.message);
       return { success: false, error: 'Error deleting short list request' };
     }
-  }
-
-  
+  }  
 }
