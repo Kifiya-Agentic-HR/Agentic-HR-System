@@ -41,32 +41,29 @@ export class JobsService {
     }
   }
 
-  async getRequests(hr_manager_id: string) {
+  async getRequests(hiringManagerId: string) {
     this.logger.debug(
-      `Calling get ${this.baseUrl}/jobs/short_list_request/${hr_manager_id}`
+      `Calling get ${this.baseUrl}/jobs/short_list_request/${hiringManagerId}`
     );
     try {
-      const payload = { hr_manager_id};
-  
       const response = await firstValueFrom(
-        this.httpService.get(`${this.baseUrl}/jobs/short_list_request/${hr_manager_id}`, payload)
+        this.httpService.get(`${this.baseUrl}/jobs/short_list_request/${hiringManagerId}`)
       );
-      this.logger.debug(`Success`);
+      this.logger.debug(`Success [getRequests(${hiringManagerId})]`);
       return response.data;
     } catch (error) {
-      this.logger.error(`Error in get()`, error.stack);
+      this.logger.error(`Error in getRequests(${hiringManagerId})`, error.stack);
       this.logger.error(error?.response?.data || error?.message);
-      return { success: false, error: 'Error getting requests' };
+      return { success: false, error: 'Error getting short list requests' };
     }
   }
 
-  async create(jobData: any, id: string) {
+  async create(jobData: any, createdBy: string) {
     this.logger.debug(
-      `Calling POST ${this.baseUrl}/jobs [create()] with data: ${JSON.stringify(jobData)} and id: ${id}`
+      `Calling POST ${this.baseUrl}/jobs [create()] with data: ${JSON.stringify(jobData)} createdBy: ${createdBy}`
     );
     try {
-      // Add the creator's email to the job data
-      const payload = { ...jobData, id };
+      const payload = { ...jobData, created_by: createdBy};
   
       const response = await firstValueFrom(
         this.httpService.post(`${this.baseUrl}/jobs`, payload)
@@ -77,25 +74,6 @@ export class JobsService {
       this.logger.error(`Error in create()`, error.stack);
       this.logger.error(error?.response?.data || error?.message);
       return { success: false, error: 'Error creating job' };
-    }
-  }
-
-  async createShortList(hr_manager_id: string, id: string) {
-    this.logger.debug(
-      `Calling post ${this.baseUrl}/jobs/short_list_request/${hr_manager_id}`
-    );
-    try {
-      const payload = { hr_manager_id, id};
-  
-      const response = await firstValueFrom(
-        this.httpService.post(`${this.baseUrl}/jobs/short_list_request/${hr_manager_id}`, payload)
-      );
-      this.logger.debug(`Success`);
-      return response.data;
-    } catch (error) {
-      this.logger.error(`Error in post()`, error.stack);
-      this.logger.error(error?.response?.data || error?.message);
-      return { success: false, error: 'Error posting short list' };
     }
   }
 
@@ -120,7 +98,7 @@ export class JobsService {
       const response = await firstValueFrom(
         this.httpService.delete(`${this.baseUrl}/jobs/${id}`),
       );
-      this.logger.debug(`Success [remove(${id})]: ${JSON.stringify(response.data)}`);
+      this.logger.debug(`Success [remove(${id})]`);
       return response.data;
     } catch (error) {
       this.logger.error(`Error in remove(${id})`, error.stack);
@@ -128,26 +106,7 @@ export class JobsService {
       return { success: false, error: `Error deleting job ${id}` };
     }
   }
-
-  async deleteRequest(hr_manager_id: string, id: string) {
-    this.logger.debug(
-      `Calling delete ${this.baseUrl}/jobs/short_list_request with id: ${hr_manager_id} and job id: ${id}`
-    );
-    try {
-      const payload = { hr_manager_id, id };
   
-      const response = await firstValueFrom(
-        this.httpService.delete(`${this.baseUrl}/jobs/short_list_request`, payload)
-      );
-      this.logger.debug(`Success [delete()]: ${id}`);
-      return response.data;
-    } catch (error) {
-      this.logger.error(`Error in delete()`, error.stack);
-      this.logger.error(error?.response?.data || error?.message);
-      return { success: false, error: 'Error deleting job' };
-    }
-  }
-
   async findApplicationsByJob(jobId: string) {
     this.logger.debug(`Calling GET ${this.baseUrl}/jobs/${jobId}/applications [findApplicationsByJob()]`);
     try {

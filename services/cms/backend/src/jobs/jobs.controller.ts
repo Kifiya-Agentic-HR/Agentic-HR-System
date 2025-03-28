@@ -10,6 +10,10 @@ import { UserRole } from '../users/schemas/user.schema';
 export class JobsController {
   constructor(private readonly jobsService: JobsService) {}
 
+  private extractUserId(req: any): string | null {
+    return req?.user?.sub || null;
+  }
+
   @Get()
   async findAll() {
     return this.jobsService.findAll();
@@ -25,33 +29,15 @@ export class JobsController {
     return this.jobsService.findApplicationsByJob(id);
   }
 
-  @Get('short_list_request/:hr_manager_id')
-  @Roles(UserRole.HR)
-  async getRequests(@Req() req: any) {
-    const hr_manager_id = req.user.sub;
-    if (!hr_manager_id) {
-      return { success: false, error: 'No hm id found in the token' };
-    }
-    return this.jobsService.getRequests(hr_manager_id );}
-
   @Post()
   @Roles(UserRole.HR)
   async create(@Body() jobData: any, @Req() req: any) {
-    const id = req.user.sub;
+    const id = this.extractUserId(req);
     if (!id) {
       return { success: false, error: 'No id found in the token' };
     
     }
-    return this.jobsService.create(jobData, id );}
-  
-  @Post('short_list_request/:hr_manager_id')
-  @Roles(UserRole.HR)
-  async createShortList(@Param('id') id: string, @Req() req: any) {
-    const hr_manager_id = req.user.sub;
-    if (!hr_manager_id) {
-      return { success: false, error: 'No hm id found in the token' };
-    }
-    return this.jobsService.createShortList(id, hr_manager_id );}
+    return this.jobsService.create(jobData, id);}
 
   @Put(':id')
   @Roles(UserRole.HR)
@@ -63,14 +49,6 @@ export class JobsController {
   @Roles(UserRole.HR)
   async remove(@Param('id') id: string) {
     return this.jobsService.remove(id);
-  }
 
-  @Delete('short_list_request')
-  @Roles(UserRole.HR)
-  async deleteRequest(@Param('id') id: string, @Req() req: any) {
-    const hr_manager_id = req.user.sub;
-    if (!hr_manager_id) {
-      return { success: false, error: 'No hm id found in the token' };
-    }
-    return this.jobsService.deleteRequest(id, hr_manager_id );}
+  }
 }
