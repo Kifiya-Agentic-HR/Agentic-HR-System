@@ -8,8 +8,12 @@ from app.utils.publisher import publish_application
 from app.utils.cloud_storage import upload_file
 from dotenv import load_dotenv
 import google.generativeai as genai
-from app.database.models import  ApplicationDocument, CandidateDocument, JobDocument, ScreeningResultDocument , InterviewsDocument
-from schemas import ShortlistUpdate, EditScore
+from app.database.models.job_model import   JobDocument
+from app.database.models.application_model import ApplicationDocument
+from app.database.models.candidate_model import CandidateDocument
+from app.database.models.interview_model import InterviewsDocument
+from app.database.models.screen_result_model import ScreeningResultDocument
+from app.schemas.shortlist_schema import ShortlistUpdate, EditScore
 
 logger = logging.getLogger(__name__)
 
@@ -320,9 +324,6 @@ async def reject_application(application_id: str):
         # Generate feedback using Gemini integration
         rejection_reason, suggestion = generate_rejection_feedback(name, screening, interview, title)
         
-        # Update the application rejection status along with feedback info.
-        # This assumes that your ApplicationDocument.reject_application can be modified
-        # to accept rejection_reason and suggestion (or update them separately).
         result = ApplicationDocument.reject_application(application_id)
         if result:
             # Send an email notification with the generated feedback
