@@ -100,7 +100,7 @@ async def short_list_request(response: Response, job_id: str, hiring_manager_id:
 @router.get("/short_list/{hiring_manager_id}", response_model=dict)
 async def get_short_list_requests(response: Response, hiring_manager_id: str):
     try:
-        short_list = ShortListDocument.get_request_by_hr_manager(hiring_manager_id)
+        short_list = ShortListDocument.get_request_by_hiring_manager(hiring_manager_id)
         response.status_code = status.HTTP_200_OK
         return {"success": True, "short_list": short_list}
     except Exception as e:
