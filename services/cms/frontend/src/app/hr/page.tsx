@@ -1,6 +1,5 @@
 "use client"
 
-// app/hr/jobs/page.tsx
 import { JobList } from "@/components/jobs/JobList";
 import withAuth from "@/utils/with_auth";
 

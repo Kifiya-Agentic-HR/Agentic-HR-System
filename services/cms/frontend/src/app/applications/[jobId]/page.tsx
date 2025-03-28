@@ -148,6 +148,32 @@ export default function ApplicationList() {
   const [recommendationError, setRecommendationError] = useState<string | null>(null);
   const [processingAppId, setProcessingAppId] = useState<string | null>(null);
 
+  // Reviewing
+  const [reviewOpen, setReviewOpen] = useState(false);
+const [availableReviewers, setAvailableReviewers] = useState<string[]>([]);
+const [selectedReviewer, setSelectedReviewer] = useState<string>("");
+
+// Mocked API functions for example purposes
+const fetchReviewerEmails = async () => {
+  const response = await fetch("/api/reviewers");
+  const data = await response.json();
+  if (data.success) setAvailableReviewers(data.emails);
+};
+
+const assignReviewer = async (email: string) => {
+  const response = await fetch("/api/assign-reviewer", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  const data = await response.json();
+  if (data.success) {
+    console.log("Reviewer assigned successfully!");
+  } else {
+    console.error("Failed to assign reviewer:", data.message);
+  }
+};
+//reviewing
   const handleRecommend = async (application: Application) => {
     setProcessingAppId(application._id);
     setRecommendationError(null);
@@ -286,6 +312,60 @@ export default function ApplicationList() {
           </h1>
 
           <div className="mb-6 w-full flex justify-end gap-4 relative">
+
+            {/* reviewing */}
+            <div className="relative">
+  <button
+    onClick={() => setReviewOpen(!reviewOpen)}
+    className="flex items-center gap-2 bg-gray-100 p-2 rounded-xl"
+  >
+    <span className="text-sm text-gray-600 mr-2">Review</span>
+    <svg
+      className={`h-4 w-4 transition-transform duration-200 ${reviewOpen ? "rotate-180" : ""}`}
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+    </svg>
+  </button>
+
+  {reviewOpen && (
+    <div className="absolute right-0 mt-2 w-64 bg-white shadow-lg rounded-xl z-10 p-4">
+      <label className="block text-sm text-gray-700 mb-2">Choose a reviewer</label>
+      <select
+        onClick={fetchReviewerEmails}
+        value={selectedReviewer}
+        onChange={(e) => setSelectedReviewer(e.target.value)}
+        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+      >
+        <option value="">-- choose a reviewer --</option>
+        {availableReviewers.map((email) => (
+          <option key={email} value={email}>
+            {email}
+          </option>
+        ))}
+      </select>
+
+      <button
+        disabled={!selectedReviewer}
+        onClick={async () => {
+          await assignReviewer(selectedReviewer);
+          setReviewOpen(false);
+          setSelectedReviewer("");
+        }}
+        className={`mt-4 w-full py-2 text-sm font-medium rounded-md ${
+          selectedReviewer
+            ? "bg-[#FF6A00] text-white"
+            : "bg-gray-300 text-gray-600 cursor-not-allowed"
+        }`}
+      >
+        Assign
+      </button>
+    </div>
+  )}
+</div>
             {/* Gender Filter Dropdown */}
             <div className="relative">
               <button

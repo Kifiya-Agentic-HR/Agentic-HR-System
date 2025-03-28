@@ -190,7 +190,7 @@ export default function AccountSettingsForm() {
 
             <Button
               type="submit"
-              className="w-full bg-[#FF8A00] hover:bg-[#FF8A00]/90 text-white  text-lg py-6 transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl"
+              className="w-full bg-[#FF8A00] hover:bg-[#FF8A00]/90 text-white text-lg py-6 transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl"
             >
               Update Account
             </Button>
@@ -198,8 +198,7 @@ export default function AccountSettingsForm() {
         </Form>
       </div>
 
-      {/* Logout Confirmation Modal */}
-      {showLogoutConfirm && (
+           {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm space-y-4">
             <h3 className="text-xl font-bold text-[#364957]">Confirm Logout</h3>

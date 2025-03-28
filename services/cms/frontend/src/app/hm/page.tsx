@@ -1,7 +1,7 @@
 "use client"
 
 // app/hm/jobs/page.tsx
-import { JobList } from "@/components/jobs/JobList";
+import { JobList } from "@/components/hm/JobList";
 import withAuth from "@/utils/with_auth";
 
  function JobsPage() {

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Briefcase, Settings } from "lucide-react";
+import { LayoutDashboard, Briefcase, Settings, Folder } from "lucide-react";
 
 export function HRSidebar() {
   const pathname = usePathname();
@@ -22,15 +22,15 @@ export function HRSidebar() {
       icon: <Briefcase className="h-5 w-5" />,
     },
     {
+      href: "/hr/bulk-job-post",
+      label: "Bulk Screening",
+      icon: <Folder className="h-5 w-5" />,
+    },
+    {
       href: "/hr/account-settings",
       label: "Account Settings",
       icon: <Settings className="h-5 w-5" />,
-    },
-    {
-      href: "/hr/bulk-job-post",
-      label: "Bulk Screening",
-      icon: <Briefcase className="h-5 w-5" />,
-    },
+    }
   ];
 
   return (
