@@ -31,7 +31,6 @@ export class UsersController {
    * Admin can list all users.
    */
   @Get()
-  @Roles(UserRole.ADMIN)
   findAll() {
     return this.usersService.findAll();
   }

@@ -41,31 +41,29 @@ export class JobsService {
     }
   }
 
-  async getRequests(hr_manager_id: string) {
+  async getRequests(hiringManagerId: string) {
     this.logger.debug(
-      `Calling get ${this.baseUrl}/jobs/short_list_request/${hr_manager_id}`
+      `Calling get ${this.baseUrl}/jobs/short_list_request/${hiringManagerId}`
     );
     try {
-      const payload = { hr_manager_id};
-  
       const response = await firstValueFrom(
-        this.httpService.get(`${this.baseUrl}/jobs/short_list_request/${hr_manager_id}`)
+        this.httpService.get(`${this.baseUrl}/jobs/short_list_request/${hiringManagerId}`)
       );
-      this.logger.debug(`Success`);
+      this.logger.debug(`Success [getRequests(${hiringManagerId})]`);
       return response.data;
     } catch (error) {
-      this.logger.error(`Error in get()`, error.stack);
+      this.logger.error(`Error in getRequests(${hiringManagerId})`, error.stack);
       this.logger.error(error?.response?.data || error?.message);
-      return { success: false, error: 'Error getting requests' };
+      return { success: false, error: 'Error getting short list requests' };
     }
   }
 
-  async create(jobData: any, id: string) {
+  async create(jobData: any, createdBy: string) {
     this.logger.debug(
-      `Calling POST ${this.baseUrl}/jobs [create()] with data: ${JSON.stringify(jobData)} and id: ${id}`
+      `Calling POST ${this.baseUrl}/jobs [create()] with data: ${JSON.stringify(jobData)} createdBy: ${createdBy}`
     );
     try {
-      const payload = { ...jobData, id };
+      const payload = { ...jobData, created_by: createdBy};
   
       const response = await firstValueFrom(
         this.httpService.post(`${this.baseUrl}/jobs`, payload)
@@ -79,20 +77,20 @@ export class JobsService {
     }
   }
 
-  async createShortList(hr_manager_id: string, id: string) {
+  async createShortList(hrId: string, hiringManagerId: string) {
     this.logger.debug(
-      `Calling post ${this.baseUrl}/jobs/short_list_request/${hr_manager_id}`
+      `Calling post ${this.baseUrl}/jobs/short_list_request/${hiringManagerId} from HR: ${hrId}`
     );
     try {
-      const payload = { hr_manager_id, id};
+      const payload = { hr_id: hrId, hiring_manager_id: hiringManagerId};
   
       const response = await firstValueFrom(
-        this.httpService.post(`${this.baseUrl}/jobs/short_list_request/${hr_manager_id}`, payload)
+        this.httpService.post(`${this.baseUrl}/jobs/short_list_request/${hiringManagerId}`, payload)
       );
-      this.logger.debug(`Success`);
+      this.logger.debug(`Success [createShortList()]`);
       return response.data;
     } catch (error) {
-      this.logger.error(`Error in post()`, error.stack);
+      this.logger.error(`Error in createShortList()`, error.stack);
       this.logger.error(error?.response?.data || error?.message);
       return { success: false, error: 'Error posting short list' };
     }
@@ -119,7 +117,7 @@ export class JobsService {
       const response = await firstValueFrom(
         this.httpService.delete(`${this.baseUrl}/jobs/${id}`),
       );
-      this.logger.debug(`Success [remove(${id})]: ${JSON.stringify(response.data)}`);
+      this.logger.debug(`Success [remove(${id})]`);
       return response.data;
     } catch (error) {
       this.logger.error(`Error in remove(${id})`, error.stack);
@@ -128,20 +126,20 @@ export class JobsService {
     }
   }
 
-  async deleteRequest(id: string, hr_manager_id: string) {
+  async deleteRequest(id: string, hrManagerId: string) {
     this.logger.debug(
-      `Calling DELETE ${this.baseUrl}/jobs/short_list_request with hr_manager_id: ${hr_manager_id} and job id: ${id}`
+      `Calling DELETE ${this.baseUrl}/jobs/short_list_request with hr_manager_id: ${hrManagerId} and job id: ${id}`
     );
     try {
       const response = await firstValueFrom(
         this.httpService.delete(`${this.baseUrl}/jobs/short_list_request`, {
-          params: { hr_manager_id, id },
+          params: { hrManagerId, id },
         })
       );
-      this.logger.debug(`Success [deleteRequest]: ${JSON.stringify(response.data)}`);
+      this.logger.debug(`Success [deleteRequest]`);
       return response.data;
     } catch (error) {
-      this.logger.error(`Error in deleteRequest`, error.stack);
+      this.logger.error(`Error in deleteRequest()`, error.stack);
       this.logger.error(error?.response?.data || error?.message);
       return { success: false, error: 'Error deleting short list request' };
     }
