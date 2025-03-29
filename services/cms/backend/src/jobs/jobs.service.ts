@@ -121,4 +121,43 @@ export class JobsService {
       return { success: false, error: `Error fetching applications for job ${jobId}` };
     }
   }
+
+ // GET short list requests
+ async shortList(hiringManagerId: string) {
+  try {
+    const response = await firstValueFrom(
+      this.httpService.get(`${this.baseUrl}/short_list/${hiringManagerId}`),
+    );
+    return response.data;
+  } catch (error) {
+    return { success: false, error: `Error fetching short list requests for hiring manager ${hiringManagerId}` };
+  }
+}
+
+  // POST create short list request
+  async createShortList(hiringManagerId: string, jobId: string) {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/short_list/${hiringManagerId}`, { job_id: jobId }),
+      );
+      return response.data;
+    } catch (error) {
+      return { success: false, error: `Error creating short list request for hiring manager ${hiringManagerId}` };
+    }
+  }
+
+  // DELETE short list request
+  async deleteShortList(hiringManagerId: string, jobId: string) {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.delete(`${this.baseUrl}/short_list`, {
+          params: { hiring_manager_id: hiringManagerId, job_id: jobId },
+        }),
+      );
+      return response.data;
+    } catch (error) {
+      return { success: false, error: `Error deleting short list request for hiring manager ${hiringManagerId} and job ${jobId}` };
+    }
+  }
+
 }
