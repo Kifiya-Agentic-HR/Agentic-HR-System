@@ -83,16 +83,22 @@ export default function JobPostingForm() {
       skills: [{ skill: "", level: "beginner" }],
       responsibilities: "",
       location: "",
+      job_status:"",
+      post_date:""
     },
   });
 
   async function onSubmit(values: FormSchemaType) {
     console.log("Form submitted with values:", values);
+    const hr_id = localStorage.getItem('userId'); 
+    if (!hr_id) {
+      toast.error("HR ID is missing. Please log in again.");
+      return;
+    }
 
     try {
       setIsSubmitting(true);
-
-      // Transform the skills array into the required object.
+//skill array to object
       const skillsObject = values.skills.reduce(
         (acc, curr) => ({
           ...acc,
@@ -103,7 +109,7 @@ export default function JobPostingForm() {
         {}
       );
 
-      // Build the payload adhering to the JobCreate interface.
+     
       const payload = {
         title: values.title,
         description: {
@@ -119,7 +125,7 @@ export default function JobPostingForm() {
       console.log("Payload prepared:", payload);
 
       // API Call
-      const result = await jobPost(payload);
+      const result = await jobPost(hr_id, payload);
 
       if (result && result.success === true) {
         router.push("/hr");

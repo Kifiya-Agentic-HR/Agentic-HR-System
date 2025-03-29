@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getJobs } from "@/lib/api";
+import { getShortlist } from "@/lib/api"; 
 import { Job } from "@/components/jobs/types";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -9,16 +9,26 @@ import { useRouter } from "next/navigation";
 export const JobList = () => {
   const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true); 
+  const [error, setError] = useState<string | null>(null); 
 
   useEffect(() => {
     const loadJobs = async () => {
-      const data = await getJobs();
-      if (data.success && data.jobs) {
-        setJobs(data.jobs);
-      } else {
-        console.error(data.error);
+      try {
+        const result = await getShortlist();
+        
+        if (result.success) {
+          setJobs(result.data); 
+        } else {
+          setError(result.error || "Failed to load jobs");
+        }
+      } catch (err) {
+        setError("An unexpected error occurred");
+      } finally {
+        setLoading(false);
       }
     };
+    
     loadJobs();
   }, []);
 
@@ -31,6 +41,22 @@ export const JobList = () => {
       day: "numeric",
     });
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="text-center text-[#364957]">Loading jobs...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="text-red-500 text-center">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -68,7 +94,6 @@ export const JobList = () => {
                       {job.job_status}
                     </span>
                   </td>
-
                   <td className="px-6 py-4">
                     <button
                       onClick={() => router.push(`/applications/${job._id}`)}
@@ -95,8 +120,6 @@ export const JobList = () => {
           </table>
         </div>
       </div>
-
-  
     </div>
   );
 };

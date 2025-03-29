@@ -38,6 +38,7 @@ const formSchema = z.object({
 
 export default function CreateHmAccountForm() {
   const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -61,9 +62,9 @@ export default function CreateHmAccountForm() {
       toast.success("Account created successfully", {
         description: `HM ${values.firstName} ${values.lastName} has been registered`,
       });
-
+      setSuccessMessage(`Account for ${values.firstName} ${values.lastName} has been created successfully!`);
       form.reset();
-      router.push("/users"); // Redirect back to user management
+      router.push("/admin/user-management"); 
     } catch (error: any) {
       toast.error("Creation failed", {
         description: error || "There was an error creating the account",
@@ -72,6 +73,7 @@ export default function CreateHmAccountForm() {
       setLoading(false);
     }
   }
+
 
   return (
     <div className="w-full max-w-2xl mx-auto px-4">
