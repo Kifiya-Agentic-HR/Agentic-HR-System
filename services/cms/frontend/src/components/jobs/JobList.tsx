@@ -3,15 +3,20 @@
 import { useState, useEffect } from "react";
 import { getJobs, updateJob } from "@/lib/api";
 import { Job } from "./types";
-import Link from "next/link";
-import { Chatbot } from "../Chatbot";
 import { useRouter } from "next/navigation";
+import { Dialog } from "@headlessui/react";
 
 export const JobList = () => {
   const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [pendingUpdate, setPendingUpdate] = useState<{
+    jobId: string;
+    newStatus: string;
+    originalStatus: string;
+  } | null>(null);
 
   useEffect(() => {
     const loadJobs = async () => {
@@ -38,28 +43,49 @@ export const JobList = () => {
     originalStatus: string
   ) => {
     if (newStatus === "closed") {
-      const isConfirmed = window.confirm(
-        "Are you sure you want to close this job? Closing it will prevent further applications."
-      );
-      if (!isConfirmed) return;
+      setPendingUpdate({ jobId, newStatus, originalStatus });
+      setShowConfirmation(true);
+      return;
     }
 
-    const originalJobs = jobs;
+    await performStatusUpdate(jobId, newStatus, originalStatus);
+  };
+
+  const performStatusUpdate = async (
+    jobId: string,
+    newStatus: string,
+    originalStatus: string
+  ) => {
+    const originalJobs = [...jobs];
+    const jobIndex = jobs.findIndex(job => job._id === jobId);
     
+    if (jobIndex === -1) return;
+
+    const jobData = jobs[jobIndex];
+    const formattedSkills = jobData.skills && typeof jobData.skills === 'object'
+      ? Object.values(jobData.skills).flatMap(skill => skill ? [skill] : [])
+      : jobData.skills;
+
+    const updatedJob = { 
+      ...jobs[jobIndex],
+      job_status: newStatus, 
+      skills: formattedSkills
+    };
+
     // Optimistic update
-    setJobs(prev =>
-      prev.map(job =>
-        job._id === jobId ? { ...job, job_status: newStatus } : job
-      )
-    );
+    setJobs(prev => [
+      ...prev.slice(0, jobIndex),
+      updatedJob,
+      ...prev.slice(jobIndex + 1)
+    ]);
 
     try {
-      const response = await updateJob(jobId, { job_status: newStatus });
+      const response = await updateJob(jobId, updatedJob);
+      
       if (!response.success) {
         throw new Error(response.error || 'Failed to update job status');
       }
     } catch (error) {
-      // Revert on error
       setJobs(originalJobs);
       setError(
         error instanceof Error
@@ -68,6 +94,47 @@ export const JobList = () => {
       );
     }
   };
+
+  const ConfirmationDialog = () => (
+    <Dialog
+      open={showConfirmation}
+      onClose={() => setShowConfirmation(false)}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+    >
+      <Dialog.Panel className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+        <Dialog.Title className="text-lg font-bold text-[#364957] mb-4">
+          Confirm Job Closure
+        </Dialog.Title>
+        <Dialog.Description className="text-[#364957]/90 mb-6">
+          Are you sure you want to close this job? Closing it will prevent further applications.
+        </Dialog.Description>
+
+        <div className="flex justify-end gap-4">
+          <button
+            onClick={() => setShowConfirmation(false)}
+            className="px-4 py-2 text-[#364957] hover:bg-[#364957]/10 rounded-lg transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={async () => {
+              if (!pendingUpdate) return;
+              setShowConfirmation(false);
+              await performStatusUpdate(
+                pendingUpdate.jobId,
+                pendingUpdate.newStatus,
+                pendingUpdate.originalStatus
+              );
+              setPendingUpdate(null);
+            }}
+            className="px-4 py-2 bg-[#FF6A00] text-white rounded-lg hover:bg-[#FF6A00]/90 transition-colors"
+          >
+            Confirm Close
+          </button>
+        </div>
+      </Dialog.Panel>
+    </Dialog>
+  );
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "N/A";
@@ -97,6 +164,8 @@ export const JobList = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
+      <ConfirmationDialog />
+      
       <h1 className="text-3xl font-bold text-[#364957] mb-8">
         <span className="relative after:content-[''] after:absolute after:left-0 after:-bottom-2 after:w-full after:h-0.5 after:bg-[#FF6A00]">
           Ongoing Jobs
