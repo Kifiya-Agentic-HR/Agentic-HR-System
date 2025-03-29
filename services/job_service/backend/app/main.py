@@ -21,7 +21,7 @@ app.add_middleware(
 app.include_router(job_router, prefix="/jobs", tags=["Jobs"])
 app.include_router(application_router, prefix="/applications", tags=["Applications"])
 app.include_router(bulk_router, prefix = '/bulk', tags = ["bulk"])
-app.include_router(short_list_router, prefix="/short_list_request", tags=["short_list"])
+app.include_router(short_list_router, prefix="/short_list", tags=["short_list"])
 if __name__ == '__main__':
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=9000)
