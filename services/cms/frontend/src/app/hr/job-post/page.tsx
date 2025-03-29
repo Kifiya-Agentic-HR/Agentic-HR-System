@@ -28,13 +28,16 @@ import { motion } from "framer-motion";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { jobPost } from "@/lib/api";
 
-// Updated form schema with a new "summary" field.
 const formSchema = z.object({
   title: z.string().min(5, "Job title must be at least 5 characters"),
-  summary: z.string().min(10, "Summary must be at least 10 characters"),
-  type: z.enum(["inperson", "remote"]),
-  commitment: z.enum(["full_time", "part_time", "internship"]),
-  // Using an array for skills so that we can later transform it.
+  description: z.object({
+    summary: z.string().min(10, "Summary must be at least 10 characters"),
+    type: z.enum(["inperson", "remote"]),
+    commitment: z.enum(["full_time", "part_time", "internship"]),
+    qualification_level: z.string().optional(),
+    responsibilities: z.string().min(50, "Responsibilities must be detailed"),
+    location: z.string().min(3, "Location must be specified"),
+  }),
   skills: z
     .array(
       z.object({
@@ -43,54 +46,32 @@ const formSchema = z.object({
       })
     )
     .min(1, "At least one skill is required"),
-  // responsibilities can be HTML text
-  responsibilities: z.string().min(50, "Responsibilities must be detailed"),
-  location: z.string().min(3, "Location must be specified"),
 });
 
 type FormSchemaType = z.infer<typeof formSchema>;
-
-// The JobCreate interface requires a nested description object:
-// interface JobCreate {
-//   title: string;
-//   description: {
-//     summary: string;
-//     type: "inperson" | "remote";
-//     commitment: "full_time" | "part_time" | "internship";
-//     qualification_level?: string;
-//     responsibilities: string;
-//     location: string;
-//   };
-//   commitment?: string;
-//   type?: string;
-//   job_status?: string;
-//   post_date?: Date;
-//   skills: Record<string, Record<string, string>>;
-// }
 
 export default function JobPostingForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
-  // Set default values including the new summary field.
   const form = useForm<FormSchemaType>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
-      summary: "",
-      type: "inperson",
-      commitment: "full_time",
+      description: {
+        summary: "",
+        type: "inperson",
+        commitment: "full_time",
+        qualification_level: "",
+        responsibilities: "",
+        location: "",
+      },
       skills: [{ skill: "", level: "beginner" }],
-      responsibilities: "",
-      location: "",
-      job_status:"",
-      post_date:""
     },
   });
 
   async function onSubmit(values: FormSchemaType) {
-    console.log("Form submitted with values:", values);
-    const hr_id = localStorage.getItem('userId'); 
+    const hr_id = localStorage.getItem('userId');
     if (!hr_id) {
       toast.error("HR ID is missing. Please log in again.");
       return;
@@ -98,43 +79,36 @@ export default function JobPostingForm() {
 
     try {
       setIsSubmitting(true);
-//skill array to object
-      const skillsObject = values.skills.reduce(
-        (acc, curr) => ({
-          ...acc,
-          [curr.skill]: {
-            required_level: curr.level,
-          },
-        }),
-        {}
-      );
 
-     
+      const skillsObject = values.skills.reduce((acc, curr) => ({
+        ...acc,
+        [curr.skill]: { required_level: curr.level }
+      }), {});
+
       const payload = {
         title: values.title,
         description: {
-          summary: values.summary,
-          type: values.type,
-          commitment: values.commitment,
-          responsibilities: values.responsibilities,
-          location: values.location,
+          summary: values.description.summary,
+          type: values.description.type,
+          commitment: values.description.commitment,
+          qualification_level: values.description.qualification_level || "",
+          responsibilities: values.description.responsibilities,
+          location: values.description.location,
         },
-        skills: skillsObject,
+        job_status: "open",
+        post_date: new Date().toISOString(),
+        skills: skillsObject
       };
 
-      console.log("Payload prepared:", payload);
-
-      // API Call
       const result = await jobPost(hr_id, payload);
 
-      if (result && result.success === true) {
+      if (result?.success) {
         router.push("/hr");
       } else {
-        const error = result.error || "There was a server error creating the job post";
-        throw new Error(error);
+        throw new Error(result?.error || "Failed to create job post");
       }
     } catch (error: unknown) {
-      const message = (error as Error).message || "An unknown error occurred";
+      const message = error instanceof Error ? error.message : "Unknown error";
       toast.error("Posting failed: " + message);
     } finally {
       setIsSubmitting(false);
@@ -182,7 +156,7 @@ export default function JobPostingForm() {
             {/* Summary Field */}
             <FormField
               control={form.control}
-              name="summary"
+              name="description.summary"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-[#364957] text-lg font-semibold">
@@ -200,11 +174,32 @@ export default function JobPostingForm() {
               )}
             />
 
+            {/* Qualification Level */}
+            <FormField
+              control={form.control}
+              name="description.qualification_level"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-[#364957] text-lg font-semibold">
+                    Qualification Level
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter required qualifications"
+                      className="border-2 border-[#364957]/20 focus:border-[#FF8A00] text-lg"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             {/* Type & Commitment */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
-                name="type"
+                name="description.type"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-[#364957] text-lg font-semibold">
@@ -228,7 +223,7 @@ export default function JobPostingForm() {
 
               <FormField
                 control={form.control}
-                name="commitment"
+                name="description.commitment"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-[#364957] text-lg font-semibold">
@@ -334,7 +329,7 @@ export default function JobPostingForm() {
             {/* Responsibilities */}
             <FormField
               control={form.control}
-              name="responsibilities"
+              name="description.responsibilities"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-[#364957] text-lg font-semibold">
@@ -359,7 +354,7 @@ export default function JobPostingForm() {
             {/* Location */}
             <FormField
               control={form.control}
-              name="location"
+              name="description.location"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-[#364957] text-lg font-semibold">

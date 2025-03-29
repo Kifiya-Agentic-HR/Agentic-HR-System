@@ -66,7 +66,7 @@ export class JobsService {
       const payload = { ...jobData, created_by: createdBy};
   
       const response = await firstValueFrom(
-        this.httpService.post(`${this.baseUrl}/jobs`, payload)
+        this.httpService.post(`${this.baseUrl}/jobs/?hr_id=${createdBy}`, payload)
       );
       this.logger.debug(`Success [create()]: ${JSON.stringify(response.data)}`);
       return response.data;

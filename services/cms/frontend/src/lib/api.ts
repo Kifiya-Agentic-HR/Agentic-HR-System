@@ -268,19 +268,7 @@ export const updateScreeningScore = async (
 };
 
 
-// export async function jobPost(jobData: JobCreate) {
-//   try {
-//     const res = await fetch(`${API_BASE}/jobs`, {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-//       body: JSON.stringify(jobData),
-//     });
-//     const data = await res.json();
-//     return data; 
-//   } catch (error: any) {
-//     return { success: false, error: error.message || "Failed to create job" };
-//   }
-// }
+
 export async function jobPost(hr_id: string, jobData: JobCreate) {
   const params = new URLSearchParams({ hr_id }).toString();
   const url = `${API_BASE}/jobs/?${params}`;
