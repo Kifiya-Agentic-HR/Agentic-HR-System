@@ -689,16 +689,15 @@ export const createShortList = async (hiringManagerId: string, jobId: string) =>
 
 
 export const getShortlist = async () => {
-  const token = localStorage.getItem('access_token');
+ 
   const hiringManagerId = localStorage.getItem('userId');
-  const url = `${API_BASE}/shortlist/${hiringManagerId}`;
+  const url = `${API_BASE}/jobs/short_list/${hiringManagerId}`;
 
   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',  ...getAuthHeaders() 
       }
     });
 

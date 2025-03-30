@@ -1,45 +1,60 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getShortlist } from "@/lib/api"; 
-import { Job } from "@/components/jobs/types";
-import Link from "next/link";
+import { getShortlist, getJobById } from "@/lib/api";
+import { Job, ShortList, ShortlistResponse } from "@/components/jobs/types";
 import { useRouter } from "next/navigation";
 
 export const JobList = () => {
   const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true); 
-  const [error, setError] = useState<string | null>(null); 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadJobs = async () => {
       try {
-        const result = await getShortlist();
+        const result: ShortlistResponse = await getShortlist();
         
-        if (result.success) {
-          setJobs(result.data); 
-        } else {
-          setError(result.error || "Failed to load jobs");
+        if (!result?.success) {
+          setError(result?.error || "Failed to load shortlist");
+          return;
         }
+
+        const jobIds = result.data?.short_list?.map(item => item.job_id) || [];
+
+        const jobPromises = jobIds.map(id => getJobById(id));
+        const jobResults = await Promise.all(jobPromises);
+
+        const validJobs = jobResults
+          .filter(result => result?.success)
+          .map(result => result.job)
+          .filter((job): job is Job => !!job);
+
+        setJobs(validJobs);
+
       } catch (err) {
+        console.error("Fetch error:", err);
         setError("An unexpected error occurred");
       } finally {
         setLoading(false);
       }
     };
-    
+
     loadJobs();
   }, []);
+
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    return isNaN(date.getTime()) 
+      ? "Invalid date" 
+      : date.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
   };
 
   if (loading) {
@@ -54,6 +69,14 @@ export const JobList = () => {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="text-red-500 text-center">{error}</div>
+        <div className="text-center mt-4">
+          <button
+            onClick={() => window.location.reload()}
+            className="text-[#FF8A00] hover:text-[#FF8A00]/80 font-medium"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }
@@ -78,7 +101,7 @@ export const JobList = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#364957]/20">
-              {jobs.map((job) => (
+              {(jobs || []).map((job) => (
                 <tr
                   key={job._id}
                   className="hover:bg-[#FF8A00]/5 transition-colors"
@@ -91,7 +114,7 @@ export const JobList = () => {
                   </td>
                   <td className="px-6 py-4">
                     <span className="px-3 py-1 rounded-full bg-[#FF8A00]/10 text-[#FF8A00] text-sm">
-                      {job.job_status}
+                      {job.job_status || "Unknown status"}
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -116,6 +139,14 @@ export const JobList = () => {
                   </td>
                 </tr>
               ))}
+              
+              {jobs.length === 0 && !loading && (
+                <tr>
+                  <td colSpan={4} className="px-6 py-4 text-center text-[#364957]/80">
+                    No ongoing jobs found
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

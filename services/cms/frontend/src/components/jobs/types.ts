@@ -6,6 +6,21 @@ export interface Job {
     applications: Application[];
   }
 
+  export interface ShortList {
+    _id: string;
+    job_id: string;
+    hiring_manager_id: string;
+    created_at: string;
+  }
+  
+  export interface ShortlistResponse {
+    success: boolean;
+    data?: {
+      short_list: ShortList[];
+    };
+    error?: string;
+  }
+
   export type User = {
    // id: string;
     _id: string;
