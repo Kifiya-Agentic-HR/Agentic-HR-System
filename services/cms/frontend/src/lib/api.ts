@@ -135,7 +135,7 @@ export async function getJobById(id: string) {
 export async function updateJob(id: string, jobData: any) {
   try {
     const res = await fetch(`${API_BASE}/jobs/${id}`, {
-      method: "PUT", 
+      method: "PATCH", 
       headers: { "Content-Type": "application/json", ...getAuthHeaders() },
       body: JSON.stringify(jobData),
     });

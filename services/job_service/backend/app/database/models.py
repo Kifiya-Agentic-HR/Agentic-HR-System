@@ -51,19 +51,46 @@ class JobDocument(BaseDocument):
         except errors.PyMongoError as e:
             raise Exception(f"Error fetching all jobs: {e}")
 
+    # @classmethod
+    # def update_job(cls, job_id, update_data):
+    #     try:
+    #         updated_job = cls.get_collection().find_one_and_update(
+    #             {"_id": ObjectId(job_id)},
+    #             {"$set": update_data},
+    #             return_document=ReturnDocument.AFTER
+    #         )
+    #         if updated_job:
+    #             updated_job["_id"] = str(updated_job["_id"])
+    #         return updated_job
+    #     except errors.PyMongoError as e:
+    #         raise Exception(f"Error updating job: {e}")
+        
     @classmethod
     def update_job(cls, job_id, update_data):
-        try:
-            updated_job = cls.get_collection().find_one_and_update(
-                {"_id": ObjectId(job_id)},
-                {"$set": update_data},
-                return_document=ReturnDocument.AFTER
-            )
-            if updated_job:
-                updated_job["_id"] = str(updated_job["_id"])
-            return updated_job
-        except errors.PyMongoError as e:
-            raise Exception(f"Error updating job: {e}")
+
+     try:
+        # Validate skills format if present
+        if 'skills' in update_data:
+            if isinstance(update_data['skills'], dict):
+                # Convert object-style skills to array
+                update_data['skills'] = [v for v in update_data['skills'].values() if isinstance(v, str)]
+            elif not isinstance(update_data['skills'], list):
+                raise ValueError("Skills must be a list of strings")
+
+        updated_job = cls.get_collection().find_one_and_update(
+            {"_id": ObjectId(job_id)},
+            {"$set": update_data},
+            return_document=ReturnDocument.AFTER
+        )
+        
+        if updated_job:
+            updated_job["_id"] = str(updated_job["_id"])
+        return updated_job
+        
+     except errors.PyMongoError as e:
+        raise Exception(f"MongoDB update error: {str(e)}")
+     except ValueError as ve:
+        raise Exception(f"Validation error: {str(ve)}")
 
 class ApplicationDocument(BaseDocument):
     collection_name = "applications"

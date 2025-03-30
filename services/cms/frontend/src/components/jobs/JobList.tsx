@@ -57,35 +57,23 @@ export const JobList = () => {
     originalStatus: string
   ) => {
     const originalJobs = [...jobs];
-    const jobIndex = jobs.findIndex(job => job._id === jobId);
     
-    if (jobIndex === -1) return;
-
-    const jobData = jobs[jobIndex];
-    const formattedSkills = jobData.skills && typeof jobData.skills === 'object'
-      ? Object.values(jobData.skills).flatMap(skill => skill ? [skill] : [])
-      : jobData.skills;
-
-    const updatedJob = { 
-      ...jobs[jobIndex],
-      job_status: newStatus, 
-      skills: formattedSkills
-    };
-
     // Optimistic update
-    setJobs(prev => [
-      ...prev.slice(0, jobIndex),
-      updatedJob,
-      ...prev.slice(jobIndex + 1)
-    ]);
+    setJobs(prev =>
+      prev.map(job =>
+        job._id === jobId ? { ...job, job_status: newStatus } : job
+      )
+    );
 
     try {
-      const response = await updateJob(jobId, updatedJob);
+      // Send only the status field with "status" key
+      const response = await updateJob(jobId, { status: newStatus });
       
       if (!response.success) {
         throw new Error(response.error || 'Failed to update job status');
       }
     } catch (error) {
+      // Revert on error
       setJobs(originalJobs);
       setError(
         error instanceof Error
