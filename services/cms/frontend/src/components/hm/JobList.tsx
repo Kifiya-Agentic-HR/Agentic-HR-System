@@ -119,7 +119,7 @@ export const JobList = () => {
                   </td>
                   <td className="px-6 py-4">
                     <button
-                      onClick={() => router.push(`/applications/${job._id}`)}
+                      onClick={() => router.push(`/applications/${job._id}?fromhm=true`)}
                       className="text-[#FF8A00] hover:text-[#FF8A00]/80 font-medium inline-flex items-center gap-2 ml-auto"
                     >
                       View Applications

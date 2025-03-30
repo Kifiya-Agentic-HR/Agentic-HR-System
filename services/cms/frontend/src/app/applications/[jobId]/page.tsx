@@ -4,7 +4,7 @@ import { Application, User} from "@/components/jobs/types";
 import { useState, useEffect } from "react";
 import StatusPopup from "@/components/jobs/StatusPopups";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams  } from "next/navigation";
 import { getGeminiRecommendations, getJobApplications, getOpenJobs, Recommendation, updateShortlist, fetchAllUsers, createShortList } from "@/lib/api";
 import {
   FiChevronLeft,
@@ -129,6 +129,9 @@ function ShortlistPopup({
 }
 
 export default function ApplicationList() {
+  const searchParams = useSearchParams();
+  const fromHM = searchParams.get('fromhm'); 
+  const fromHR = searchParams.get('fromhr');
   const router = useRouter();
   const params = useParams();
   const jobId = params.jobId as string; 
@@ -150,6 +153,7 @@ export default function ApplicationList() {
   const [processingAppId, setProcessingAppId] = useState<string | null>(null);
 
   // Reviewing
+  const [reviewStatus, setReviewStatus] = useState<{[key: string]: boolean}>({});
   const [reviewOpen, setReviewOpen] = useState(false);
 const [availableReviewers, setAvailableReviewers] = useState<User[]>([]);
 const [selectedReviewer, setSelectedReviewer] = useState<string>("");
@@ -252,9 +256,9 @@ const assignReviewer = async (reviewerId:string, jobId: string) => {
 
   const filteredAndSortedApps = applications
     .filter((app) => {
-      const genderMatch =
+      const genderMatch = fromHM ? true : 
         filterType === "all" || app.candidate.gender?.toLowerCase() === filterType;
-      const statusMatch =
+      const statusMatch =  fromHM ? app.application_status === 'pending' : 
         statusFilter === "all" || app.application_status === statusFilter;
       return genderMatch && statusMatch;
     })
@@ -319,16 +323,19 @@ const assignReviewer = async (reviewerId:string, jobId: string) => {
               Applications Overview
             </span>
           </h1>
-
+          {!fromHM && (
           <div className="mb-6 w-full flex justify-end gap-4 relative">
+         
 
-            {/* reviewing */}
+           {/* reviewing */}
             <div className="relative">
   <button
     onFocus={() => setReviewOpen(!reviewOpen)}
     className="flex items-center gap-2 bg-gray-100 p-2 rounded-xl"
   >
-    <span className="text-sm text-gray-600 mr-2">Review</span>
+    <span className="text-sm text-gray-600 mr-2">
+  {reviewStatus[jobId] ? "IN REVIEW" : "Review"}
+</span>
     <svg
       className={`h-4 w-4 transition-transform duration-200 ${reviewOpen ? "rotate-180" : ""}`}
       xmlns="http://www.w3.org/2000/svg"
@@ -368,11 +375,10 @@ const assignReviewer = async (reviewerId:string, jobId: string) => {
       </div>
 
       <select
-        onClick={fetchReviewerEmails}
-        value={selectedReviewer}
-        onChange={(e) => setSelectedReviewer(e.target.value)}
-  
-        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+    onClick={fetchReviewerEmails}
+    value={selectedReviewer}
+    onChange={(e) => setSelectedReviewer(e.target.value)}
+    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500" 
       >
         <option value="">-- choose a reviewer --</option>
         {availableReviewers.map((user) => (
@@ -394,14 +400,15 @@ const assignReviewer = async (reviewerId:string, jobId: string) => {
           Cancel
         </button>
         <button
-  disabled={!selectedReviewer}
-  onClick={async () => {
-    await assignReviewer(selectedReviewer, jobId) ; //params.jobId as string
-    setReviewOpen(false);
-    setSelectedReviewer("");
-  }}
-  className={`flex-1 py-2 text-sm font-medium rounded-md ${
-    selectedReviewer
+       disabled={!selectedReviewer}
+       onClick={async () => {
+        await assignReviewer(selectedReviewer, jobId);
+        setReviewStatus(prev => ({...prev, [jobId]: true})); // Track by job ID
+        setReviewOpen(false);
+        setSelectedReviewer("");
+      }}
+      className={`flex-1 py-2 text-sm font-medium rounded-md ${
+      selectedReviewer
       ? "bg-[#FF6A00] text-white"
       : "bg-gray-300 text-gray-600 cursor-not-allowed"
   }`}
@@ -500,7 +507,9 @@ const assignReviewer = async (reviewerId:string, jobId: string) => {
                 </div>
               )}
             </div>
+            
           </div>
+          )}
 
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
             <div className="overflow-x-auto">

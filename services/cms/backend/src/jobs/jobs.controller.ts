@@ -54,10 +54,17 @@ export class JobsController {
   }
 
   // GET /short_list/:id
-  @Get('/short_list/:id')
+  @Get('/short_list/job/:id')
   @Roles(UserRole.HM)
   async shortList(@Param('id') id: string) {
     return this.jobsService.shortList(id);
+  }
+
+// get by job _id 
+  @Get('/short_list/:id')
+  @Roles(UserRole.HM)
+  async getShortLIst(@Param("id") id: string){
+    return this.jobsService.getshortList(id);
   }
 
   // POST /short_list/:hiring_manager_id

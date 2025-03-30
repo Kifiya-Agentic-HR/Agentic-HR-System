@@ -134,6 +134,19 @@ export class JobsService {
   }
 }
 
+async getshortList(jobId: string) {
+  try {
+    const response = await firstValueFrom(
+      this.httpService.get(`${this.baseUrl}/jobs/short_list/job/${jobId}`),
+    );
+    return response.data;
+  } catch (error) {
+    return { success: false, error: `Error fetching short list requests for hiring manager ${jobId}` };
+  }
+}
+ 
+
+
   // POST create short list request
   async createShortList(hiringManagerId: string, jobId: string) {
     try {

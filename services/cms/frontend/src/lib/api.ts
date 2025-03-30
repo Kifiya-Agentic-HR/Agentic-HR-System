@@ -713,5 +713,25 @@ export const getShortlist = async () => {
 };
 
 
+export const getShortlistByJob = async (jobId: string) => {
+  const url = `${API_BASE}/jobs/short_list/job/${jobId}`;
 
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',  ...getAuthHeaders() 
+      }
+    });
+
+    const data = await response.json();
+    return { success: true, data };
+    
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: 'Unknown network error occurred' };
+  }
+};
 
