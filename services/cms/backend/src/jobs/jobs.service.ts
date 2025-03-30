@@ -66,7 +66,7 @@ export class JobsService {
       const payload = { ...jobData, created_by: createdBy};
   
       const response = await firstValueFrom(
-        this.httpService.post(`${this.baseUrl}/jobs`, payload)
+        this.httpService.post(`${this.baseUrl}/jobs/?hr_id=${createdBy}`, payload)
       );
       this.logger.debug(`Success [create()]: ${JSON.stringify(response.data)}`);
       return response.data;
@@ -78,10 +78,10 @@ export class JobsService {
   }
 
   async update(id: string, jobData: any) {
-    this.logger.debug(`Calling PUT ${this.baseUrl}/jobs/${id} [update()] with data: ${JSON.stringify(jobData)}`);
+    this.logger.debug(`Calling PATCH ${this.baseUrl}/jobs/${id} [update()] with data: ${JSON.stringify(jobData)}`);
     try {
       const response = await firstValueFrom(
-        this.httpService.put(`${this.baseUrl}/jobs/${id}`, jobData),
+        this.httpService.patch(`${this.baseUrl}/jobs/${id}`, jobData),
       );
       this.logger.debug(`Success [update(${id})]: ${JSON.stringify(response.data)}`);
       return response.data;

@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards, Req, HttpCode, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
+
 import { JobsService } from './jobs.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -39,7 +40,7 @@ export class JobsController {
     }
     return this.jobsService.create(jobData, id);}
 
-  @Put(':id')
+  @Patch(':id')
   @Roles(UserRole.HR)
   async update(@Param('id') id: string, @Body() jobData: any) {
     return this.jobsService.update(id, jobData);

@@ -33,6 +33,7 @@ export default function JobsGrid() {
 
   // Client-side filtering
   const filteredJobs = jobs.filter((job) => {
+    if (job.job_status.toLowerCase() === 'closed') return false;
     const matchesSearch = search
       ? job.title.toLowerCase().includes(search.toLowerCase()) ||
         job.description.summary.toLowerCase().includes(search.toLowerCase())

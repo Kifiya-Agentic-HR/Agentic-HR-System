@@ -135,7 +135,7 @@ export async function getJobById(id: string) {
 export async function updateJob(id: string, jobData: any) {
   try {
     const res = await fetch(`${API_BASE}/jobs/${id}`, {
-      method: "PUT", 
+      method: "PATCH", 
       headers: { "Content-Type": "application/json", ...getAuthHeaders() },
       body: JSON.stringify(jobData),
     });
@@ -268,19 +268,31 @@ export const updateScreeningScore = async (
 };
 
 
-export async function jobPost(jobData: JobCreate) {
+
+export async function jobPost(hr_id: string, jobData: JobCreate) {
+  const params = new URLSearchParams({ hr_id }).toString();
+  const url = `${API_BASE}/jobs/?${params}`;
+
   try {
-    const res = await fetch(`${API_BASE}/jobs`, {
+    const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...getAuthHeaders() },
       body: JSON.stringify(jobData),
     });
-    const data = await res.json();
-    return data; 
+
+    if (!response.ok) {
+      const errorData = await response.json(); 
+      return { success: false, error: errorData.detail || response.statusText };
+    }
+
+    const data = await response.json();
+    return { success: true, data };
   } catch (error: any) {
-    return { success: false, error: error.message || "Failed to create job" };
+    return { success: false, error: error.message || "Failed to create job due to network issues" };
   }
 }
+
+
 
 // ----- Candidate Shortlisting ----- 
 export async function updateShortlist(applicationId: string, updateData: { shortlisted: boolean; shortlist_note: string; }) {
@@ -620,10 +632,10 @@ Output format (strictly follow):
     
     // Parse the structured response
     const recommendations: Recommendation[] = [];
-    const rows = rawText.split('\n').filter(line => line.startsWith('|'));
+    const rows = rawText.split('\n').filter((line: string) => line.startsWith('|'));
     
     for (const row of rows.slice(2)) { // Skip header
-      const [_, title, location, type, reason] = row.split('|').map(c => c.trim());
+      const [_, title, location, type, reason] = row.split('|').map((c: string) => c.trim());
       if (title && reason ) {
         recommendations.push({
           title,
@@ -647,6 +659,63 @@ export interface Recommendation {
   type: string;
   reason: string;
 }
+
+
+// --------- shortlisting -----------------
+export const createShortList = async (hiringManagerId: string, jobId: string) => {
+  const url = `${API_BASE}/jobs/short_list/${encodeURIComponent(hiringManagerId)}?job_id=${encodeURIComponent(jobId)}`;
+
+  try {
+      const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              ...getAuthHeaders() 
+          },
+          body: JSON.stringify({})
+      });
+
+      if (!response.ok) {
+          throw new Error('Network response was not ok');
+      }
+
+      const result = await response.json();
+      return result;
+  } catch (error) {
+      console.error('Error:', error);
+      return { success: false, error: error.message };
+  }
+};
+
+
+export const getShortlist = async () => {
+  const token = localStorage.getItem('access_token');
+  const hiringManagerId = localStorage.getItem('userId');
+  const url = `${API_BASE}/shortlist/${hiringManagerId}`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const data = await response.json();
+    return { success: true, data };
+    
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: 'Unknown network error occurred' };
+  }
+};
+
+
+
+
 // update-score
 
 // main

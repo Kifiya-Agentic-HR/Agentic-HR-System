@@ -31,7 +31,7 @@ export default function UserManagementPage() {
     const result = await fetchAllUsers();
     if (result.success) {
       const filtered = result.data.filter(
-        (user: { role: string }) => user.role !== "admin" && user.role !== "hr"      );
+        (user: { role: string }) => user.role !== "admin" );
       setUsers(filtered);
     } else {
       toast.error("Failed to fetch users", { description: result.error });

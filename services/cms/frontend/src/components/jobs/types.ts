@@ -7,7 +7,7 @@ export interface Job {
   }
 
   export type User = {
-    id: string;
+   // id: string;
     _id: string;
     role: "hr" | "hm" | "admin";
     firstName: string;

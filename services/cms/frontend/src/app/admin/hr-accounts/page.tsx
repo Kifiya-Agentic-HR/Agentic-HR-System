@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import {useState} from "react";
 import { ArrowLeft } from "lucide-react";
 
 import {
@@ -37,6 +38,7 @@ const formSchema = z.object({
 
 export default function CreateHrAccountForm() {
   const router = useRouter();
+  const [successMessage, setSuccessMessage] = useState('');
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -59,7 +61,9 @@ export default function CreateHrAccountForm() {
 
       toast.success("Account created successfully", {
         description: `HR ${values.firstName} ${values.lastName} has been registered`,
+        
       });
+      setSuccessMessage(`Account for ${values.firstName} ${values.lastName} has been created successfully!`);
       form.reset();
     } catch (error: any) {
       toast.error("Creation failed", {

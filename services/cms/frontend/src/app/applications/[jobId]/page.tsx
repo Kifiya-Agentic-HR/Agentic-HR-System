@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import StatusPopup from "@/components/jobs/StatusPopups";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { getGeminiRecommendations, getJobApplications, getOpenJobs, Recommendation, updateShortlist, fetchAllUsers } from "@/lib/api";
+import { getGeminiRecommendations, getJobApplications, getOpenJobs, Recommendation, updateShortlist, fetchAllUsers, createShortList } from "@/lib/api";
 import {
   FiChevronLeft,
   FiFileText,
@@ -15,7 +15,6 @@ import {
   FiBriefcase,
   FiList,
   FiThumbsUp,
-  FiThumbsDown,
   FiChevronUp,
   FiChevronDown,
   FiClock,
@@ -132,6 +131,7 @@ function ShortlistPopup({
 export default function ApplicationList() {
   const router = useRouter();
   const params = useParams();
+  const jobId = params.jobId as string; 
   const [applications, setApplications] = useState<Application[]>([]);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [showShortlistPopup, setShowShortlistPopup] = useState(false);
@@ -154,7 +154,7 @@ export default function ApplicationList() {
 const [availableReviewers, setAvailableReviewers] = useState<User[]>([]);
 const [selectedReviewer, setSelectedReviewer] = useState<string>("");
 
-// Mocked API functions for example purposes
+
 const fetchReviewerEmails = async () => {
   const data = await fetchAllUsers();
   if (data.success) {
@@ -169,21 +169,20 @@ const fetchReviewerEmails = async () => {
 };
  
 
+const assignReviewer = async (reviewerId:string, jobId: string) => {
+  const response = await createShortList(reviewerId, jobId); 
 
-const assignReviewer = async (email: string) => {
-  const response = await fetch("/api/assign-reviewer", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email }),
-  });
-  const data = await response.json();
-  if (data.success) {
-    console.log("Reviewer assigned successfully!");
+  if (response.success) {
+      console.log("Reviewer assigned successfully!");
   } else {
-    console.error("Failed to assign reviewer:", data.message);
+      console.error("Failed to assign reviewer:", response.error);
   }
 };
+
+
+
 //reviewing
+
   const handleRecommend = async (application: Application) => {
     setProcessingAppId(application._id);
     setRecommendationError(null);
@@ -372,11 +371,13 @@ const assignReviewer = async (email: string) => {
         onClick={fetchReviewerEmails}
         value={selectedReviewer}
         onChange={(e) => setSelectedReviewer(e.target.value)}
+  
         className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
       >
         <option value="">-- choose a reviewer --</option>
         {availableReviewers.map((user) => (
-          <option key={user.id} value={user.email}>
+           <option key={user._id} value={user._id}> 
+          
             {user.email}
           </option>
         ))}
@@ -393,20 +394,21 @@ const assignReviewer = async (email: string) => {
           Cancel
         </button>
         <button
-          disabled={!selectedReviewer}
-          onClick={async () => {
-            await assignReviewer(selectedReviewer);
-            setReviewOpen(false);
-            setSelectedReviewer("");
-          }}
-          className={`flex-1 py-2 text-sm font-medium rounded-md ${
-            selectedReviewer
-              ? "bg-[#FF6A00] text-white"
-              : "bg-gray-300 text-gray-600 cursor-not-allowed"
-          }`}
-        >
-          Assign
-        </button>
+  disabled={!selectedReviewer}
+  onClick={async () => {
+    await assignReviewer(selectedReviewer, jobId) ; //params.jobId as string
+    setReviewOpen(false);
+    setSelectedReviewer("");
+  }}
+  className={`flex-1 py-2 text-sm font-medium rounded-md ${
+    selectedReviewer
+      ? "bg-[#FF6A00] text-white"
+      : "bg-gray-300 text-gray-600 cursor-not-allowed"
+  }`}
+>
+  Assign
+</button>
+
       </div>
     </div>
   )}

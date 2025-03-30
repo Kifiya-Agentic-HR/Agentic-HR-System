@@ -41,26 +41,67 @@ async def get_job(response: Response,job_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving job: {e}")
 
-@router.put("/{job_id}", response_model=dict)
-async def update_job(response:Response ,job_id: str, job_update: JobUpdate):
+# @router.put("/{job_id}", response_model=dict)
+# async def update_job(response:Response ,job_id: str, job_update: JobUpdate):
+#     try:
+#         update_data = {k: v for k, v in job_update.dict().items() if v is not None}
+#         if not update_data:
+#             response.status_code = status.HTTP_400_BAD_REQUEST
+#             return {
+#                 "success": False,
+#                 "error":"missing update fields provided"
+#             }
+#         updated_job = JobDocument.update_job(job_id, update_data)
+#         if not updated_job:
+#             response.status_code = status.HTTP_404_NOT_FOUND
+#             return {
+#                 "success": False,
+#                 "error":"job not found or error occured when updated"
+#             }
+#         return {"success": True, "job": updated_job}
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Error updating job: {e}")
+    
+@router.patch("/{job_id}", response_model=dict)
+async def update_job(response: Response, job_id: str, job_update: JobUpdate):
     try:
-        update_data = {k: v for k, v in job_update.dict().items() if v is not None}
+        # Get only provided fields excluding None values
+        update_data = job_update.dict(exclude_unset=True)
+        print("Received data:", update_data)
+
+        if 'status' in update_data:
+            update_data['job_status'] = update_data.pop('status')
+        
+        print("Processed update data:", update_data)
+        
         if not update_data:
             response.status_code = status.HTTP_400_BAD_REQUEST
             return {
                 "success": False,
-                "error":"missing update fields provided"
+                "error": "No update fields provided"
             }
+
         updated_job = JobDocument.update_job(job_id, update_data)
+        
         if not updated_job:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {
                 "success": False,
-                "error":"job not found or error occured when updated"
+                "error": "Job not found or update failed"
             }
+
         return {"success": True, "job": updated_job}
+
+    except ValueError as ve:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(ve)
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error updating job: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating job: {str(e)}"
+        )
 
 #Get all applications for a specific job
 @router.get("/{job_id}/applications", response_model=dict)
