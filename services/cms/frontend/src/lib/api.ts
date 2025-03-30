@@ -724,8 +724,8 @@ export const getShortlistByJob = async (jobId: string) => {
       }
     });
 
-    const data = await response.json();
-    return { success: true, data };
+    const short_list = await response.json();
+    return { success: true, short_list };
     
   } catch (error) {
     if (error instanceof Error) {

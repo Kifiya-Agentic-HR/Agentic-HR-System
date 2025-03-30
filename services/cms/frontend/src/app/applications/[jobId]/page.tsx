@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import StatusPopup from "@/components/jobs/StatusPopups";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams  } from "next/navigation";
-import { getGeminiRecommendations, getJobApplications, getOpenJobs, Recommendation, updateShortlist, fetchAllUsers, createShortList } from "@/lib/api";
+import { getGeminiRecommendations, getJobApplications, getOpenJobs, Recommendation, updateShortlist, fetchAllUsers, createShortList, getShortlistByJob} from "@/lib/api";
 import {
   FiChevronLeft,
   FiFileText,
@@ -157,32 +157,61 @@ export default function ApplicationList() {
   const [reviewOpen, setReviewOpen] = useState(false);
 const [availableReviewers, setAvailableReviewers] = useState<User[]>([]);
 const [selectedReviewer, setSelectedReviewer] = useState<string>("");
+const [currentReviewer, setCurrentReviewer] = useState<User | null>(null);
+
 
 
 const fetchReviewerEmails = async () => {
-  const data = await fetchAllUsers();
-  if (data.success) {
-    const filtered = data.data.filter(
-      (user: User) =>  user.role !== "hr" && user.role !== "admin"
-    );
+  try {
+    const usersResponse = await fetchAllUsers();
+    if (!usersResponse.success) {
+      throw new Error("Failed to fetch users: " + usersResponse.error);
+    }
+
+    const filtered = usersResponse.data.filter((user: User) => user.role !== "hr" && user.role !== "admin");
     setAvailableReviewers(filtered);
-  } else {
-    toast.error("Failed to fetch users", { description: data.error });
+
+    const shortlistResponse = await getShortlistByJob(jobId);
+
+    if (!shortlistResponse.success || !shortlistResponse.short_list.short_list || shortlistResponse.short_list.short_list.length === 0) {
+      console.error("Shortlist API returned empty or invalid: ", shortlistResponse);
+      throw new Error("No shortlist available or failed to fetch shortlist.");
+    }
+
+    const shortlist = shortlistResponse.short_list.short_list[0];
+    filtered.forEach((user: User) => {
+    });
+    const existingReviewer = filtered.find((user: User) => user._id === shortlist.hiring_manager_id);
+
+    if (!existingReviewer) {
+      console.error("No matching reviewer found. Filtered Users: ", filtered);
+      throw new Error("Hiring manager not found among filtered users.");
+    }
+
+    setCurrentReviewer(existingReviewer);
+  } catch (error) {
+    console.error("Failed to load review data:", error);
+    toast.error("Failed to load review data", {
+      description: error instanceof Error ? error.message : "Unknown error"
+    });
   }
-  setLoading(false);
 };
  
+const assignReviewer = async (reviewerId: string, jobId: string) => {
+  try {
+    const response = await createShortList(reviewerId, jobId);
+    if (!response.success) throw new Error(response.error);
 
-const assignReviewer = async (reviewerId:string, jobId: string) => {
-  const response = await createShortList(reviewerId, jobId); 
-
-  if (response.success) {
-      console.log("Reviewer assigned successfully!");
-  } else {
-      console.error("Failed to assign reviewer:", response.error);
+    const newReviewer = availableReviewers.find(u => u._id === reviewerId);
+    setCurrentReviewer(newReviewer || null);
+    toast.success("Reviewer assigned successfully");
+    setReviewOpen(false);
+  } catch (error) {
+    toast.error("Failed to assign reviewer", {
+      description: error instanceof Error ? error.message : "Unknown error"
+    });
   }
 };
-
 
 
 //reviewing
@@ -243,6 +272,27 @@ const assignReviewer = async (reviewerId:string, jobId: string) => {
     return () => clearInterval(intervalId);
   }, [params.jobId, router]);
 
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        // Load applications
+        const appsResponse = await getJobApplications(jobId);
+        if (appsResponse.success) setApplications(appsResponse.applications);
+
+        // Load reviewers and check shortlist
+        await fetchReviewerEmails();
+      } catch (error) {
+        console.error("Initial data load failed:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadInitialData();
+    const intervalId = setInterval(loadInitialData, 30000);
+    return () => clearInterval(intervalId);
+  }, [jobId]);
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
@@ -282,6 +332,91 @@ const assignReviewer = async (reviewerId:string, jobId: string) => {
       </div>
     );
   }
+
+  const renderReviewSection = () => (
+    <div className="relative">
+      {currentReviewer ? (
+        <div className="flex items-center gap-2 bg-gray-100 p-2 rounded-xl cursor-default">
+          <FiCheckCircle className="text-[#FF6A00]" />
+          <span className="text-sm text-gray-600">
+            UNDER REVIEW by {currentReviewer.email}
+          </span>
+        </div>
+      ) : (
+        <>
+          <button
+            onClick={() => setReviewOpen(!reviewOpen)}
+            className="flex items-center gap-2 bg-gray-100 p-2 rounded-xl"
+          >
+            <span className="text-sm text-gray-600 mr-2">Assign Review</span>
+            <svg
+              className={`h-4 w-4 transition-transform duration-200 ${reviewOpen ? "rotate-180" : ""}`}
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </button>
+
+          {reviewOpen && (
+            <div className="absolute right-0 mt-2 w-80 bg-white shadow-lg rounded-xl z-10 p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-medium text-gray-700">Select Reviewer</h3>
+                <button
+                  onClick={() => setReviewOpen(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <FiChevronUp className="w-5 h-5" />
+                </button>
+              </div>
+
+              <select
+                value={selectedReviewer}
+                onChange={(e) => setSelectedReviewer(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-base text-gray-700 focus:ring-2 focus:ring-[#FF6A00]"
+              >
+                <option value="">Select a reviewer...</option>
+                {availableReviewers.map((user) => (
+                  <option key={user._id} value={user._id}>
+                    {user.email}
+                  </option>
+                ))}
+              </select>
+
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={() => {
+                    setReviewOpen(false);
+                    setSelectedReviewer("");
+                  }}
+                  className="flex-1 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => selectedReviewer && assignReviewer(selectedReviewer, jobId)}
+                  className={`flex-1 py-2 text-white rounded-lg ${
+                    selectedReviewer
+                      ? "bg-[#FF6A00] hover:bg-[#FF8A00]"
+                      : "bg-gray-300 cursor-not-allowed"
+                  }`}
+                >
+                  Assign
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
 
   return (
     <div className="flex">
@@ -323,193 +458,101 @@ const assignReviewer = async (reviewerId:string, jobId: string) => {
               Applications Overview
             </span>
           </h1>
+
           {!fromHM && (
-          <div className="mb-6 w-full flex justify-end gap-4 relative">
-         
+            <div className="mb-6 w-full flex justify-end gap-4 relative">
+              {renderReviewSection()}
 
-           {/* reviewing */}
-            <div className="relative">
-  <button
-    onFocus={() => setReviewOpen(!reviewOpen)}
-    className="flex items-center gap-2 bg-gray-100 p-2 rounded-xl"
-  >
-    <span className="text-sm text-gray-600 mr-2">
-  {reviewStatus[jobId] ? "IN REVIEW" : "Review"}
-</span>
-    <svg
-      className={`h-4 w-4 transition-transform duration-200 ${reviewOpen ? "rotate-180" : ""}`}
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-    </svg>
-  </button>
-
-  {reviewOpen && (
-    <div className="absolute right-0 mt-2 w-64 bg-white shadow-lg rounded-xl z-10 p-4">
-      <div className="flex justify-around items-center mb-2">
-        <button
-          onClick={() => setReviewOpen(false)}
-          className="text-gray-500 hover:text-gray-700"
-          aria-label="Close"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-        </button>
-        <label className="block text-sm text-gray-700">Choose a reviewer</label>
-        <div className="w-5"></div> 
-      </div>
-
-      <select
-    onClick={fetchReviewerEmails}
-    value={selectedReviewer}
-    onChange={(e) => setSelectedReviewer(e.target.value)}
-    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500" 
-      >
-        <option value="">-- choose a reviewer --</option>
-        {availableReviewers.map((user) => (
-           <option key={user._id} value={user._id}> 
-          
-            {user.email}
-          </option>
-        ))}
-      </select>
-
-      <div className="flex gap-2 mt-4">
-        <button
-          onClick={() => {
-            setReviewOpen(false);
-            setSelectedReviewer("");
-          }}
-          className="flex-1 py-2 text-sm font-medium rounded-md border border-gray-300 text-gray-700"
-        >
-          Cancel
-        </button>
-        <button
-       disabled={!selectedReviewer}
-       onClick={async () => {
-        await assignReviewer(selectedReviewer, jobId);
-        setReviewStatus(prev => ({...prev, [jobId]: true})); // Track by job ID
-        setReviewOpen(false);
-        setSelectedReviewer("");
-      }}
-      className={`flex-1 py-2 text-sm font-medium rounded-md ${
-      selectedReviewer
-      ? "bg-[#FF6A00] text-white"
-      : "bg-gray-300 text-gray-600 cursor-not-allowed"
-  }`}
->
-  Assign
-</button>
-
-      </div>
-    </div>
-  )}
-</div>
-            {/* Gender Filter Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setGenderOpen(!genderOpen)}
-                className="flex items-center gap-2 bg-gray-100 p-2 rounded-xl"
-              >
-                <span className="text-sm text-gray-600 mr-2">Gender: {filterType}</span>
-                <svg
-                  className={`h-4 w-4 transition-transform duration-200 ${genderOpen ? "rotate-180" : ""}`}
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+              {/* Gender Filter Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setGenderOpen(!genderOpen)}
+                  className="flex items-center gap-2 bg-gray-100 p-2 rounded-xl"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              {genderOpen && (
-                <div className="absolute right-0 mt-2 w-32 bg-white shadow-lg rounded-xl overflow-hidden z-10">
-                  <button
-                    onClick={() => { setFilterType("all"); setGenderOpen(false); }}
-                    className={`block w-full text-left px-4 py-2 text-sm ${filterType === "all" ? "bg-[#FF6A00] text-white" : "bg-white text-gray-600 hover:bg-gray-200"}`}
+                  <span className="text-sm text-gray-600 mr-2">Gender: {filterType}</span>
+                  <svg
+                    className={`h-4 w-4 transition-transform duration-200 ${genderOpen ? "rotate-180" : ""}`}
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
                   >
-                    All
-                  </button>
-                  <button
-                    onClick={() => { setFilterType("male"); setGenderOpen(false); }}
-                    className={`block w-full text-left px-4 py-2 text-sm ${filterType === "male" ? "bg-[#FF6A00] text-white" : "bg-white text-gray-600 hover:bg-gray-200"}`}
-                  >
-                    Male
-                  </button>
-                  <button
-                    onClick={() => { setFilterType("female"); setGenderOpen(false); }}
-                    className={`block w-full text-left px-4 py-2 text-sm ${filterType === "female" ? "bg-[#FF6A00] text-white" : "bg-white text-gray-600 hover:bg-gray-200"}`}
-                  >
-                    Female
-                  </button>
-                </div>
-              )}
-            </div>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {genderOpen && (
+                  <div className="absolute right-0 mt-2 w-32 bg-white shadow-lg rounded-xl overflow-hidden z-10">
+                    <button
+                      onClick={() => { setFilterType("all"); setGenderOpen(false); }}
+                      className={`block w-full text-left px-4 py-2 text-sm ${filterType === "all" ? "bg-[#FF6A00] text-white" : "bg-white text-gray-600 hover:bg-gray-200"}`}
+                    >
+                      All
+                    </button>
+                    <button
+                      onClick={() => { setFilterType("male"); setGenderOpen(false); }}
+                      className={`block w-full text-left px-4 py-2 text-sm ${filterType === "male" ? "bg-[#FF6A00] text-white" : "bg-white text-gray-600 hover:bg-gray-200"}`}
+                    >
+                      Male
+                    </button>
+                    <button
+                      onClick={() => { setFilterType("female"); setGenderOpen(false); }}
+                      className={`block w-full text-left px-4 py-2 text-sm ${filterType === "female" ? "bg-[#FF6A00] text-white" : "bg-white text-gray-600 hover:bg-gray-200"}`}
+                    >
+                      Female
+                    </button>
+                  </div>
+                )}
+              </div>
 
-            {/* Status Filter Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setStatusOpen(!statusOpen)}
-                className="flex items-center gap-2 bg-gray-100 p-2 rounded-xl"
-              >
-                <span className="text-sm text-gray-600 mr-2">Status: {statusFilter}</span>
-                <svg
-                  className={`h-4 w-4 transition-transform duration-200 ${statusOpen ? "rotate-180" : ""}`}
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+              {/* Status Filter Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setStatusOpen(!statusOpen)}
+                  className="flex items-center gap-2 bg-gray-100 p-2 rounded-xl"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              {statusOpen && (
-                <div className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-xl overflow-hidden z-10">
-                  <button
-                    onClick={() => { setStatusFilter("all"); setStatusOpen(false); }}
-                    className={`block w-full text-left px-4 py-2 text-sm ${statusFilter === "all" ? "bg-[#FF6A00] text-white" : "bg-white text-gray-600 hover:bg-gray-200"}`}
+                  <span className="text-sm text-gray-600 mr-2">Status: {statusFilter}</span>
+                  <svg
+                    className={`h-4 w-4 transition-transform duration-200 ${statusOpen ? "rotate-180" : ""}`}
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
                   >
-                    All
-                  </button>
-                  <button
-                    onClick={() => { setStatusFilter("pending"); setStatusOpen(false); }}
-                    className={`block w-full text-left px-4 py-2 text-sm ${statusFilter === "pending" ? "bg-[#FFB800] text-white" : "bg-white text-gray-600 hover:bg-[#FFB800]/20"}`}
-                  >
-                    Pending
-                  </button>
-                  <button
-                    onClick={() => { setStatusFilter("hired"); setStatusOpen(false); }}
-                    className={`block w-full text-left px-4 py-2 text-sm ${statusFilter === "hired" ? "bg-[#4CAF50] text-white" : "bg-white text-gray-600 hover:bg-[#4CAF50]/20"}`}
-                  >
-                    Hired
-                  </button>
-                  <button
-                    onClick={() => { setStatusFilter("rejected"); setStatusOpen(false); }}
-                    className={`block w-full text-left px-4 py-2 text-sm ${statusFilter === "rejected" ? "bg-[#F44336] text-white" : "bg-white text-gray-600 hover:bg-[#F44336]/20"}`}
-                  >
-                    Rejected
-                  </button>
-                </div>
-              )}
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {statusOpen && (
+                  <div className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-xl overflow-hidden z-10">
+                    <button
+                      onClick={() => { setStatusFilter("all"); setStatusOpen(false); }}
+                      className={`block w-full text-left px-4 py-2 text-sm ${statusFilter === "all" ? "bg-[#FF6A00] text-white" : "bg-white text-gray-600 hover:bg-gray-200"}`}
+                    >
+                      All
+                    </button>
+                    <button
+                      onClick={() => { setStatusFilter("pending"); setStatusOpen(false); }}
+                      className={`block w-full text-left px-4 py-2 text-sm ${statusFilter === "pending" ? "bg-[#FFB800] text-white" : "bg-white text-gray-600 hover:bg-[#FFB800]/20"}`}
+                    >
+                      Pending
+                    </button>
+                    <button
+                      onClick={() => { setStatusFilter("hired"); setStatusOpen(false); }}
+                      className={`block w-full text-left px-4 py-2 text-sm ${statusFilter === "hired" ? "bg-[#4CAF50] text-white" : "bg-white text-gray-600 hover:bg-[#4CAF50]/20"}`}
+                    >
+                      Hired
+                    </button>
+                    <button
+                      onClick={() => { setStatusFilter("rejected"); setStatusOpen(false); }}
+                      className={`block w-full text-left px-4 py-2 text-sm ${statusFilter === "rejected" ? "bg-[#F44336] text-white" : "bg-white text-gray-600 hover:bg-[#F44336]/20"}`}
+                    >
+                      Rejected
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-            
-          </div>
           )}
+         
 
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
             <div className="overflow-x-auto">
