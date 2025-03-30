@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Response
-from schemas import JobCreate, JobUpdate
-from app.database.models import JobDocument, ApplicationDocument, ShortListDocument
+from app.schemas.job_schema import JobCreate, JobUpdate
+from app.database.models.job_model import JobDocument
+from app.database.models.application_model import  ApplicationDocument
 from datetime import datetime
 
 router = APIRouter()
@@ -83,37 +84,3 @@ async def get_job_applications(response: Response,job_id: str):
     
 
 
-@router.post("/short_list/{hiring_manager_id}", status_code=status.HTTP_201_CREATED, response_model=dict)
-async def short_list_request(response: Response, job_id: str, hiring_manager_id: str):
-    try:
-        short_list = ShortListDocument.create_request(job_id, hiring_manager_id)
-        if short_list is None:
-            response.status_code = status.HTTP_400_BAD_REQUEST
-            return {"success": False, "error": "Short list request failed"}
-        short_list['_id'] = str(short_list['_id'])
-        return {"success": True, "short_list": short_list}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error creating short list request: {e}")
-    
-
-
-@router.get("/short_list/{hiring_manager_id}", response_model=dict)
-async def get_short_list_requests(response: Response, hiring_manager_id: str):
-    try:
-        short_list = ShortListDocument.get_request_by_hiring_manager(hiring_manager_id)
-        response.status_code = status.HTTP_200_OK
-        return {"success": True, "short_list": short_list}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error retrieving short list requests: {e}")
-
-@router.delete("/short_list/", response_model=dict)
-async def delete_short_list_request(response: Response, hiring_manager_id: str, job_id: str):
-    try:
-        short_list = ShortListDocument.delete_request(hiring_manager_id, job_id)
-   
-        if not short_list:
-            response.status_code = status.HTTP_404_NOT_FOUND
-            return {"success": False, "error": "The request does not exist"}
-        return {"success": True, "short_list": short_list}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error deleting short list request: {e}")

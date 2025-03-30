@@ -4,7 +4,7 @@ import logging
 from fastapi import HTTPException, UploadFile
 from botocore.client import Config
 import botocore.exceptions
-from config_local import Config as config
+from app.utils.config_local import Config as config
 import json
 
 # Set up logging
