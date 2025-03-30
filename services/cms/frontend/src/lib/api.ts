@@ -716,6 +716,3 @@ export const getShortlist = async () => {
 
 
 
-// update-score
-
-// main

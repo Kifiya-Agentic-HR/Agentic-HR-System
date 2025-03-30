@@ -126,7 +126,7 @@ export class JobsService {
  async shortList(hiringManagerId: string) {
   try {
     const response = await firstValueFrom(
-      this.httpService.get(`${this.baseUrl}/short_list/${hiringManagerId}`),
+      this.httpService.get(`${this.baseUrl}/jobs/short_list/${hiringManagerId}`),
     );
     return response.data;
   } catch (error) {
@@ -138,7 +138,8 @@ export class JobsService {
   async createShortList(hiringManagerId: string, jobId: string) {
     try {
       const response = await firstValueFrom(
-        this.httpService.post(`${this.baseUrl}/short_list/${hiringManagerId}`, { job_id: jobId }),
+        this.httpService.post(`${this.baseUrl}/jobs/short_list/${hiringManagerId}?job_id=${jobId}`,
+        {} ),
       );
       return response.data;
     } catch (error) {
@@ -150,7 +151,7 @@ export class JobsService {
   async deleteShortList(hiringManagerId: string, jobId: string) {
     try {
       const response = await firstValueFrom(
-        this.httpService.delete(`${this.baseUrl}/short_list`, {
+        this.httpService.delete(`${this.baseUrl}/jobs/short_list`, {
           params: { hiring_manager_id: hiringManagerId, job_id: jobId },
         }),
       );

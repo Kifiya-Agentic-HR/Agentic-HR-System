@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, HttpCode, Query } from '@nestjs/common';
 
 import { JobsService } from './jobs.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
@@ -62,13 +62,12 @@ export class JobsController {
   }
 
   // POST /short_list/:hiring_manager_id
-  // Expects { job_id: string } in the request body
-  @Post('/short_list/:hiring_manager_id')
+  @Post('/short_list/:hiring_manager_id') 
   @Roles(UserRole.HR)
   @Roles(UserRole.HM)
   async createShortList(
     @Param('hiring_manager_id') hiringManagerId: string,
-    @Body('job_id') jobId: string,
+    @Query('job_id') jobId: string,  
   ) {
     return this.jobsService.createShortList(hiringManagerId, jobId);
   }
