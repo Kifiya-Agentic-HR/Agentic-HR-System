@@ -178,14 +178,21 @@ const fetchReviewerEmails = async () => {
       throw new Error("No shortlist available or failed to fetch shortlist.");
     }
 
-    const shortlist = shortlistResponse.short_list.short_list[0];
-    filtered.forEach((user: User) => {
+    const shortlist = shortlistResponse.short_list.short_list;
+
+
+    const existingReviewer = filtered.find((user: User) => {
+      const userId = String(user._id).trim();
+      const hiringManagerId = String(shortlist.hiring_manager_id).trim();
+      return userId === hiringManagerId;
     });
-    const existingReviewer = filtered.find((user: User) => user._id === shortlist.hiring_manager_id);
 
     if (!existingReviewer) {
-      console.error("No matching reviewer found. Filtered Users: ", filtered);
-      throw new Error("Hiring manager not found among filtered users.");
+      console.error("No match. Raw IDs:", {
+        shortlistHiringManager: shortlist.hiring_manager_id,
+        filteredUsers: filtered.map((u: User) => u._id)
+      });
+      throw new Error("Hiring manager not found.");
     }
 
     setCurrentReviewer(existingReviewer);
@@ -212,8 +219,6 @@ const assignReviewer = async (reviewerId: string, jobId: string) => {
     });
   }
 };
-
-
 //reviewing
 
   const handleRecommend = async (application: Application) => {
@@ -425,13 +430,7 @@ const assignReviewer = async (reviewerId: string, jobId: string) => {
           <img src="/logo.svg" alt="Logo" className="h-12" />
         </div>
         <nav className="space-y-4">
-          <Link
-            href="/hr"
-            className="flex items-center space-x-3 text-gray-600 hover:text-[#FF6A00] transition-colors p-3 rounded-lg hover:bg-[#FF6A00]/10"
-          >
-            <FiBriefcase className="w-5 h-5" />
-            <span>Job Postings</span>
-          </Link>
+          
           <Link
             href="/applications"
             className="flex items-center space-x-3 text-[#FF6A00] bg-[#FF6A00]/10 p-3 rounded-lg"
