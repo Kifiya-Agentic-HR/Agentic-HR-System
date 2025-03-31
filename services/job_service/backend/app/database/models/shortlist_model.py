@@ -17,7 +17,7 @@ class ShortListDocument(BaseDocument):
     collection_name = "short_list"
 
     @classmethod
-    def create_request(cls, job_id, hr_manager_id):
+    def create_request(cls, job_id, hiring_manager_id):
         try:
             collection = cls.get_collection()
             
@@ -28,7 +28,7 @@ class ShortListDocument(BaseDocument):
                 # Update hr_id if job_id exists
                 collection.update_one(
                     {"job_id": job_id}, 
-                    {"$set": {"hr_manager_id": hr_manager_id, "created_at": datetime.utcnow()}}
+                    {"$set": {"hiring_manager_id": hiring_manager_id, "created_at": datetime.utcnow()}}
                 )
                 return existing_request
 
@@ -36,7 +36,7 @@ class ShortListDocument(BaseDocument):
                 # Create new entry
                 data = {
                     "job_id": job_id,
-                    "hr_manager_id": hr_manager_id,
+                    "hiring_manager_id": hiring_manager_id,
                     "created_at": datetime.utcnow()
                 }
                 result = collection.insert_one(data)
@@ -47,10 +47,10 @@ class ShortListDocument(BaseDocument):
             raise Exception(f"Error creating/updating shortlist request: {e}")
 
     @classmethod
-    def get_request_by_hr_manager(cls, hr_manager_id):
+    def get_request_by_hr_manager(cls, hiring_manager_id):
         # Find screening results using the application_id foreign key.
         try:
-            result = cls.get_collection().find_one({"hr_manager_id": hr_manager_id})
+            result = cls.get_collection().find_one({"hiring_manager_id": hiring_manager_id})
             if result:
                 result["_id"] = str(result["_id"])
             return result
