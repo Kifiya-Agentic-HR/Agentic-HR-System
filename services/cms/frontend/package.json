@@ -27,6 +27,8 @@
     "@tiptap/react": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
     "@types/draft-js": "^0.11.18",
+    "@headlessui/react":"^2.2.0",
+
     "axios": "^1.7.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

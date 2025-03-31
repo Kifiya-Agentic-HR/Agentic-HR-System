@@ -331,6 +331,8 @@ class InterviewsDocument(BaseDocument):
             result["_id"] = str(result["_id"])
             result["application_id"] = str(result["application_id"])
         return result
+    
+
 class ShortListDocument(BaseDocument):
     collection_name = "short_list"
 
@@ -365,15 +367,31 @@ class ShortListDocument(BaseDocument):
             raise Exception(f"Error creating/updating shortlist request: {e}")
 
     @classmethod
-    def get_request_by_hiring_manager(cls, hiring_manager_id):
-        # Find screening results using the application_id foreign key.
+    def get_request_by_job_id(cls, job_id: str):
         try:
-            result = cls.get_collection().find_one({"hiring_manager_id": hiring_manager_id})
-            if result:
-                result["_id"] = str(result["_id"])
-            return result
-        except errors.PyMongoError as e:    
-            raise Exception(f"Error fetching shortlist request: {e}")
+            cursor = cls.get_collection().find({"job_id": job_id})
+            results = list(cursor)
+
+            for doc in results:
+                doc["_id"] = str(doc["_id"])
+
+            return results
+
+        except errors.PyMongoError as e:
+            raise Exception(f"Database error: {str(e)}")
+
+    @classmethod
+    def get_request_by_hiring_manager(cls, hiring_manager_id):
+     try:
+        results = list(cls.get_collection().find(
+            {"hiring_manager_id": hiring_manager_id}
+        ))
+        for doc in results:
+            doc["_id"] = str(doc["_id"])    
+        return results
+     except errors.PyMongoError as e:    
+        raise Exception(f"Error fetching shortlist requests: {e}")
+  
     @classmethod
     def delete_request(cls, hiring_manager_id, job_id):
         try:

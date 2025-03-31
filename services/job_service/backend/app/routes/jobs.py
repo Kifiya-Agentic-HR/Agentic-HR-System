@@ -146,6 +146,25 @@ async def get_short_list_requests(response: Response, hiring_manager_id: str):
         return {"success": True, "short_list": short_list}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving short list requests: {e}")
+    
+
+@router.get("/short_list/job/{job_id}", response_model=dict)
+async def get_short_list_requests(response: Response, job_id: str):
+    try:
+        short_list = ShortListDocument.get_request_by_job_id(job_id)
+        if not short_list:  # Check if list is empty
+            return {
+                "success": False,
+                "message": "No shortlist found for this job",
+            }
+            
+        return {
+            "success": True,
+            "short_list": short_list
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving short list requests: {e}")
+    
 
 @router.delete("/short_list/", response_model=dict)
 async def delete_short_list_request(response: Response, hiring_manager_id: str, job_id: str):

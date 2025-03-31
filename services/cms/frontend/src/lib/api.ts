@@ -553,7 +553,8 @@ export const bulkUpload = async (formData: FormData)=> {
     const API_BASE = "http://localhost:9000";
     const response = await fetch(`${API_BASE}/bulk`, {
       method: "POST",
-      body: formData
+      body: formData,
+      // headers:{ ...getAuthHeaders()  } and changing path
     });
 
     if (!response.ok) {
@@ -689,16 +690,15 @@ export const createShortList = async (hiringManagerId: string, jobId: string) =>
 
 
 export const getShortlist = async () => {
-  const token = localStorage.getItem('access_token');
+ 
   const hiringManagerId = localStorage.getItem('userId');
-  const url = `${API_BASE}/shortlist/${hiringManagerId}`;
+  const url = `${API_BASE}/jobs/short_list/${hiringManagerId}`;
 
   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',  ...getAuthHeaders() 
       }
     });
 
@@ -714,8 +714,25 @@ export const getShortlist = async () => {
 };
 
 
+export const getShortlistByJob = async (jobId: string) => {
+  const url = `${API_BASE}/jobs/short_list/job/${jobId}`;
 
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',  ...getAuthHeaders() 
+      }
+    });
 
-// update-score
+    const short_list = await response.json();
+    return { success: true, short_list };
+    
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: 'Unknown network error occurred' };
+  }
+};
 
-// main

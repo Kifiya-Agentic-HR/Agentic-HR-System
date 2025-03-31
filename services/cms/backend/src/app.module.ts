@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { InterviewsModule } from './interviews/interviews.module';
 import { ApplicationsModule } from './applications/applications.module';
 import { ShortListModule } from './short_list/short_list.module';
+import { BulkModule } from './bulk/bulk.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ShortListModule } from './short_list/short_list.module';
     InterviewsModule,
     ApplicationsModule,
     ShortListModule,
+    BulkModule,
   ],
 })
 export class AppModule {}
