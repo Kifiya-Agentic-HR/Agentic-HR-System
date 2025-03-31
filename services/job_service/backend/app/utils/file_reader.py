@@ -4,7 +4,6 @@ import requests
 import tempfile
 from pdfminer.high_level import extract_text
 from docx import Document
-from typing import Union
 
 logger = logging.getLogger(__name__)
 

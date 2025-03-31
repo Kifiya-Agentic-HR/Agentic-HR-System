@@ -1,8 +1,6 @@
-from pymongo import MongoClient, errors
-import os
+from pymongo import MongoClient
 import logging
-import time
-from config_local import Config
+from app.utils.config_local import Config
 
 logger = logging.getLogger(__name__)
 

@@ -1,5 +1,5 @@
 import aio_pika
-from config_local import Config
+from app.utils.config_local import Config
 from tenacity import retry, wait_fixed, stop_after_attempt
 import json
 import logging
