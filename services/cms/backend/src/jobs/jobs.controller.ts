@@ -52,42 +52,4 @@ export class JobsController {
     return this.jobsService.remove(id);
 
   }
-
-  // GET /short_list/:id
-  @Get('/short_list/job/:id')
-  @Roles(UserRole.HR)
-  async getshortList(@Param('id') id: string) {
-    return this.jobsService.getshortList(id);
-  }
-
-
-// get by jhm_id
-  @Get('/short_list/:id')
-  @Roles(UserRole.HM)
-  async shortList(@Param("id") id: string){
-    return this.jobsService.shortList(id);
-  }
-
-  // POST /short_list/:hiring_manager_id
-  @Post('/short_list/:hiring_manager_id') 
-  @Roles(UserRole.HR)
-  @Roles(UserRole.HM)
-  async createShortList(
-    @Param('hiring_manager_id') hiringManagerId: string,
-    @Query('job_id') jobId: string,  
-  ) {
-    return this.jobsService.createShortList(hiringManagerId, jobId);
-  }
-
-  // DELETE /short_list?hiring_manager_id=...&job_id=...
-  @Delete('/short_list')
-  @HttpCode(200)
-  @Roles(UserRole.HR)
-  @Roles(UserRole.HM)
-  async deleteShortList(
-    @Query('hiring_manager_id') hiringManagerId: string,
-    @Query('job_id') jobId: string,
-  ) {
-    return this.jobsService.deleteShortList(hiringManagerId, jobId);
-  }
 }

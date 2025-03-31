@@ -17,7 +17,7 @@ export class JobsService {
       const response = await firstValueFrom(
         this.httpService.get(`${this.baseUrl}/jobs`),
       );
-      this.logger.debug(`Got response: ${JSON.stringify(response.data)}`);
+      // this.logger.debug(`Got response: ${JSON.stringify(response.data)}`);
       return response.data;
     } catch (error) {
       this.logger.error(`Error fetching jobs`, error.stack); 
@@ -32,7 +32,7 @@ export class JobsService {
       const response = await firstValueFrom(
         this.httpService.get(`${this.baseUrl}/jobs/${id}`),
       );
-      this.logger.debug(`Success [findOne(${id})]: ${JSON.stringify(response.data)}`);
+      // this.logger.debug(`Success [findOne(${id})]: ${JSON.stringify(response.data)}`);
       return response.data;
     } catch (error) {
       this.logger.error(`Error in findOne(${id})`, error.stack);
@@ -49,7 +49,7 @@ export class JobsService {
       const response = await firstValueFrom(
         this.httpService.get(`${this.baseUrl}/jobs/short_list_request/${hiringManagerId}`)
       );
-      this.logger.debug(`Success [getRequests(${hiringManagerId})]`);
+      // this.logger.debug(`Success [getRequests(${hiringManagerId})]`);
       return response.data;
     } catch (error) {
       this.logger.error(`Error in getRequests(${hiringManagerId})`, error.stack);
@@ -68,7 +68,7 @@ export class JobsService {
       const response = await firstValueFrom(
         this.httpService.post(`${this.baseUrl}/jobs/?hr_id=${createdBy}`, payload)
       );
-      this.logger.debug(`Success [create()]: ${JSON.stringify(response.data)}`);
+      // this.logger.debug(`Success [create()]: ${JSON.stringify(response.data)}`);
       return response.data;
     } catch (error) {
       this.logger.error(`Error in create()`, error.stack);
@@ -83,7 +83,7 @@ export class JobsService {
       const response = await firstValueFrom(
         this.httpService.patch(`${this.baseUrl}/jobs/${id}`, jobData),
       );
-      this.logger.debug(`Success [update(${id})]: ${JSON.stringify(response.data)}`);
+      // this.logger.debug(`Success [update(${id})]: ${JSON.stringify(response.data)}`);
       return response.data;
     } catch (error) {
       this.logger.error(`Error in update(${id})`, error.stack);
@@ -113,7 +113,7 @@ export class JobsService {
       const response = await firstValueFrom(
         this.httpService.get(`${this.baseUrl}/jobs/${jobId}/applications`),
       );
-      this.logger.debug(`Success [findApplicationsByJob(${jobId})]: ${JSON.stringify(response.data)}`);
+      // this.logger.debug(`Success [findApplicationsByJob(${jobId})]: ${JSON.stringify(response.data)}`);
       return response.data;
     } catch (error) {
       this.logger.error(`Error in findApplicationsByJob(${jobId})`, error.stack);
@@ -133,45 +133,5 @@ export class JobsService {
     return { success: false, error: `Error fetching short list requests for hiring manager ${hiringManagerId}` };
   }
 }
-
-async getshortList(jobId: string) {
-  try {
-    const response = await firstValueFrom(
-      this.httpService.get(`${this.baseUrl}/jobs/short_list/job/${jobId}`),
-    );
-    return response.data;
-  } catch (error) {
-    return { success: false, error: `Error fetching short list requests for hiring manager ${jobId}` };
-  }
-}
  
-
-
-  // POST create short list request
-  async createShortList(hiringManagerId: string, jobId: string) {
-    try {
-      const response = await firstValueFrom(
-        this.httpService.post(`${this.baseUrl}/jobs/short_list/${hiringManagerId}?job_id=${jobId}`,
-        {} ),
-      );
-      return response.data;
-    } catch (error) {
-      return { success: false, error: `Error creating short list request for hiring manager ${hiringManagerId}` };
-    }
-  }
-
-  // DELETE short list request
-  async deleteShortList(hiringManagerId: string, jobId: string) {
-    try {
-      const response = await firstValueFrom(
-        this.httpService.delete(`${this.baseUrl}/jobs/short_list`, {
-          params: { hiring_manager_id: hiringManagerId, job_id: jobId },
-        }),
-      );
-      return response.data;
-    } catch (error) {
-      return { success: false, error: `Error deleting short list request for hiring manager ${hiringManagerId} and job ${jobId}` };
-    }
-  }
-
 }

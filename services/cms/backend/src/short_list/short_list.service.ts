@@ -17,7 +17,7 @@ export class ShortListService {
         `Calling post ${this.baseUrl}/short_list/${hiring_manager_id} from job: ${job_id}`
       );
       try {
-        const payload = { job_id, hiring_manager_id};
+        const payload = { job_id: job_id, hiring_manager_id};
         const response = await firstValueFrom(
           this.httpService.post(`${this.baseUrl}/short_list/${hiring_manager_id}`, payload)
         );
@@ -75,4 +75,22 @@ export class ShortListService {
       return { success: false, error: 'Error deleting short list request' };
     }
   }  
+
+  async getShortListByJobId(job_id: string) {
+    this.logger.debug(
+      `Calling get ${this.baseUrl}/short_list/job/${job_id}`
+    );
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(`${this.baseUrl}/short_list/job/${job_id}`)
+      );
+      this.logger.debug(`Success [getShortListByJobId(${job_id})]`);
+      return response.data;
+    } catch (error) {
+      this.logger.error(`Error in getShortListByJobId(${job_id})`, error.stack);
+      this.logger.error(error?.response?.data || error?.message);
+      return { success: false, error: 'Error getting short list by job id' };
+    }
+  }
+  
 }
