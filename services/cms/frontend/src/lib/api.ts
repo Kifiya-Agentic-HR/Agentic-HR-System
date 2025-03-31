@@ -664,7 +664,7 @@ export interface Recommendation {
 
 // --------- shortlisting -----------------
 export const createShortList = async (hiringManagerId: string, jobId: string) => {
-  const url = `${API_BASE}/jobs/short_list/${encodeURIComponent(hiringManagerId)}?job_id=${encodeURIComponent(jobId)}`;
+  const url = `${API_BASE}/short_list/${encodeURIComponent(hiringManagerId)}?job_id=${encodeURIComponent(jobId)}`;
 
   try {
       const response = await fetch(url, {
@@ -673,7 +673,7 @@ export const createShortList = async (hiringManagerId: string, jobId: string) =>
               'Content-Type': 'application/json',
               ...getAuthHeaders() 
           },
-          body: JSON.stringify({})
+          body: JSON.stringify({ job_id: jobId }) 
       });
 
       if (!response.ok) {
@@ -692,7 +692,7 @@ export const createShortList = async (hiringManagerId: string, jobId: string) =>
 export const getShortlist = async () => {
  
   const hiringManagerId = localStorage.getItem('userId');
-  const url = `${API_BASE}/jobs/short_list/${hiringManagerId}`;
+  const url = `${API_BASE}/short_list/${hiringManagerId}`;
 
   try {
     const response = await fetch(url, {
@@ -715,7 +715,7 @@ export const getShortlist = async () => {
 
 
 export const getShortlistByJob = async (jobId: string) => {
-  const url = `${API_BASE}/jobs/short_list/job/${jobId}`;
+  const url = `${API_BASE}/short_list/job/${jobId}`;
 
   try {
     const response = await fetch(url, {

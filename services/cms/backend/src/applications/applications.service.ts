@@ -17,7 +17,7 @@ export class ApplicationsService {
       const response = await firstValueFrom(
         this.httpService.get(`${this.baseUrl}/applications`),
       );
-      this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
+      // this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
       return response.data; 
     } catch (error) {
       this.logger.error(`Error fetching applications: ${error.message}`, error.stack);
@@ -31,7 +31,7 @@ export class ApplicationsService {
       const response = await firstValueFrom(
         this.httpService.get(`${this.baseUrl}/applications/${application_id}`),
       );
-      this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
+      // this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
       return response.data;
     } catch (error) {
       this.logger.error(`Error fetching application ${application_id}: ${error.message}`, error.stack);
@@ -45,7 +45,7 @@ export class ApplicationsService {
       const response = await firstValueFrom(
         this.httpService.post(`${this.baseUrl}/applications`, appData),
       );
-      this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
+      // this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
       return response.data;
     } catch (error) {
       this.logger.error(`Error creating application: ${error.message}`, error.stack);
@@ -59,7 +59,7 @@ export class ApplicationsService {
       const response = await firstValueFrom(
         this.httpService.patch(`${this.baseUrl}/applications/${application_id}/reject`)
       );
-      this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
+      // this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
       return response.data; 
     } catch (error) {
       this.logger.error(`Error rejecting application ${application_id}: ${error.message}`, error.stack);
@@ -76,7 +76,7 @@ export class ApplicationsService {
       const response = await firstValueFrom(
         this.httpService.patch(`${this.baseUrl}/applications/${application_id}/accept`)
       );
-      this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
+      // this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
       return response.data; 
     } catch (error) {
       this.logger.error(`Error accepting application ${application_id}: ${error.message}`, error.stack);
@@ -93,7 +93,7 @@ export class ApplicationsService {
       const response = await firstValueFrom(
         this.httpService.put(`${this.baseUrl}/applications/edit_score/${application_id}`, updateData)
       );
-      this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
+      // this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
       return response.data; 
     } catch (error) {
       this.logger.error(`Error editing application ${application_id}: ${error.message}`, error.stack);
@@ -110,7 +110,7 @@ export class ApplicationsService {
       const response = await firstValueFrom(
         this.httpService.put(`${this.baseUrl}/applications/${application_id}`, updateData)
       );
-      this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
+      // this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
       return response.data; 
     } catch (error) {
       this.logger.error(`Error updating application ${application_id}: ${error.message}`, error.stack);

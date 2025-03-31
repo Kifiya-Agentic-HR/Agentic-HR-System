@@ -11,12 +11,21 @@ export class ShortListController {
   constructor(private readonly shortListService: ShortListService) {}
 
   @Get(':hiring_manager_id')
-  @Roles(UserRole.HR)
+  @Roles(UserRole.HR, UserRole.HM)
   async getRequests(@Param('hiring_manager_id') hiring_manager_id: string) {
     if (!hiring_manager_id) {
       return { success: false, error: 'No hm id found' };
     }
     return this.shortListService.getRequests(hiring_manager_id )
+  }
+
+  @Get('/job/:job_id')
+  @Roles(UserRole.HR, UserRole.HM)
+  async getShortListByJobId(@Param('job_id') job_id: string) {
+    if (!job_id) {
+      return { success: false, error: 'No job id found' };
+    }
+    return this.shortListService.getShortListByJobId(job_id);
   }
 
   @Post(':hiring_manager_id')
@@ -38,7 +47,9 @@ export class ShortListController {
       error: 'Missing one or more required parameters',
     };
   }
-    
   return this.shortListService.deleteRequest(id, {job_id, hiring_manager_id});
   }
+
+
+
 }

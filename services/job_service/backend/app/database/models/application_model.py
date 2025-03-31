@@ -3,6 +3,10 @@ from app.database.database import database
 from datetime import datetime
 from bson import ObjectId
 from pymongo import ReturnDocument, errors
+
+from app.database.models.candidate_model import CandidateDocument
+from app.database.models.interview_model import InterviewsDocument
+from app.database.models.screen_result_model import ScreeningResultDocument
 logger = logging.getLogger(__name__)
 class BaseDocument:
     """Base class for common database operations."""

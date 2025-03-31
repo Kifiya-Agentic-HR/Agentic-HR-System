@@ -50,10 +50,13 @@ class ShortListDocument(BaseDocument):
     def get_request_by_hr_manager(cls, hiring_manager_id):
         # Find screening results using the application_id foreign key.
         try:
-            result = cls.get_collection().find_one({"hiring_manager_id": hiring_manager_id})
-            if result:
-                result["_id"] = str(result["_id"])
-            return result
+            result_data = cls.get_collection().find({"hiring_manager_id": hiring_manager_id})
+            results = []
+            if result_data:
+                for result in result_data:
+                    result["_id"] = str(result["_id"])
+                    results.append(result)
+            return results
         except errors.PyMongoError as e:    
             raise Exception(f"Error fetching shortlist request: {e}")
     @classmethod
@@ -68,3 +71,12 @@ class ShortListDocument(BaseDocument):
         except errors.PyMongoError as e:
             raise Exception(f"Error deleting shortlist request: {e}")
    
+    @classmethod
+    def get_request_by_job(cls, jobId):
+        try:
+            result = cls.get_collection().find_one({"job_id": jobId})
+            if result:
+                result["_id"] = str(result["_id"])
+            return result
+        except errors.PyMongoError as e:
+            raise Exception(f"Error fetching shortlist request: {e}")
