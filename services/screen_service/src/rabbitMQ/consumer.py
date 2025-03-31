@@ -45,7 +45,8 @@ async def process_message(message: aio_pika.IncomingMessage):
             overall_score = llm_output.get("overall_score", 0)
             final_score = (overall_score ) 
             
-
+            logger.info(f"Final score calculated: {final_score}")
+            
             result = {
                 "application_id": application_id,
                 "score": round(final_score, 1),
