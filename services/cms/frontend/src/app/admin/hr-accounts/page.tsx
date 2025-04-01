@@ -65,6 +65,7 @@ export default function CreateHrAccountForm() {
       });
       setSuccessMessage(`Account for ${values.firstName} ${values.lastName} has been created successfully!`);
       form.reset();
+      router.push("/admin/user-management"); 
     } catch (error: any) {
       toast.error("Creation failed", {
         description: error || "There was an error creating the account",

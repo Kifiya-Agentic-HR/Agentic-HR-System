@@ -295,9 +295,9 @@ export async function jobPost(hr_id: string, jobData: JobCreate) {
 
 
 // ----- Candidate Shortlisting ----- 
-export async function updateShortlist(applicationId: string, updateData: { shortlisted: boolean; shortlist_note: string; }) {
+export async function updateShortlist(application_id: string, updateData: { shortlisted: boolean; shortlist_note: string; }) {
   try {
-    const res = await fetch(`${API_BASE}/applications/${applicationId}`, {
+    const res = await fetch(`${API_BASE}/applications/${application_id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json", ...getAuthHeaders() },
       body: JSON.stringify(updateData),
@@ -549,12 +549,13 @@ export const deleteUser = async (userId: string, userRole: string) => {
 export const bulkUpload = async (formData: FormData)=> {
   console.log("api called")
   console.log(formData)
+  const url = `${API_BASE}/bulk/`;
   try {
     const headers = { ...getAuthHeaders()};
     const response = await fetch(`${API_BASE}/bulk/`, {
       method: "POST",
       body: formData,
-     headers // and changing path
+      headers
     });
 
     if (!response.ok) {
@@ -581,7 +582,7 @@ interface GeminiRecommendRequest {
 
 export async function getGeminiRecommendations(request: GeminiRecommendRequest): Promise<Recommendation[]> {
   try {
-    const API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    const API_KEY = "AIzaSyCjym5MYnST-sE9UdytGoTD8CxOGRJwpUM";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
 
     const prompt = `Analyze this candidate profile and the available job positions to recommend suitable matches. Follow these rules:

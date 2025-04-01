@@ -140,9 +140,13 @@ export class ApplicationsService {
     } catch (error) {
       this.logger.error(`Error updating application ${application_id}: ${error.message}`, error.stack);
       return {
+        
         success: false,
         error: error?.response?.data?.error || 'Error updating application',
       };
     }
   }
 }
+
+
+      

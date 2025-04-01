@@ -4,12 +4,16 @@ import requests
 import tempfile
 from pdfminer.high_level import extract_text
 from docx import Document
+import fitz  # PyMuPDF
+import pytesseract
+from PIL import Image
 
 logger = logging.getLogger(__name__)
 
 def extract_text_from_file(file_path_or_url: str) -> str:
     """
     Handles both local files and URLs for text extraction
+    Supports PDF (including image-based), DOCX, DOC, and TXT files
     """
     try:
         # Check if input is a local file path
@@ -46,13 +50,61 @@ def extract_text_from_file(file_path_or_url: str) -> str:
         logger.error(f"Error extracting text from {file_path_or_url}: {str(e)}")
         raise
 
-# Local file handlers
 def extract_text_from_pdf(file_path: str) -> str:
-    """Extract text from local PDF file"""
+    """Extract text from PDF with OCR fallback"""
     try:
-        return extract_text(file_path)
+        # First try standard text extraction
+        text = extract_text(file_path)
+        
+        # Check if text extraction might have failed (image-based PDF)
+        if len(text.strip()) < 50:  # Adjust threshold as needed
+            logger.info("Low text count, attempting OCR")
+            return extract_text_from_image_pdf(file_path)
+        return text
     except Exception as e:
         logger.error(f"PDF extraction error: {str(e)}")
+        raise
+
+def extract_text_from_image_pdf(file_path: str) -> str:
+    """Extract text from image-based PDF using OCR"""
+    text = []
+    try:
+        doc = fitz.open(file_path)
+        for page_num, page in enumerate(doc):
+            # Render page as an image
+            pix = page.get_pixmap(dpi=300)  # Increase DPI for better OCR accuracy
+            img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+            
+            # Perform OCR
+            page_text = pytesseract.image_to_string(img)
+            text.append(f"--- PAGE {page_num + 1} ---\n{page_text}")
+            
+            # Clean up resources
+            del pix
+            
+        return '\n'.join(text)
+    except Exception as e:
+        logger.error(f"OCR extraction error: {str(e)}")
+        raise
+    finally:
+        if 'doc' in locals():
+            doc.close()
+
+def extract_text_from_pdf_bytes(content: bytes) -> str:
+    """Extract text from PDF bytes with OCR fallback"""
+    try:
+        with tempfile.NamedTemporaryFile(delete=True, suffix='.pdf') as tmp:
+            tmp.write(content)
+            tmp.seek(0)
+            
+            # First try standard extraction
+            text = extract_text(tmp.name)
+            if len(text.strip()) < 50:
+                logger.info("Low text count, attempting OCR for byte content")
+                return extract_text_from_image_pdf(tmp.name)
+            return text
+    except Exception as e:
+        logger.error(f"PDF bytes extraction error: {str(e)}")
         raise
 
 def extract_text_from_docx(file_path: str) -> str:
@@ -71,18 +123,6 @@ def extract_text_from_txt(file_path: str) -> str:
             return f.read()
     except Exception as e:
         logger.error(f"TXT extraction error: {str(e)}")
-        raise
-
-# Byte stream handlers
-def extract_text_from_pdf_bytes(content: bytes) -> str:
-    """Extract text from PDF bytes"""
-    try:
-        with tempfile.NamedTemporaryFile(delete=True, suffix='.pdf') as tmp:
-            tmp.write(content)
-            tmp.seek(0)
-            return extract_text(tmp.name)
-    except Exception as e:
-        logger.error(f"PDF bytes extraction error: {str(e)}")
         raise
 
 def extract_text_from_docx_bytes(content: bytes) -> str:

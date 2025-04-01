@@ -20,9 +20,10 @@ export class BulkService {
     jobInputs: { job_id?: string },
     zipfolder: Express.Multer.File,
     jobFile?: Express.Multer.File,
+    createdBy?: string,
   ) {
     this.logger.log(`Creating bulk application. jobInputs: ${JSON.stringify(jobInputs)}`);
-
+  
     try {
       const formData = new FormData();
 
@@ -36,15 +37,19 @@ export class BulkService {
           contentType: jobFile.mimetype,
         });
       }
-
+  
       formData.append('zipfolder', zipfolder.buffer, {
         filename: zipfolder.originalname,
         contentType: zipfolder.mimetype,
       });
+  
+      let url = `${this.baseUrl}/bulk/`;
 
+      if (jobFile && createdBy) {
+        formData.append('hr_id', createdBy);
+      }
+  
       const headers = formData.getHeaders();
-      // Ensure the URL ends with a trailing slash to match FastAPI's route
-      const url = `${this.baseUrl}/bulk/`;
       const response = await firstValueFrom(
         this.httpService.post(url, formData, { headers }),
       );
