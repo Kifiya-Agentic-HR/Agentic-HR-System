@@ -17,7 +17,7 @@ services:
       MONGO_INITDB_DATABASE: "hr_db"
       REDIS_URI: "redis://redis:6379"
       NOTIFICATION_SERVICE_URL: "http://notification:${NOTIFICATION_PORT}/api/v1/"
-      FRONTEND_BASE_URL: "http://localhost:${CMS_FRONTEND_PORT}"
+      FRONTEND_BASE_URL: "http://${HOST}:${CMS_FRONTEND_PORT}"
       INTERVIEW_BACKEND_URL: "http://interview_backend:8080/api/v1"
       JWT_SECRET: "${JWT_SECRET}"
       ADMIN_EMAIL: "${ADMIN_EMAIL}"
@@ -34,7 +34,7 @@ services:
       - cms_backend
     env_file: .env
     environment:
-      # NEXT_PUBLIC_API_BASE_URL: "http://localhost:${CMS_BACKEND_PORT}"
+      # NEXT_PUBLIC_API_BASE_URL: "http://${HOST}:${CMS_BACKEND_PORT}"
       NEXT_PUBLIC_GEMINI_API_KEY: "${GEMINI_API_KEY}"
 
     networks:
@@ -46,8 +46,6 @@ services:
   interview_backend:
     build: ./services/interview_ai/backend
     container_name: InterviewBackend
-    ports:
-      - "${INTERVIEW_BACKEND_PORT}:8080"
     depends_on:
       - mongo
       - redis
@@ -61,9 +59,9 @@ services:
       OPENAI_API_KEY: "${OPENAI_API_KEY}"
       MODEL: "${MODEL}"
       NOTIFICATION_SERVICE_URL: "http://notification:${NOTIFICATION_PORT}/api/v1/"
-      FRONTEND_BASE_URL: "http://localhost:${INTERVIEW_FRONTEND_PORT}"
+      FRONTEND_BASE_URL: "http://${HOST}:${INTERVIEW_FRONTEND_PORT}"
       WEAVIATE_HOST: "weaviate"
-      WEAVIATE_PORT: 8080
+      WEAVIATE_PORT: 8081
 
     networks:
       - app_network
@@ -79,8 +77,8 @@ services:
       - interview_backend
     env_file: .env
     environment:
-      NEXT_PUBLIC_API_BASE_URL: "http://localhost:8080/api/v1"
-      INTERVIEW_BACKEND: "http://localhost:${INTERVIEW_BACKEND_PORT}"
+      NEXT_PUBLIC_API_BASE_URL: "http://${HOST}:${CMS_BACKEND_PORT}/api/v1"
+      NEXT_PUBLIC_INTERVIEW_BACKEND: "http://${HOST}:${CMS_BACKEND_PORT}"
     networks:
       - app_network
 
@@ -88,8 +86,6 @@ services:
   job_service_backend:
     build: ./services/job_service/backend
     container_name: job_service_backend
-    ports:
-      - "${JOB_APPLICATION_PORT}:9000"
     env_file: .env
     environment:
       RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
@@ -124,7 +120,7 @@ services:
       - "${JOB_PORTAL_PORT}:3000"
     env_file: .env
     environment:
-      BASE_API_URL: "http://localhost:${JOB_APPLICATION_PORT}"
+      BASE_API_URL: "http://${HOST}:${JOB_APPLICATION_PORT}"
     networks:
       - app_network
     restart: unless-stopped
@@ -159,8 +155,6 @@ services:
     command: mongod --quiet --logpath /dev/null
     container_name: Mongo
     restart: always
-    ports:
-      - "27027:27017"
     volumes:
       - ./data/mongo:/data/db
     environment:
@@ -260,9 +254,9 @@ services:
   #     - technical_assessment_backend
   #   env_file: .env
   #   environment:
-  #     NEXT_PUBLIC_API_BASE_URL: "http://localhost:${TECHNICAL_ASSESSEMENT_FRONTENDPORT}"
+  #     NEXT_PUBLIC_API_BASE_URL: "http://${HOST}:${TECHNICAL_ASSESSEMENT_FRONTENDPORT}"
   #     NEXT_PUBLIC_GEMINI_API_KEY: "${GEMINI_API_KEY}"
-  #     TECHNICAL_ASSESSEMENT_BACKEND: "http://localhost:${TECHNICAL_ASSESSEMENT_BACKENDPORT}"
+  #     TECHNICAL_ASSESSEMENT_BACKEND: "http://${HOST}:${TECHNICAL_ASSESSEMENT_BACKENDPORT}"
 
   #   networks:
   #     - app_network
@@ -299,7 +293,7 @@ services:
     command: server /data --console-address ":9001"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: ["CMD", "curl", "-f", "http://${HOST}:9000/minio/health/live"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -346,15 +340,12 @@ services:
       DEFAULT_VECTORIZER_MODULE: 'text2vec-huggingface'
       ENABLE_MODULES: 'text2vec-huggingface'
       HUGGINGFACE_API_KEY: '${HUGGINGFACE_API_KEY}'
-    ports:
-      - 8082:8080
-      - 50051:50051
     volumes:
       - weaviate_data:/var/lib/weaviate
     networks:
       - app_network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/v1/.well-known/ready"]
+      test: ["CMD", "curl", "-f", "http://weaviate:8080/v1/.well-known/ready"]
       interval: 30s
       timeout: 10s
       retries: 3
