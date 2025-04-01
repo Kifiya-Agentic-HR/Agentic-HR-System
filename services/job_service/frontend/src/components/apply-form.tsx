@@ -1,3 +1,4 @@
+// ApplyForm.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -12,6 +13,7 @@ import confetti from 'canvas-confetti';
 import ProgressBar from '@/components/ui/progress-bar';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
+import { submitApplication, ApplicationFormData } from '@/actions/get-api';
 
 const PRIMARY_COLOR = '#364957';
 const SECONDARY_COLOR = '#FF8A00';
@@ -22,14 +24,14 @@ interface ApplyFormProps {
 }
 
 export default function ApplyForm({ jobId }: ApplyFormProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ApplicationFormData>({
     full_name: '',
     email: '',
     phone_number: '',
     gender: '',
     disability: '',
     experience_years: '',
-    resume: null as File | null,
+    resume: null,
   });
 
   const [loading, setLoading] = useState(false);
@@ -104,31 +106,12 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
         });
       }, 200);
 
-      const formPayload = new FormData();
-      formPayload.append('full_name', formData.full_name);
-      formPayload.append('email', formData.email);
-      formPayload.append('phone_number', formData.phone_number);
-      formPayload.append('gender', formData.gender);
-      formPayload.append('disability', formData.disability);
-      formPayload.append('experience_years', formData.experience_years);
-      formPayload.append('job_id', jobId);
-      if (formData.resume) {
-        formPayload.append('cv', formData.resume, formData.resume.name);
-      }
-
-      const response = await fetch(`http://localhost:9000/applications`, {
-        method: 'POST',
-        body: formPayload,
-      });
+      await submitApplication(formData, jobId);
 
       clearInterval(progressInterval);
       setUploadProgress(100);
-
-      const data = await response.json();
-
-      if (!response.ok) throw new Error(data.error || 'Application failed');
-
       setIsSubmitted(true);
+      
       confetti({
         particleCount: 150,
         spread: 100,
@@ -138,7 +121,6 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
       });
 
     } catch (err) {
-
       setError(err instanceof Error ? err.message : 'Application failed');
     } finally {
       setLoading(false);

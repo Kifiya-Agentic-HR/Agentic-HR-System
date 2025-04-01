@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { formatDate } from "@/lib/utils";
-import { getJobs, Job } from "@/actions/get-jobs";
+import { getJobs, Job } from "@/actions/get-api";
 import { ArrowUpRight } from "lucide-react";
 import { useCustomSearchParams } from "@/components/search-params-provider";
 

@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Param, Body, UseGuards, Patch, Put} from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, UseGuards, Patch, Put, UseInterceptors, UploadedFile} from '@nestjs/common';
 import { ApplicationsService } from './applications.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { Public, Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/schemas/user.schema';
+import { FileInterceptor } from '@nestjs/platform-express';
+
 
 @Controller('applications')
 @UseGuards(AuthGuard, RolesGuard)
@@ -22,9 +24,14 @@ export class ApplicationsController {
     return this.appsService.findOne(id);
   }
 
-  @Post()
-  async create(@Body() appData: any) {
-    return this.appsService.create(appData);
+  @Post('')
+  @Public()
+  @UseInterceptors(FileInterceptor('cv'))
+  async create(
+    @UploadedFile() cv: Express.Multer.File,
+    @Body() appData: any
+  ) {
+    return this.appsService.create(appData, cv);
   }
   
   @Patch(':id/reject')
