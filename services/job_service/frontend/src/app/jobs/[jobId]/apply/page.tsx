@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Briefcase, Clock, MapPin, Lock, BookOpenText, BrainCircuit, Users, CheckCircle } from 'lucide-react';
 import ApplyForm from '@/components/apply-form';
-import { getJob,  Job } from '@/actions/get-jobs';
+import { getJob,  Job } from '@/actions/get-api';
 import { motion, AnimatePresence } from 'framer-motion';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';

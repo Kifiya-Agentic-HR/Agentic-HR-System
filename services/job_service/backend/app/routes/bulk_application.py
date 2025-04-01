@@ -67,13 +67,6 @@ async def create_bulk_application(
                     "error":"job source must be provided"
                 }
 
-
-
-
-
-
-    
-    
     if not job:
         raise HTTPException(status_code=404, detail="Job not found.")
     

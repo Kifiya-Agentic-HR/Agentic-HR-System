@@ -1,6 +1,7 @@
 import { Injectable, Logger} from '@nestjs/common';
 import { HttpService} from '@nestjs/axios';
 import { firstValueFrom} from 'rxjs';
+import * as FormData from 'form-data';
 
 @Injectable()
 export class ApplicationsService {
@@ -39,17 +40,41 @@ export class ApplicationsService {
     }
   }
 
-  async create(appData: any) {
-    this.logger.log(`Creating new application with data: ${JSON.stringify(appData)}`);
+  async create(appData: any, cvFile: Express.Multer.File) {
+    const form = new FormData();
+    
+    form.append('cv', cvFile.buffer, {
+      filename: cvFile.originalname,
+      contentType: cvFile.mimetype
+    });
+  
+    Object.entries(appData).forEach(([key, value]) => {
+      form.append(key, value.toString());
+    });
+  
     try {
       const response = await firstValueFrom(
-        this.httpService.post(`${this.baseUrl}/applications`, appData),
+        this.httpService.post(`${this.baseUrl}/applications`, form, {
+          headers: {
+            ...form.getHeaders(),
+            'Accept': 'application/json'
+          }
+        })
       );
-      // this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
+  
       return response.data;
     } catch (error) {
-      this.logger.error(`Error creating application: ${error.message}`, error.stack);
-      return { success: false, error: 'Error creating application' };
+      const errorData = error.response?.data || {
+        error: 'Application failed',
+        details: 'No response from server'
+      };
+      
+      this.logger.error(`Application Error: ${JSON.stringify(errorData)}`);
+      
+      return {
+        success: false,
+        ...errorData
+      };
     }
   }
 

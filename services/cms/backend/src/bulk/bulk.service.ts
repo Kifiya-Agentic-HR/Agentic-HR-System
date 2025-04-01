@@ -1,8 +1,11 @@
-import { Injectable, Logger} from '@nestjs/common';
-import { HttpService} from '@nestjs/axios';
-import { firstValueFrom} from 'rxjs';
-import FormData from 'form-data';
-import { File as MulterFile } from 'multer';
+import { Injectable, Logger } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
+import { AxiosError } from 'axios';
+import * as FormData from 'form-data';
+import { Express } from 'express';
+
+
 
 @Injectable()
 export class BulkService {
@@ -15,8 +18,8 @@ export class BulkService {
 
   async createBulkApplication(
     jobInputs: { job_id?: string },
-    zipfolder: MulterFile,
-    jobFile?: MulterFile,
+    zipfolder: Express.Multer.File,
+    jobFile?: Express.Multer.File,
   ) {
     this.logger.log(`Creating bulk application. jobInputs: ${JSON.stringify(jobInputs)}`);
 
@@ -40,14 +43,30 @@ export class BulkService {
       });
 
       const headers = formData.getHeaders();
+      // Ensure the URL ends with a trailing slash to match FastAPI's route
+      const url = `${this.baseUrl}/bulk/`;
       const response = await firstValueFrom(
-        this.httpService.post(`${this.baseUrl}/`, formData, { headers }),
+        this.httpService.post(url, formData, { headers }),
       );
       this.logger.debug(`Bulk application response: ${JSON.stringify(response.data)}`);
       return response.data;
     } catch (error) {
-      this.logger.error(`Error creating bulk application: ${error.message}`, error.stack);
-      return { success: false, error: 'Error creating bulk application' };
+      const axiosError = error as AxiosError;
+      if (axiosError.response) {
+        // Extract error details from the backend's response
+        const errorData = axiosError.response.data as any;
+        this.logger.error(`Backend error: ${JSON.stringify(errorData)}`);
+        return { 
+          success: false, 
+          error: errorData.detail || errorData.error || 'Error creating bulk application' 
+        };
+      } else if (axiosError.request) {
+        this.logger.error(`No response received: ${axiosError.request}`);
+        return { success: false, error: 'No response from the server' };
+      } else {
+        this.logger.error(`Request error: ${axiosError.message}`);
+        return { success: false, error: axiosError.message };
+      }
     }
   }
 

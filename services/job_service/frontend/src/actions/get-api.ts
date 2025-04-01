@@ -1,3 +1,5 @@
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:5050"
+
 export type Job = {
   _id: string;
   title: string;
@@ -79,7 +81,7 @@ export async function findJobs({
 
 export async function getJobs(): Promise<Job[]> {
   try {
-    const response = await fetch("http://localhost:9000/jobs/");
+    const response = await fetch(`${API_BASE}/jobs/`);
     if (!response.ok) {
       throw new Error(`Error fetching jobs: ${response.statusText}`);
     }
@@ -96,7 +98,7 @@ export async function getJobs(): Promise<Job[]> {
 // single job fetch 
 export const getJob = async (jobId: string): Promise<Job | null> => {
   try {
-    const url = `http://localhost:9000/jobs/${jobId}`;
+    const url = `${API_BASE}/jobs/${jobId}`;
     console.log(`Sending request to: ${url}`);
 
     const response = await fetch(url);
@@ -113,4 +115,39 @@ export const getJob = async (jobId: string): Promise<Job | null> => {
     console.error("Error fetching job:", error);
     return null;
   }
+};
+
+// application-service.ts
+export interface ApplicationFormData {
+  full_name: string;
+  email: string;
+  phone_number: string;
+  gender: string;
+  disability: string;
+  experience_years: string;
+  resume: File | null;
+}
+
+export const submitApplication = async (formData: ApplicationFormData, jobId: string) => {
+  const formPayload = new FormData();
+  formPayload.append('full_name', formData.full_name);
+  formPayload.append('email', formData.email);
+  formPayload.append('phone_number', formData.phone_number);
+  formPayload.append('gender', formData.gender);
+  formPayload.append('disability', formData.disability);
+  formPayload.append('experience_years', formData.experience_years);
+  formPayload.append('job_id', jobId);
+  
+  if (formData.resume) {
+    formPayload.append('cv', formData.resume, formData.resume.name);
+  }
+
+  const response = await fetch(`${API_BASE}/applications`, {
+    method: 'POST',
+    body: formPayload,
+  });
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Application failed');
+  return data;
 };

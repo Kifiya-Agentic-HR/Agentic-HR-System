@@ -13,9 +13,9 @@ export class JobsService {
 
   async findAll() {
     try {
-      this.logger.debug(`Calling GET ${this.baseUrl}/jobs`); 
+      this.logger.debug(`Calling GET ${this.baseUrl}/jobs/`); 
       const response = await firstValueFrom(
-        this.httpService.get(`${this.baseUrl}/jobs`),
+        this.httpService.get(`${this.baseUrl}/jobs/`),
       );
       // this.logger.debug(`Got response: ${JSON.stringify(response.data)}`);
       return response.data;

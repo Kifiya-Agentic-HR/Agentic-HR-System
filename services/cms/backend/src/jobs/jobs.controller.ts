@@ -3,7 +3,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Http
 import { JobsService } from './jobs.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { Public, Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/schemas/user.schema';
 
 @Controller('jobs')
@@ -15,12 +15,16 @@ export class JobsController {
     return req?.user?.sub || null;
   }
 
-  @Get()
+ 
+  @Get("")
+  @Public()
   async findAll() {
     return this.jobsService.findAll();
   }
 
+ 
   @Get(':id')
+  @Public()
   async findOne(@Param('id') id: string) {
     return this.jobsService.findOne(id);
   }

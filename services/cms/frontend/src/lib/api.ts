@@ -550,11 +550,11 @@ export const bulkUpload = async (formData: FormData)=> {
   console.log("api called")
   console.log(formData)
   try {
-    const API_BASE = "http://localhost:9000";
-    const response = await fetch(`${API_BASE}/bulk`, {
+    const headers = { ...getAuthHeaders()};
+    const response = await fetch(`${API_BASE}/bulk/`, {
       method: "POST",
       body: formData,
-      // headers:{ ...getAuthHeaders()  } and changing path
+     headers // and changing path
     });
 
     if (!response.ok) {
