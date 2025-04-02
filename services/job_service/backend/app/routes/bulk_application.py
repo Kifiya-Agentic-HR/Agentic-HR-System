@@ -31,7 +31,8 @@ async def create_bulk_application(
     
     response: Response,
     job_inputs: dict = Depends(validate_job_input),
-    zipfolder: UploadFile = File(...)
+    zipfolder: UploadFile = File(...),
+    hr_id: str = Form(...),
 ):
     job_id = job_inputs.get("job_id")
     job_file = job_inputs.get("job_file")
@@ -54,7 +55,7 @@ async def create_bulk_application(
             file_path = await upload_file(job_file)
             extracted_job_requirement = extract_job_requirement(file_path)
             logger.info(extract_job_requirement)
-            job = JobDocument.create_job(extracted_job_requirement)
+            job = JobDocument.create_job(extracted_job_requirement, hr_id)
             job_id = str(job["_id"])
             job = JobDocument.get_job_by_id(job_id)
         except Exception as e:

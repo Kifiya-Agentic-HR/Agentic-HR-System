@@ -17,6 +17,11 @@ aiofiles
 pymongo
 python-multipart
 python-dotenv
+PyMuPDF 
+pillow 
+pdfminer.six 
+python-docx 
+requests
 # AI and Processing
 google-generativeai
 PyPDF2

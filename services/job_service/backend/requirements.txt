@@ -15,6 +15,12 @@ flask-sqlalchemy
 pdfminer.six==20221105
 python-docx==0.8.11
 aio_pika
+PyMuPDF 
+pillow 
+pdfminer.six 
+python-docx 
+requests
+
 
 tenacity
 aiofiles

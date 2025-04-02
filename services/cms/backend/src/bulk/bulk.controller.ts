@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UploadedFile, UseInterceptors, UseGuards, UploadedFiles, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Req, Post, Body, Param, UploadedFile, UseInterceptors, UseGuards, UploadedFiles, BadRequestException } from '@nestjs/common';
 import { BulkService } from './bulk.service';
 import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
@@ -12,7 +12,11 @@ import { UserRole } from 'src/users/schemas/user.schema';
 export class BulkController {
   constructor(private readonly bulkService: BulkService) {}
 
-  @Post("/")
+  private extractUserId(req: any): string | null {
+    return req?.user?.sub || null;
+  }
+  
+  @Post()
   @Roles(UserRole.HR)
   @UseInterceptors(
     FileFieldsInterceptor([
@@ -23,15 +27,18 @@ export class BulkController {
   async createBulkApplication(
     @UploadedFiles() files: { zipfolder?: Express.Multer.File[]; job_file?: Express.Multer.File[] },
     @Body() jobInputs: { job_id?: string },
+    @Req() req: any
   ) {
-    const zipfolder = files.zipfolder?.[0];
-    const jobFile = files.job_file?.[0];
-
+    const hr_id = this.extractUserId(req);
+    const zipfolder = files?.zipfolder?.[0];
+    const jobFile = files?.job_file?.[0];
+  
+    console.log("HR ID: ", hr_id);
     // Validate required files
     if (!zipfolder) {
       throw new BadRequestException('Zip folder is required');
     }
-
+  
     // Validate job input source
     if (!jobInputs.job_id && !jobFile) {
       throw new BadRequestException(
@@ -39,7 +46,14 @@ export class BulkController {
       );
     }
 
-    return this.bulkService.createBulkApplication(jobInputs, zipfolder, jobFile);
+    console.log("Job Inputs: ", jobInputs);
+  
+    return this.bulkService.createBulkApplication(
+      jobInputs,
+      zipfolder,
+      jobFile,
+      hr_id // Pass the extracted hr_id to the service
+    );
   }
 
 

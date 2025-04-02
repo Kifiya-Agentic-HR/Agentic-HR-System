@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { getJobs, updateJob } from "@/lib/api";
 import { Job } from "./types";
 import { useRouter } from "next/navigation";
-import { Dialog } from "@headlessui/react";
+import {Chatbot} from "@/components/Chatbot";
+import { Dialog  } from "@headlessui/react";
 
 export const JobList = () => {
   const router = useRouter();
@@ -221,6 +222,7 @@ export const JobList = () => {
           </table>
         </div>
       </div>
+      <Chatbot jobs={jobs} />
     </div>
   );
 };
