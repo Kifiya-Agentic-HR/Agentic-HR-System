@@ -257,6 +257,8 @@ async def create_application(
             "job_skills": str(job["skills"]),
             "application_id": new_application,
             "resume_path": file_path,
+            "from": "web",
+            "job_id": job_id,
         })
         
         return {"success": True, "application": new_application}

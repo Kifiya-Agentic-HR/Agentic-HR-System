@@ -1,5 +1,6 @@
 from src.database import database
 from datetime import datetime
+from src.utils.schemas import RecommendationCreate
 from bson import ObjectId
 from pymongo import errors, ReturnDocument
 class BaseDocument:
@@ -78,3 +79,26 @@ class JobDocument(BaseDocument):
             return updated_job
         except errors.PyMongoError as e:
             raise Exception(f"Error updating job: {e}")
+class RecommendationDocument(BaseDocument):
+    collection_name = "recommendations"
+
+    @classmethod
+    def create_recommendation(cls, recomendation_data: RecommendationCreate):
+        
+        recomendation_data["created_at"] = datetime.utcnow()
+            
+        try:
+            result = cls.get_collection().insert_one(recomendation_data)
+            return cls.get_collection().find_one({"_id": ObjectId(result.inserted_id)})
+        except errors.PyMongoError as e:
+            raise Exception(f"Error inserting recommendation: {e}")
+
+    @classmethod
+    def get_recommendations_by_job_id(cls, job_id):
+        try:
+            recommendations = cls.get_collection().find({"job_id": job_id})
+            if recommendations:
+                recommendations["_id"] = str(recommendations["_id"])
+            return recommendations
+        except errors.PyMongoError as e:
+            raise Exception(f"Error fetching recommendations by job_id: {e}")
