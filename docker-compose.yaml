@@ -125,7 +125,7 @@ services:
     build:
       context: ./services/job_service/frontend
       args:
-        NEXT_PUBLIC_BASE_API_URL: "http://${HOST}:${JOB_APPLICATION_PORT}"
+        NEXT_PUBLIC_BASE_API_URL: "http://${HOST}:${CMS_BACKEND_PORT}"
     container_name: job_service_frontend
     ports:
       - "${JOB_PORTAL_PORT}:3000"
