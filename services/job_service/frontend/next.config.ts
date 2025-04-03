@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   serverRuntimeConfig: {
     // Will only be available on the server side
     mySecret: 'secret',
-    BASE_API_URL: process.env.BASE_API_URL, // Pass through env variables
+    BASE_API_URL: process.env.NEXT_PUBLIC_BASE_API_URL, // Pass through env variables
   },
 };
 
