@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Wand2, User, X } from "lucide-react";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { FormSchemaType } from "./JobPostingForm";
+import { FormSchemaType } from "@/app/hr/job-post/page";
 
 type ChatMessage = {
   role: "user" | "assistant" | "error";
@@ -76,7 +76,7 @@ export const Chatbot = ({
     setIsLoadingResponse(true);
 
     try {
-      const apiKey = "AIzaSyBOZfZH8sLc61pMRJlFB4Yt40eKqhucPCA";
+      const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
       if (!apiKey) throw new Error("Gemini API key not configured");
 
       const genAI = new GoogleGenerativeAI(apiKey);
