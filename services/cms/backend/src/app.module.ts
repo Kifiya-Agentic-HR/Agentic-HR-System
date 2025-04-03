@@ -9,8 +9,8 @@ import { InterviewsModule } from './interviews/interviews.module';
 import { ApplicationsModule } from './applications/applications.module';
 import { ShortListModule } from './short_list/short_list.module';
 import { BulkModule } from './bulk/bulk.module';
-import * as cacheManager from 'cache-manager';
 import { redisStore } from 'cache-manager-redis-yet';
+import * as cacheManager from 'cache-manager'; 
 
 @Module({
   imports: [

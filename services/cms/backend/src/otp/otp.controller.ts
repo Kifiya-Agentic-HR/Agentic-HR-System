@@ -22,6 +22,24 @@ export class OtpController {
     }
   }
 
+  // New endpoint to resend OTP
+  @Post('resend')
+  async resendOtp(@Body('email') email: string) {
+    if (!email || !this.isValidEmail(email)) {
+      throw new HttpException('Invalid email address', HttpStatus.BAD_REQUEST);
+    }
+
+    try {
+      await this.otpService.resendOtp(email);
+      return { message: 'OTP resent successfully' };
+    } catch (error) {
+      throw new HttpException(
+        'Failed to resend OTP',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   @Post('verify')
   async verifyOtp(@Body() body: { email: string; otp: string }) {
     const { email, otp } = body;

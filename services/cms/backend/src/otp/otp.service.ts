@@ -8,6 +8,7 @@ import { firstValueFrom } from 'rxjs';
 @Injectable()
 export class OtpService {
   private readonly notificationUrl: string;
+  private readonly otpExpirySeconds = 300; // 5 minutes
 
   constructor(
     private readonly httpService: HttpService,
@@ -25,33 +26,67 @@ export class OtpService {
 
   async sendOtp(email: string): Promise<void> {
     const otp = this.generateOtp();
-    const expiresInSeconds = 300; // 5 minutes
 
     try {
-      // Store the OTP in Redis with an expiration time
       await this.redis.set(
         `otp:${email}`,
         JSON.stringify({ otp }),
         'EX',
-        expiresInSeconds,
+        this.otpExpirySeconds,
       );
 
-      // Prepare the payload for the notification service
       const payload = {
         type: 'otp_verification',
         subject: 'Your OTP Code',
         to: email,
         otp: otp,
-        expires_in_minutes: 5,
+        expires_in_minutes: this.otpExpirySeconds / 60,
       };
 
-      // Use firstValueFrom to convert the observable to a promise
       await firstValueFrom(
         this.httpService.post(`${this.notificationUrl}/notify/email`, payload),
       );
     } catch (error) {
       throw new HttpException(
         'Failed to send OTP via notification service',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  // Resend OTP: If an OTP exists and is still valid, reuse it; otherwise, generate a new one.
+  async resendOtp(email: string): Promise<void> {
+    const key = `otp:${email}`;
+    let otpData = await this.redis.get(key);
+    let otp: string;
+
+    if (otpData) {
+      otp = JSON.parse(otpData).otp;
+    } else {
+      otp = this.generateOtp();
+      await this.redis.set(
+        key,
+        JSON.stringify({ otp }),
+        'EX',
+        this.otpExpirySeconds,
+      );
+    }
+
+    const payload = {
+      type: 'otp_resend',
+      subject: 'Your OTP Code (Resent)',
+      to: email,
+      otp: otp,
+      expires_in_minutes: this.otpExpirySeconds / 60,
+    };
+
+    try {
+      await firstValueFrom(
+        this.httpService.post(`${this.notificationUrl}/notify/email`, payload),
+      );
+    } catch (error) {
+      throw new HttpException(
+        'Failed to resend OTP via notification service',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
