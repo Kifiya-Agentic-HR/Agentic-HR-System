@@ -22,7 +22,8 @@ interface ApplyFormProps {
   jobId: string;
 }
 
-const VerifyEmailButton = ({ 
+// New component: VerifyEmailText replaces the button with clickable text
+const VerifyEmailText = ({ 
   email,
   onVerified,
   isVerified
@@ -35,9 +36,11 @@ const VerifyEmailButton = ({
   const [otpValue, setOtpValue] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
   const isValidEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
 
   const handleVerifyClick = async () => {
+    if (!isValidEmail(email) || loading || isVerified) return;
     setLoading(true);
     try {
       // Simulate API call to send OTP
@@ -69,29 +72,20 @@ const VerifyEmailButton = ({
   };
 
   return (
-    <div className="space-y-2">
-      <Button
-        type="button"
-        className="w-full h-10"
-        variant={isVerified ? 'outline' : 'default'}
-        style={{
-          backgroundColor: isVerified ? 'transparent' : SECONDARY_COLOR,
-          borderColor: isVerified ? SECONDARY_COLOR : 'transparent',
-        }}
-        onClick={!isVerified ? handleVerifyClick : undefined}
-        disabled={!isValidEmail(email) || loading || isVerified}
+    <div className="relative mt-2">
+      <span 
+        onClick={handleVerifyClick} 
+        className={`cursor-pointer text-sm font-medium ${isValidEmail(email) ? 'text-[#FF8A00]' : 'text-gray-400'}`}
       >
-        {loading ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : isVerified ? (
-          <div className="flex items-center gap-2 text-[#FF8A00]">
+        {isVerified ? (
+          <span className="flex items-center gap-1">
             <CheckCircle className="w-4 h-4" />
             Email Verified
-          </div>
+          </span>
         ) : (
-          'Verify Email Address'
+          'Verify Email'
         )}
-      </Button>
+      </span>
 
       <AnimatePresence>
         {showOtpPopup && (
@@ -299,27 +293,30 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                       <Mail className="w-4 h-4 text-[#364957]" />
                       Email Address
                     </Label>
-                    <Input
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) => {
-                        setFormData({ ...formData, email: e.target.value });
-                        setTouchedFields({ ...touchedFields, email: true });
-                      }}
-                      className={`focus:ring-2 focus:ring-[#FF8A00]/50 border-[#364957]/30 ${
-                        touchedFields.email && !isValidEmail(formData.email) ? 'border-red-500' : ''
-                      }`}
-                    />
+                    <div className="flex items-center">
+                      <Input
+                        type="email"
+                        required
+                        value={formData.email}
+                        onChange={(e) => {
+                          setFormData({ ...formData, email: e.target.value });
+                          setTouchedFields({ ...touchedFields, email: true });
+                        }}
+                        className={`focus:ring-2 focus:ring-[#FF8A00]/50 border-[#364957]/30 ${
+                          touchedFields.email && !isValidEmail(formData.email) ? 'border-red-500' : ''
+                        }`}
+                      />
+                      {isValidEmail(formData.email) && (
+                        <VerifyEmailText
+                          email={formData.email}
+                          onVerified={() => setIsEmailVerified(true)}
+                          isVerified={isEmailVerified}
+                        />
+                      )}
+                    </div>
                     {touchedFields.email && !isValidEmail(formData.email) && (
                       <p className="text-xs text-red-500 mt-1">Please enter a valid email address</p>
                     )}
-                    
-                    <VerifyEmailButton
-                      email={formData.email}
-                      onVerified={() => setIsEmailVerified(true)}
-                      isVerified={isEmailVerified}
-                    />
                   </div>
 
                   <div>
@@ -435,9 +432,7 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                   <input {...getInputProps()} required />
                   <div className="flex flex-col items-center gap-3">
                     <UploadCloud className={`w-8 h-8 ${isDragActive ? 'text-[#FF8A00]' : 'text-[#364957]/50'}`} />
-                    <p className={`text-sm ${
-                      isDragActive ? 'text-[#FF8A00]' : 'text-[#364957]/70'
-                    }`}>
+                    <p className={`text-sm ${isDragActive ? 'text-[#FF8A00]' : 'text-[#364957]/70'}`}>
                       {formData.resume ? (
                         <span className="font-medium text-[#364957]">
                           {formData.resume.name}
