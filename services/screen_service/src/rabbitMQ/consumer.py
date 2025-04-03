@@ -8,6 +8,8 @@ from concurrent.futures import ThreadPoolExecutor
 import aio_pika
 from config_local import Config
 from src.models import ScreeningResultDocument
+from src.models import RecommendationDocument
+
 import sys
 m = time.time() - start
 print(f"Time taken to import: {m}")
@@ -28,12 +30,13 @@ async def process_message(message: aio_pika.IncomingMessage):
         try:
             logger.info("Processing message...")
             data = json.loads(message.body.decode())
-
             # Extract job details and resume_path
             job_description = data.get("job_description")
-            job_skills = data.get("job_skills")            
+            job_skills = data.get("job_skills")    
+            job_id = data.get("job_id")
             application_id = data.get("application_id")
             resume_path = data.get("resume_path")
+            source = data.get('from')
 
             # Offload the blocking scoreResume call to the thread pool
             loop = asyncio.get_running_loop()
@@ -46,19 +49,31 @@ async def process_message(message: aio_pika.IncomingMessage):
             final_score = (overall_score ) 
             
 
-            result = {
-                "application_id": application_id,
-                "score": round(final_score, 1),
-                "reasoning": llm_output.get("score_breakdown", {}),
-                "parsed_cv": parsed_resume,
-            }
+            if source == "recommendation":
+                result = {
+                    "job_id":job_id,
+                    "score" : round(final_score, 1),
+                    "application_id": application_id,
+                }
+                await loop.run_in_executor(
+                executor, RecommendationDocument.create_recommendation, result
 
-            # Save result to MongoDB asynchronously using the executor
-            await loop.run_in_executor(
-                executor, ScreeningResultDocument.create_result, result
             )
+                logger.info(f"Consumer: Successfully processed application from recommendation with application_id {application_id}")
+            else:
+                result = {
+                    "application_id": application_id,
+                    "score": round(final_score, 1),
+                    "reasoning": llm_output.get("score_breakdown", {}),
+                    "parsed_cv": parsed_resume,
+                }
 
-            logger.info(f"Consumer: Successfully processed application {application_id}")
+                # Save result to MongoDB asynchronously using the executor
+                await loop.run_in_executor(
+                    executor, ScreeningResultDocument.create_result, result
+                )
+
+                logger.info(f"Consumer: Successfully processed application from web with application_id {application_id}")
 
         except json.JSONDecodeError:
             logger.error("Failed to decode JSON from message body.")
