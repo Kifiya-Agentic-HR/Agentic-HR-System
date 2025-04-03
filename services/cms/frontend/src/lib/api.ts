@@ -1,6 +1,5 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8082"; 
-const INTERVIEW_BASE = process.env.NEXT_PUBLIC_INTERVIEW_BASE || "http://localhost:8082";
-
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE 
+const INTERVIEW_BASE = process.env.NEXT_PUBLIC_API_BASE 
 interface JobCreate {
   title: string;
   description: {

@@ -32,7 +32,7 @@ async def create_bulk_application(
     response: Response,
     job_inputs: dict = Depends(validate_job_input),
     zipfolder: UploadFile = File(...),
-    hr_id: str = Form(...),
+    hr_id: str = Form(None),
 ):
     job_id = job_inputs.get("job_id")
     job_file = job_inputs.get("job_file")

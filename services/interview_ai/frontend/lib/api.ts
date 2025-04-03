@@ -1,4 +1,4 @@
-const BASE_URL = process.env.NEXT_PUBLIC_INTERVIEW_BACKEND || 'http://localhost:8082';
+const BASE_URL = process.env.NEXT_PUBLIC_INTERVIEW_BACKEND 
 
 export interface ChatMessage {
     text: string;
