@@ -23,19 +23,19 @@ import {
 } from "react-icons/fi";
 import { toast } from "sonner";
 
+interface ShortlistPopupProps {
+  application: Application;
+  onClose: () => void;
+  refreshApplications: () => Promise<void>;
+}
+
 function ShortlistPopup({
   application,
   onClose,
   refreshApplications,
-}: {
-  application: Application;
-  onClose: () => void;
-  refreshApplications: () => Promise<void>;
-}) {
-  const [note, setNote] = useState(application.shortlist_note || "");
-  const [isShortlisted, setIsShortlisted] = useState(
-    application.shortlisted ?? false
-  );
+}: ShortlistPopupProps) {
+  const [note, setNote] = useState('');
+  const [isShortlisted, setIsShortlisted] = useState(application.shortlisted ?? false);
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async () => {
@@ -85,25 +85,43 @@ function ShortlistPopup({
               onClick={() => setIsShortlisted(false)}
               className={`flex-1 py-2 rounded-xl ${
                 !isShortlisted
-                  ? "bg-[#F44336] text-white"
+                  ? "bg-[#FF6A00] text-white"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
-              No
+              Pending
             </button>
           </div>
         </div>
 
+        {application.shortlist_comments && application.shortlist_comments.length > 0 && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Previous Notes
+            </label>
+            <div className="max-h-40 overflow-y-auto bg-gray-50 p-3 rounded-lg border border-gray-200">
+              {application.shortlist_comments.map((comment, index) => (
+                <div key={index} className="mb-2">
+                  <p className="text-gray-800">{comment.comment}</p>
+                  <p className="text-xs text-gray-500">
+                    {comment.user} on {new Date(comment.timestamp).toLocaleString()}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Note
+            New Note
           </label>
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF6A00] focus:border-transparent"
             rows={4}
-            placeholder="Add shortlist notes..."
+            placeholder="Add shortlist note..."
           />
         </div>
 

@@ -381,7 +381,8 @@ async def update_shortlist(application_id: str, update: ShortlistUpdate):
     try:
         # Update the application record with shortlist status and note
         update_data = update.dict()
-        updated_app = ApplicationDocument.update_shortlist(application_id, update_data)
+        current_user = update_data.get("user", "User")
+        updated_app = ApplicationDocument.update_shortlist(application_id, update_data, current_user)
         if not updated_app:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
