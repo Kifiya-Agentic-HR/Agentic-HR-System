@@ -1,10 +1,9 @@
-// src/otp/otp.service.ts
-import { Injectable } from '@nestjs/common';
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { InjectRedis } from '@nestjs-modules/ioredis';
-import { Redis } from 'ioredis'; // Import Redis from ioredis
+import { Redis } from 'ioredis';
 import { ConfigService } from '@nestjs/config';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class OtpService {
@@ -15,7 +14,9 @@ export class OtpService {
     @InjectRedis() private readonly redis: Redis,
     private readonly configService: ConfigService,
   ) {
-    this.notificationUrl = this.configService.get('NOTIFICATION_SERVICE_URL') || 'http://notification-service';
+    this.notificationUrl =
+      this.configService.get<string>('NOTIFICATION_SERVICE_URL') ||
+      'http://notification-service';
   }
 
   generateOtp(): string {
@@ -27,6 +28,7 @@ export class OtpService {
     const expiresInSeconds = 300; // 5 minutes
 
     try {
+      // Store the OTP in Redis with an expiration time
       await this.redis.set(
         `otp:${email}`,
         JSON.stringify({ otp }),
@@ -34,13 +36,19 @@ export class OtpService {
         expiresInSeconds,
       );
 
-      await this.httpService.post(`${this.notificationUrl}/notify/email`, {
+      // Prepare the payload for the notification service
+      const payload = {
         type: 'otp_verification',
         subject: 'Your OTP Code',
         to: email,
         otp: otp,
         expires_in_minutes: 5,
-      }).toPromise();
+      };
+
+      // Use firstValueFrom to convert the observable to a promise
+      await firstValueFrom(
+        this.httpService.post(`${this.notificationUrl}/notify/email`, payload),
+      );
     } catch (error) {
       throw new HttpException(
         'Failed to send OTP via notification service',

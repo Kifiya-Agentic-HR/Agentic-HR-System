@@ -2,9 +2,8 @@ import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { OtpService } from './otp.service';
 import { OtpController } from './otp.controller';
-import { RedisModule } from '@nestjs-modules/ioredis'; // Ensure correct import
+import { RedisModule, RedisModuleOptions } from '@nestjs-modules/ioredis';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-
 
 @Module({
   imports: [
@@ -13,15 +12,25 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       maxRedirects: 5,
     }),
     RedisModule.forRootAsync({
-      imports: [ConfigModule], // Ensure ConfigModule is available
-      useFactory: (configService: ConfigService) => ({
-        // Access Redis settings from the configuration
-        host: configService.get<string>('REDIS_HOST', 'localhost'),
-        port: configService.get<number>('REDIS_PORT', 6379),
-        password: configService.get<string>('REDIS_PASSWORD'), // This can be undefined
-        db: configService.get<number>('REDIS_DB', 0) // Default database index
-      }),
-      inject: [ConfigService] // Inject ConfigService to use it in the factory function
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService): RedisModuleOptions => {
+        const host = configService.get<string>('REDIS_HOST', 'localhost');
+        const port = configService.get<number>('REDIS_PORT', 6379);
+        const password = configService.get<string>('REDIS_PASSWORD');
+        const db = configService.get<number>('REDIS_DB', 0);
+
+        // Build the Redis URL
+        let url = `redis://${host}:${port}`;
+        if (password) {
+          url = `redis://:${password}@${host}:${port}`;
+        }
+        if (db) {
+          url += `/${db}`;
+        }
+
+        return { type: 'single', url };
+      },
+      inject: [ConfigService],
     }),
   ],
   controllers: [OtpController],

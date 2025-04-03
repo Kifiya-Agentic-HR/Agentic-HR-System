@@ -1,4 +1,3 @@
-// src/otp/otp.controller.ts
 import { Controller, Post, Get, Body, HttpException, HttpStatus } from '@nestjs/common';
 import { OtpService } from './otp.service';
 
