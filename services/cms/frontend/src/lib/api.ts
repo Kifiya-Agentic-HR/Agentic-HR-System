@@ -1,5 +1,5 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE 
-const INTERVIEW_BASE = process.env.NEXT_PUBLIC_API_BASE 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL 
+const INTERVIEW_BASE = process.env.NEXT_PUBLIC_API_BASE_URL 
 interface JobCreate {
   title: string;
   description: {
