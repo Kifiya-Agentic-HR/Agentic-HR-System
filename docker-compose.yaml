@@ -114,7 +114,7 @@ services:
       rabbitmq:
         condition: service_healthy
       s3-server:
-        condition: service_healthy
+        condition: service_started
       mc:
         condition: service_started
   
@@ -319,7 +319,7 @@ services:
     container_name: mc-init
     depends_on:
       s3-server:
-        condition: service_healthy
+        condition: service_started
     entrypoint: > 
       /bin/sh -c "
         # Wait until MinIO is available
