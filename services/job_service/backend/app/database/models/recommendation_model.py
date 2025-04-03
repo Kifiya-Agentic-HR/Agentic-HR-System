@@ -36,7 +36,11 @@ class RecommendationDocument(BaseDocument):
         try:
             recommendations = cls.get_collection().find({"job_id": job_id})
             result = []
+            seen = set()
             for recommendation in recommendations:
+                if recommendation["application_id"] in seen:
+                    continue
+                seen.add(recommendation["application_id"])
                 recommendation["_id"] = str(recommendation["_id"])  # Convert _id to string
                 result.append(recommendation)
             return result

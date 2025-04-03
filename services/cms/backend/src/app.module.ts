@@ -8,6 +8,7 @@ import { InterviewsModule } from './interviews/interviews.module';
 import { ApplicationsModule } from './applications/applications.module';
 import { ShortListModule } from './short_list/short_list.module';
 import { BulkModule } from './bulk/bulk.module';
+import { RecommendationModule } from './recommendation/recommendation.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { BulkModule } from './bulk/bulk.module';
     UsersModule,
     JobsModule,
     InterviewsModule,
+    RecommendationModule,
     ApplicationsModule,
     ShortListModule,
     BulkModule,
