@@ -10,7 +10,6 @@ import { ApplicationsModule } from './applications/applications.module';
 import { ShortListModule } from './short_list/short_list.module';
 import { BulkModule } from './bulk/bulk.module';
 import { redisStore } from 'cache-manager-redis-yet';
-import * as cacheManager from 'cache-manager'; 
 
 @Module({
   imports: [
@@ -29,15 +28,24 @@ import * as cacheManager from 'cache-manager';
     {
       provide: 'CACHE_MANAGER',
       useFactory: async (): Promise<any> => {
+        // Use REDIS_HOST and REDIS_PORT from env (with defaults)
+        const host = process.env.REDIS_HOST || 'redis';
+        const port = parseInt(process.env.REDIS_PORT, 10) || 6379;
         const store = await redisStore({
-          socket: {
-            host: process.env.REDIS_HOST,
-            port: parseInt(process.env.REDIS_PORT, 10),
-          },
+          socket: { host, port },
           ttl: 30 * 1000,
         });
-        const cachingFn = (cacheManager as any).caching;
-        return cachingFn({ store });
+        // Dynamically import the cache-manager module
+        const cacheManagerModule = await import('cache-manager');
+        let createCacheFn: Function;
+        if (cacheManagerModule.default && typeof cacheManagerModule.default.createCache === 'function') {
+          createCacheFn = cacheManagerModule.default.createCache;
+        } else if (typeof cacheManagerModule.createCache === 'function') {
+          createCacheFn = cacheManagerModule.createCache;
+        } else {
+          throw new Error('Could not find createCache function in cache-manager module');
+        }
+        return createCacheFn({ store });
       },
     },
   ],
