@@ -1,8 +1,7 @@
-// ApplyForm.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CheckCircle, Loader2, UploadCloud, User, Mail, Venus, Mars, Accessibility, Briefcase, FileText, Phone } from 'lucide-react';
+import { CheckCircle, Loader2, UploadCloud, User, Mail, Venus, Mars, Accessibility, Briefcase, FileText, Phone, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,6 +22,133 @@ interface ApplyFormProps {
   jobId: string;
 }
 
+const VerifyEmailButton = ({ 
+  email,
+  onVerified,
+  isVerified
+}: {
+  email: string;
+  onVerified: () => void;
+  isVerified: boolean;
+}) => {
+  const [showOtpPopup, setShowOtpPopup] = useState(false);
+  const [otpValue, setOtpValue] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const isValidEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
+
+  const handleVerifyClick = async () => {
+    setLoading(true);
+    try {
+      // Simulate API call to send OTP
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setShowOtpPopup(true);
+    } catch (err) {
+      setError('Failed to send OTP');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOtpSubmit = async () => {
+    setLoading(true);
+    try {
+      // Simulate API verification
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (otpValue === '123456') { // Replace with actual OTP validation
+        onVerified();
+        setShowOtpPopup(false);
+      } else {
+        setError('Invalid OTP code');
+      }
+    } catch (err) {
+      setError('Verification failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <Button
+        type="button"
+        className="w-full h-10"
+        variant={isVerified ? 'outline' : 'default'}
+        style={{
+          backgroundColor: isVerified ? 'transparent' : SECONDARY_COLOR,
+          borderColor: isVerified ? SECONDARY_COLOR : 'transparent',
+        }}
+        onClick={!isVerified ? handleVerifyClick : undefined}
+        disabled={!isValidEmail(email) || loading || isVerified}
+      >
+        {loading ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : isVerified ? (
+          <div className="flex items-center gap-2 text-[#FF8A00]">
+            <CheckCircle className="w-4 h-4" />
+            Email Verified
+          </div>
+        ) : (
+          'Verify Email Address'
+        )}
+      </Button>
+
+      <AnimatePresence>
+        {showOtpPopup && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              className="bg-white rounded-xl p-6 max-w-md w-full"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Verify OTP</h3>
+                <button 
+                  onClick={() => setShowOtpPopup(false)}
+                  className="text-[#364957]/50 hover:text-[#364957]"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <p className="text-sm text-[#364957]/80 mb-4">
+                Enter the 6-digit code sent to {email}
+              </p>
+
+              <Input
+                value={otpValue}
+                onChange={(e) => setOtpValue(e.target.value)}
+                placeholder="123456"
+                className="mb-4 text-center tracking-[0.5em]"
+                maxLength={6}
+              />
+
+              {error && (
+                <p className="text-red-500 text-sm mb-4">{error}</p>
+              )}
+
+              <Button
+                onClick={handleOtpSubmit}
+                className="w-full"
+                disabled={loading || otpValue.length !== 6}
+              >
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : 'Verify Code'}
+              </Button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 export default function ApplyForm({ jobId }: ApplyFormProps) {
   const [formData, setFormData] = useState<ApplicationFormData>({
     full_name: '',
@@ -34,6 +160,7 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
     resume: null,
   });
 
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -59,6 +186,7 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
 
   const isFormValid = () => {
     return (
+      isEmailVerified &&
       formData.full_name &&
       isValidEmail(formData.email) &&
       formData.phone_number &&
@@ -83,12 +211,16 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
     }
   }, [isSubmitted]);
 
+  useEffect(() => {
+    setIsEmailVerified(false);
+  }, [formData.email]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     if (!isFormValid()) {
-      setError('Please fill out all required fields with valid values.');
+      setError('Please fill out all required fields and verify your email.');
       return;
     }
 
@@ -182,6 +314,12 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                     {touchedFields.email && !isValidEmail(formData.email) && (
                       <p className="text-xs text-red-500 mt-1">Please enter a valid email address</p>
                     )}
+                    
+                    <VerifyEmailButton
+                      email={formData.email}
+                      onVerified={() => setIsEmailVerified(true)}
+                      isVerified={isEmailVerified}
+                    />
                   </div>
 
                   <div>
@@ -193,8 +331,7 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                       international
                       defaultCountry="ET"
                       value={formData.phone_number}
-                      // @ts-ignore - react-phone-number-input types are incorrect
-                      onChange={handlePhoneChange}
+                      onChange={(value) => handlePhoneChange(value || '')}
                       className={`phone-input ${!formData.phone_number && touchedFields.phone_number ? 'invalid' : ''}`}
                       inputComponent={Input}
                       required
@@ -342,9 +479,7 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                 >
                   {loading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    'Submit Application'
-                  )}
+                  ) : 'Submit Application'}
                 </Button>
               </div>
             </form>
