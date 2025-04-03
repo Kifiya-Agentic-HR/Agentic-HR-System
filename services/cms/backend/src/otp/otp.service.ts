@@ -9,15 +9,14 @@ import { firstValueFrom } from 'rxjs';
 export class OtpService {
   private readonly notificationUrl: string;
   private readonly otpExpirySeconds = 300; // 5 minutes
-
   constructor(
     private readonly httpService: HttpService,
     @InjectRedis() private readonly redis: Redis,
     private readonly configService: ConfigService,
   ) {
-    this.notificationUrl =
-      this.configService.get<string>('NOTIFICATION_SERVICE_URL') ||
-      'http://notification-service';
+    this.notificationUrl = process.env.NOTIFICATION_SERVICE_URL
+      // this.configService.get<string>('NOTIFICATION_SERVICE_URL') ||
+      // 'http://notification-service/';
   }
 
   generateOtp(): string {
@@ -26,33 +25,42 @@ export class OtpService {
 
   async sendOtp(email: string): Promise<void> {
     const otp = this.generateOtp();
+    console.log('OTP Generated:', otp); // Log OTP generation
 
     try {
+      console.log('Attempting to set OTP in Redis'); // Log before setting OTP
       await this.redis.set(
         `otp:${email}`,
         JSON.stringify({ otp }),
         'EX',
         this.otpExpirySeconds,
       );
+      console.log('OTP set in Redis successfully'); // Log after setting OTP
 
       const payload = {
-        type: 'otp_verification',
-        subject: 'Your OTP Code',
         to: email,
         otp: otp,
-        expires_in_minutes: this.otpExpirySeconds / 60,
+        type: 'otp_verification',
+        subject: 'Your Verification Code',
+        title: 'Account Verification',
       };
+      console.log('Payload prepared:', payload); // Log the prepared payload
 
+      console.log(`Sending OTP to notification service at ${this.notificationUrl}notify/email`); // Log before sending the request
       await firstValueFrom(
-        this.httpService.post(`${this.notificationUrl}/notify/email`, payload),
+        this.httpService.post(`${this.notificationUrl}notify/email`, payload)
       );
+      console.log('OTP sent to notification service successfully'); // Log successful send
+
     } catch (error) {
+      console.error('Error in sendOtp method:', error); // Log any errors caught
       throw new HttpException(
         'Failed to send OTP via notification service',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
+
 
   // Resend OTP: If an OTP exists and is still valid, reuse it; otherwise, generate a new one.
   async resendOtp(email: string): Promise<void> {

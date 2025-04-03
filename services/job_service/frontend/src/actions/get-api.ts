@@ -151,3 +151,70 @@ export const submitApplication = async (formData: ApplicationFormData, jobId: st
   if (!response.ok) throw new Error(data.error || 'Application failed');
   return data;
 };
+
+export interface OtpResponse {
+  message: string;
+}
+
+export interface HealthCheckResponse {
+  status: string;
+  redis: string;
+}
+
+export const OtpAPI = {
+  sendOtp: async (email: string): Promise<OtpResponse> => {
+    // Here, you need to adjust the payload to include the 'otp', 'type', 'subject', and 'title'
+    const otp = Math.floor(100000 + Math.random() * 900000).toString(); // Example, you should receive this from backend ideally
+    const payload = {
+      email,
+      otp,
+      type: 'otp_verification',
+      subject: 'Your Verification Code',
+      title: 'Account Verification'
+    };
+    return handleRequest('/otp/send', 'POST', payload);
+  },
+
+  resendOtp: async (email: string): Promise<OtpResponse> => {
+    // Assuming resend keeps a similar structure
+    return handleRequest('/otp/resend', 'POST', { email });
+  },
+
+  verifyOtp: async (email: string, otp: string): Promise<OtpResponse> => {
+    return handleRequest('/otp/verify', 'POST', { email, otp });
+  },
+
+  checkHealth: async (): Promise<HealthCheckResponse> => {
+    return handleRequest('/otp/health', 'GET');
+  },
+};
+
+// Generic request handler
+async function handleRequest<T>(
+  endpoint: string,
+  method: 'GET' | 'POST',
+  body?: Record<string, any>
+): Promise<T> {
+  try {
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: method !== 'GET' ? JSON.stringify(body) : undefined,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Request failed');
+    }
+
+    return data;
+  } catch (error) {
+    console.error(`API Request Error (${endpoint}):`, error);
+    throw new Error(
+      error instanceof Error ? error.message : 'An unexpected error occurred'
+    );
+  }
+}

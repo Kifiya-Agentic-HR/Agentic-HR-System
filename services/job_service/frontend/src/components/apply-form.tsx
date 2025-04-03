@@ -12,7 +12,7 @@ import confetti from 'canvas-confetti';
 import ProgressBar from '@/components/ui/progress-bar';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
-import { submitApplication, ApplicationFormData } from '@/actions/get-api';
+import { submitApplication, ApplicationFormData, OtpAPI } from '@/actions/get-api';
 
 const PRIMARY_COLOR = '#364957';
 const SECONDARY_COLOR = '#FF8A00';
@@ -36,36 +36,59 @@ const VerifyEmailText = ({
   const [otpValue, setOtpValue] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
 
   const isValidEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
 
-  const handleVerifyClick = async () => {
-    if (!isValidEmail(email) || loading || isVerified) return;
+  // Handle countdown for resend cooldown
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setInterval(() => {
+        setResendCooldown((prev) => prev - 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [resendCooldown]);
+
+  const handleSendOtp = async () => {
+    if (!isValidEmail(email)) return;
+    setIsSendingOtp(true);
+    try {
+      await OtpAPI.sendOtp(email);
+      setShowOtpPopup(true);
+      setResendCooldown(30); // 30-second cooldown
+      setError('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send OTP');
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (resendCooldown > 0) return;
     setLoading(true);
     try {
-      // Simulate API call to send OTP
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setShowOtpPopup(true);
+      await OtpAPI.resendOtp(email);
+      setResendCooldown(30);
+      setError('');
     } catch (err) {
-      setError('Failed to send OTP');
+      setError(err instanceof Error ? err.message : 'Failed to resend OTP');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOtpSubmit = async () => {
+  const handleVerifyOtp = async () => {
+    if (otpValue.length !== 6) return;
     setLoading(true);
     try {
-      // Simulate API verification
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      if (otpValue === '123456') { // Replace with actual OTP validation
-        onVerified();
-        setShowOtpPopup(false);
-      } else {
-        setError('Invalid OTP code');
-      }
+      await OtpAPI.verifyOtp(email, otpValue);
+      onVerified();
+      setShowOtpPopup(false);
     } catch (err) {
-      setError('Verification failed');
+      setError(err instanceof Error ? err.message : 'Invalid OTP code');
     } finally {
       setLoading(false);
     }
@@ -74,14 +97,18 @@ const VerifyEmailText = ({
   return (
     <div className="relative mt-2">
       <span 
-        onClick={handleVerifyClick} 
-        className={`cursor-pointer text-sm font-medium ${isValidEmail(email) ? 'text-[#FF8A00]' : 'text-gray-400'}`}
+        onClick={handleSendOtp} 
+        className={`cursor-pointer text-sm font-medium ${
+          isValidEmail(email) && !isVerified ? 'text-[#FF8A00]' : 'text-gray-400'
+        } ${isSendingOtp ? 'opacity-70' : ''}`}
       >
         {isVerified ? (
           <span className="flex items-center gap-1">
             <CheckCircle className="w-4 h-4" />
             Email Verified
           </span>
+        ) : isSendingOtp ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
         ) : (
           'Verify Email'
         )}
@@ -116,18 +143,32 @@ const VerifyEmailText = ({
 
               <Input
                 value={otpValue}
-                onChange={(e) => setOtpValue(e.target.value)}
-                placeholder="123456"
-                className="mb-4 text-center tracking-[0.5em]"
+                onChange={(e) => {
+                  setOtpValue(e.target.value.replace(/\D/g, '').slice(0, 6));
+                  setError('');
+                }}
+                placeholder="••••••"
+                className="mb-4 text-center tracking-[0.5em] font-mono text-xl"
                 maxLength={6}
               />
+
+              <div className="flex justify-between items-center mb-6">
+                <button
+                  onClick={handleResendOtp}
+                  disabled={resendCooldown > 0 || loading}
+                  className="text-sm text-[#FF8A00] disabled:text-gray-400"
+                >
+                  {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Code'}
+                </button>
+                {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+              </div>
 
               {error && (
                 <p className="text-red-500 text-sm mb-4">{error}</p>
               )}
 
               <Button
-                onClick={handleOtpSubmit}
+                onClick={handleVerifyOtp}
                 className="w-full"
                 disabled={loading || otpValue.length !== 6}
               >
@@ -325,7 +366,7 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                       Phone Number
                     </Label>
                     <PhoneInput
-                      international
+                      
                       defaultCountry="ET"
                       value={formData.phone_number}
                       onChange={(value) => handlePhoneChange(value || '')}

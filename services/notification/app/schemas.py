@@ -67,5 +67,6 @@ NotificationUnion = Union[
     ApplicationReceivedNotification,
     InterviewFlaggedNotification,
     ApplicationPassedNotification,
-    ApplicationRejectedNotification
+    ApplicationRejectedNotification, 
+    OtpVerificationNotification
 ]
