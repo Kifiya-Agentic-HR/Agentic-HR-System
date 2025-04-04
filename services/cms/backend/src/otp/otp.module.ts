@@ -14,12 +14,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     RedisModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService): RedisModuleOptions => {
-        // If REDIS_URI is provided (as in your docker-compose), use it.
         const redisUri = configService.get<string>('REDIS_URI');
         if (redisUri) {
           return { type: 'single', url: redisUri };
         }
-        // Otherwise, build the URL from individual values.
+  
         const host = configService.get<string>('REDIS_HOST', 'localhost');
         const port = configService.get<number>('REDIS_PORT', 6379);
         const password = configService.get<string>('REDIS_PASSWORD');

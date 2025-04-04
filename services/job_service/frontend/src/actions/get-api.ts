@@ -179,7 +179,7 @@ export const OtpAPI = {
   },
 };
 
-// Generic request handler
+
 async function handleRequest<T>(
   endpoint: string,
   method: 'GET' | 'POST',
