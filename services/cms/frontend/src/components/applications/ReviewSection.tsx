@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { User } from "@/components/jobs/types";
-import { FiCheckCircle, FiChevronUp, FiChevronDown } from "react-icons/fi";
+import { FiCheckCircle, FiChevronUp } from "react-icons/fi";
 import { toast } from "sonner";
-import { getShortlistByJob, createShortList } from "@/lib/api";
+import { fetchAllUsers, getShortlistByJob, createShortList } from "@/lib/api";
 
 interface ReviewSectionProps {
   jobId: string;
@@ -41,7 +41,7 @@ export default function ReviewSection({ jobId }: ReviewSectionProps) {
 
   const assignReviewer = async (reviewerId: string) => {
     try {
-      const response = await createShortList(reviewerId, jobId);
+      await createShortList(reviewerId, jobId);
       const newReviewer = availableReviewers.find((u) => u._id === reviewerId);
       setCurrentReviewer(newReviewer || null);
       toast.success("Reviewer assigned successfully");
