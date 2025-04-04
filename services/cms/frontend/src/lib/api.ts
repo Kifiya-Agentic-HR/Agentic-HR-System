@@ -204,6 +204,16 @@ export async function getApplicationById(id: string) {
   }
 }
 
+export async function getMe() {
+  try {
+    const res = await fetch(`${API_BASE}/users/me/name`, { headers: { ...getAuthHeaders() } });
+    const data = await res.json();
+    return data; 
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to fetch user" };
+  }
+}
+
 export async function rejectApplication(id: string) {
   try {
     const res = await fetch(`${API_BASE}/applications/${id}/reject`, { method: "PATCH", headers: { ...getAuthHeaders() } });
@@ -261,7 +271,7 @@ export const updateScreeningScore = async (
     console.error(' Error updating screening score:', error);
     return {
       success: false,
-      error: error.message || 'Failed to update score',
+      error: error?.message || 'Failed to update score',
     };
   }
 };

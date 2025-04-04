@@ -76,3 +76,4 @@ export class ApplicationsController {
     return this.appsService.editScore(id, updateData);
   }
 }
+

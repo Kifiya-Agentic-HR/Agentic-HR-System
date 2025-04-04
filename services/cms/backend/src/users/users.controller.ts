@@ -55,6 +55,19 @@ export class UsersController {
     return this.usersService.findOne(req.user.sub);
   }
 
+  @Get("me/name") // for convenience, return the full name of the current user')
+  @Roles(UserRole.HR, UserRole.HM)
+  async me(@Req() req: any) {
+  let currentUser = req?.user?.sub || "Guest";
+      if (currentUser !== "Guest") {
+        console.debug("Current user ID: ", currentUser);
+        currentUser = await this.usersService.findOne(currentUser);
+        console.debug("Current user: ", currentUser);
+        currentUser = currentUser.firstName + " " + currentUser.lastName;
+      }
+      return {"name": currentUser}
+  }
+
   /**
    * users can update their own password, first/last name, etc.
    */
