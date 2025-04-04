@@ -1,0 +1,182 @@
+"use client";
+
+import { Application } from "@/components/jobs/types";
+import Link from "next/link";
+import {
+  FiCalendar,
+  FiFileText,
+  FiStar,
+  FiBriefcase,
+  FiChevronUp,
+  FiChevronDown,
+  FiCheckCircle,
+} from "react-icons/fi";
+import StatusBadge from "./StatusBadge";
+
+interface ApplicationsTableProps {
+  applications: Application[];
+  fromHM: boolean;
+  handleRecommend: (app: Application) => void;
+  processingAppId: string | null;
+  setSelectedApp: (app: Application | null) => void;
+  setShowShortlistPopup: (show: boolean) => void;
+  setPopupType: (type: "screening" | "interview") => void;
+  dateSortOrder: "none" | "asc" | "desc";
+  scoreSortOrder: "none" | "asc" | "desc";
+  setDateSortOrder: (order: "none" | "asc" | "desc") => void;
+  setScoreSortOrder: (order: "none" | "asc" | "desc") => void;
+}
+
+export default function ApplicationsTable({
+  applications,
+  fromHM,
+  handleRecommend,
+  processingAppId,
+  setSelectedApp,
+  setShowShortlistPopup,
+  setPopupType,
+  dateSortOrder,
+  scoreSortOrder,
+  setDateSortOrder,
+  setScoreSortOrder,
+}: ApplicationsTableProps) {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+  };
+
+  const toggleSort = (current: "none" | "asc" | "desc") =>
+    current === "none" ? "asc" : current === "asc" ? "desc" : "none";
+
+  return (
+    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-primary text-white">
+            <tr className="text-left text-sm font-semibold">
+              <th className="pl-8 pr-6 py-5 rounded-tl-2xl">Candidate</th>
+              <th className="px-6 py-5">
+                <button
+                  onClick={() => setDateSortOrder(toggleSort(dateSortOrder))}
+                  className="flex items-center space-x-2 hover:text-[#FF6A00]"
+                >
+                  <span>Applied Date</span>
+                  {dateSortOrder !== "none" &&
+                    (dateSortOrder === "asc" ? (
+                      <FiChevronUp />
+                    ) : (
+                      <FiChevronDown />
+                    ))}
+                </button>
+              </th>
+              <th className="px-6 py-5">CV</th>
+              <th className="px-6 py-5">Shortlisted</th>
+              <th className="px-6 py-5">
+                <button
+                  onClick={() => setScoreSortOrder(toggleSort(scoreSortOrder))}
+                  className="flex items-center space-x-2 hover:text-[#FF6A00]"
+                >
+                  <span>Screening</span>
+                  {scoreSortOrder !== "none" &&
+                    (scoreSortOrder === "asc" ? (
+                      <FiChevronUp />
+                    ) : (
+                      <FiChevronDown />
+                    ))}
+                </button>
+              </th>
+              <th className="px-6 py-5">Interview</th>
+              <th className="pr-8 pl-6 py-5 text-center">Status</th>
+              <th className="pr-8 pl-6 py-5 rounded-tr-2xl text-center">
+                Other Roles
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {applications.map((app) => (
+              <tr key={app._id} className="hover:bg-[#364957]/5">
+                <td className="pl-8 pr-6 py-4 font-medium text-primary text-lg">
+                  {app.candidate.full_name}
+                </td>
+                <td className="px-6 py-4 text-gray-600">
+                  <div className="flex items-center">
+                    <FiCalendar className="mr-2" />
+                    {formatDate(app.created_at)}
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <Link
+                    href={app.cv_link}
+                    className="flex items-center text-secondary"
+                  >
+                    <FiFileText className="mr-2" />
+                    View CV
+                  </Link>
+                </td>
+                <td className="px-6 py-4">
+                  <button
+                    onClick={() => {
+                      setSelectedApp(app);
+                      setShowShortlistPopup(true);
+                    }}
+                    className={`flex items-center px-4 py-2 rounded-xl ${
+                      app.shortlisted === true
+                        ? "bg-[#4CAF50]/10 text-[#4CAF50]"
+                        : app.shortlisted === false
+                        ? "bg-gray-100"
+                        : "bg-[#F44336]/10 text-[#F44336]"
+                    }`}
+                  >
+                    {app.shortlisted ? "Yes" : "Pending"}
+                  </button>
+                </td>
+                <td className="px-6 py-4">
+                  <button
+                    onClick={() => {
+                      setSelectedApp(app);
+                      setPopupType("screening");
+                    }}
+                    className="flex items-center px-4 py-2 rounded-xl bg-[#FF8A00]/10"
+                  >
+                    <FiStar className="mr-2" />
+                    {app.screening?.score?.toFixed(1) || "Add Score"}
+                  </button>
+                </td>
+                <td className="px-6 py-4">
+                  <button
+                    onClick={() => {
+                      setSelectedApp(app);
+                      setPopupType("interview");
+                    }}
+                    className={`px-4 py-2 rounded-xl ${
+                      app.interview?.interview_status === "flagged"
+                        ? "bg-[#F44336]/10"
+                        : app.interview?.hiring_decision
+                        ? "bg-[#4CAF50]/10"
+                        : "bg-secondary/10"
+                    }`}
+                  >
+                    {app.interview?.hiring_decision || "Schedule"}
+                  </button>
+                </td>
+                <td className="pr-8 pl-6 py-4 text-center">
+                  <StatusBadge status={app.application_status} />
+                </td>
+                <td className="pr-8 pl-6 py-4">
+                  <button
+                    onClick={() => handleRecommend(app)}
+                    disabled={processingAppId === app._id}
+                    className="flex items-center px-4 py-2 rounded-xl border-2 border-[#FF8A00]"
+                  >
+                    <FiBriefcase className="mr-2" />
+                    {processingAppId === app._id ? "Analyzing..." : "Recommend"}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
