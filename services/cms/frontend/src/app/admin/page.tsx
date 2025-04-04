@@ -4,15 +4,21 @@ import { useState } from "react";
 import Dashboard from "@/components/admin/admin_dashboard";
 import withAuth from "@/utils/with_auth";
 import { Button } from "@/components/ui/button";
-import { FiLogOut } from "react-icons/fi";
+import { FiLogOut, FiSettings } from "react-icons/fi";
 
 function DashboardPage() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+
+  // Retrieve user's email from localStorage and get the first letter.
+  const email = localStorage.getItem("userEmail") || "user@example.com";
+  const firstLetter = email.charAt(0).toUpperCase();
 
   const logoutConfirmed = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("userId");
     localStorage.removeItem("userRole");
+    localStorage.removeItem("userEmail");
 
     setTimeout(() => {
       window.location.href = "/";
@@ -22,14 +28,43 @@ function DashboardPage() {
   return (
     <>
       <div className="w-full px-4 relative">
-        {/* Top row with Logout icon aligned to the right */}
-        <div className="flex justify-end mt-8">
+        {/* Top row with Profile icon aligned to the right */}
+        <div className="flex justify-end mt-8 relative">
           <button
-            onClick={() => setShowLogoutConfirm(true)}
-            className="p-2 rounded-full hover:bg-gray-200"
+            onClick={() => setShowProfileDropdown((prev) => !prev)}
+            className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center"
           >
-            <FiLogOut size={24} className="text-[#FF8A00]" />
+            <span className="text-lg font-semibold text-[#364957]">{firstLetter}</span>
           </button>
+
+          {/* Dropdown menu */}
+          {showProfileDropdown && (
+            <div className="absolute right-0 mt-2 w-56 bg-white shadow-lg rounded-md py-2 z-50">
+              {/* User Info Section */}
+              <div className="px-4 py-2 border-b border-gray-200">
+                <p className="text-sm text-gray-500">Signed in as</p>
+                <p className="text-sm font-medium text-gray-900 truncate">{email}</p>
+              </div>
+
+              {/* Dropdown Items */}
+              <a
+                href="/account"
+                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                onClick={() => setShowProfileDropdown(false)}
+              >
+                <FiSettings className="mr-2" /> Account Settings
+              </a>
+              <button
+                onClick={() => {
+                  setShowProfileDropdown(false);
+                  setShowLogoutConfirm(true);
+                }}
+                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                <FiLogOut className="mr-2" /> Logout
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Dashboard header with orange bottom border */}
