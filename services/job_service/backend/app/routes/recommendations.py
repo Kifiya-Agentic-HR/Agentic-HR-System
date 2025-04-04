@@ -18,7 +18,9 @@ async def create_recommendations(response: Response,job_id: str):
                 "sucess": False,
                 "error": f"job with id {job_id} not found"
             }
-        applications = [application for application in ApplicationDocument.get_applications() if application['application_status'] != "hired" ]
+        existed_applications = ApplicationDocument.get_applications_by_job(job_id)
+        existed_application_ids = [app['_id'] for app in existed_applications]
+        applications = [application for application in ApplicationDocument.get_applications() if application["_id"] not in existed_application_ids ]
         for application in applications:
             await publish_application({
                 "job_description": str(job["description"]),

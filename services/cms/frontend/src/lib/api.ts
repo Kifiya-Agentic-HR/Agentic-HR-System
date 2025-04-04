@@ -737,3 +737,50 @@ export const getShortlistByJob = async (jobId: string) => {
   }
 };
 
+// recommendation end-point
+export const createRecommendation = async (jobId: string) => {
+  const url = `${API_BASE}/recommendations`;
+
+  try {
+      const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              ...getAuthHeaders() 
+          },
+          body: JSON.stringify({ job_id: jobId }) 
+      });
+
+      if (!response.ok) {
+          throw new Error('Network response was not ok');
+      }
+
+      const result = await response.json();
+      return result;
+  } catch (error) {
+      console.error('Error:', error);
+      return { success: false, error: error.message };
+  }
+};
+
+export const getRecommendationByJob = async (jobId: string) => {
+  const url = `${API_BASE}/recommendations`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',  ...getAuthHeaders() 
+      }
+    });
+
+    const recommendations = await response.json();
+    return { success: true, recommendations };
+    
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: 'Unknown network error occurred' };
+  }
+};
