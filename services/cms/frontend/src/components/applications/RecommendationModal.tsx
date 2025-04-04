@@ -54,7 +54,7 @@ export default function RecommendationModal({
                       </div>
                       <div className="flex items-center">
                         <FiClock className="mr-2 text-[#FF8A00]" />
-                        {rec.type.replace("_", " ")}
+                        {rec.type.replaceAll("_", " ")}
                       </div>
                     </div>
                   </div>
