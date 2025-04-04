@@ -4,6 +4,15 @@ FROM node:18-alpine
 # Set the working directory
 WORKDIR /interview-ai
 
+# Declare build arguments for interview_frontend
+ARG NEXT_PUBLIC_API_BASE_URL
+ARG NEXT_PUBLIC_INTERVIEW_BACKEND
+
+# Set environment variables if needed during build
+ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
+ENV NEXT_PUBLIC_INTERVIEW_BACKEND=${NEXT_PUBLIC_INTERVIEW_BACKEND}
+
+
 # Copy package.json and package-lock.json
 COPY package.json package-lock.json ./
 
