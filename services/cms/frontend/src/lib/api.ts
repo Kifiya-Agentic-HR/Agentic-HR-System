@@ -1,3 +1,4 @@
+
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL
 const INTERVIEW_BASE = process.env.NEXT_PUBLIC_API_BASE_URL
 interface JobCreate {
@@ -204,6 +205,16 @@ export async function getApplicationById(id: string) {
   }
 }
 
+export async function getMe() {
+  try {
+    const res = await fetch(`${API_BASE}/users/me/name`, { headers: { ...getAuthHeaders() } });
+    const data = await res.json();
+    return data; 
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to fetch user" };
+  }
+}
+
 export async function rejectApplication(id: string) {
   try {
     const res = await fetch(`${API_BASE}/applications/${id}/reject`, { method: "PATCH", headers: { ...getAuthHeaders() } });
@@ -261,7 +272,7 @@ export const updateScreeningScore = async (
     console.error(' Error updating screening score:', error);
     return {
       success: false,
-      error: error.message || 'Failed to update score',
+      error: error?.message || 'Failed to update score',
     };
   }
 };
@@ -736,3 +747,50 @@ export const getShortlistByJob = async (jobId: string) => {
   }
 };
 
+// recommendation end-point
+export const createRecommendation = async (jobId: string) => {
+  const url = `${API_BASE}/recommendations`;
+
+  try {
+      const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              ...getAuthHeaders() 
+          },
+          body: JSON.stringify({ job_id: jobId }) 
+      });
+
+      if (!response.ok) {
+          throw new Error('Network response was not ok');
+      }
+
+      const result = await response.json();
+      return result;
+  } catch (error) {
+      console.error('Error:', error);
+      return { success: false, error: error.message };
+  }
+};
+
+export const getRecommendationByJob = async (jobId: string) => {
+  const url = `${API_BASE}/recommendations`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',  ...getAuthHeaders() 
+      }
+    });
+
+    const recommendations = await response.json();
+    return { success: true, recommendations };
+    
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: 'Unknown network error occurred' };
+  }
+};

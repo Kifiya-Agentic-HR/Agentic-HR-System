@@ -33,7 +33,7 @@ class ApplicationDocument(BaseDocument):
             "cv_link": application_data["cv_link"],
             "application_status":"pending",
             "shortlisted": False,
-            "shortlist_note": "",
+            "shortlist_comments": [],
             "source": application_data["source"]
 
         }
@@ -141,20 +141,35 @@ class ApplicationDocument(BaseDocument):
         except errors.PyMongoError as e:
             raise Exception(f"Error accepting application: {e}")
     @classmethod
-    def update_shortlist(cls, application_id, update_data):
+    def update_shortlist(cls, application_id, update_data, user="default_user"):
+        """
+        Updates the shortlist status of an application. If a shortlist note is provided,
+        it appends a new comment (with the comment text, user, and a timestamp) to the
+        'shortlist_comments' array. If no prior comments exist, MongoDB will create a new array.
+        """
         try:
+            note = update_data.get("shortlist_note", "").strip()
+            if note:
+                comment = {
+                    "comment": note,
+                    "user": user,
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+                update_query = {
+                    "$set": {"shortlisted": update_data.get("shortlisted")},
+                    "$push": {"shortlist_comments": comment}
+                }
+            else:
+                update_query = {
+                    "$set": {"shortlisted": update_data.get("shortlisted")}
+                }
             updated_application = cls.get_collection().find_one_and_update(
                 {"_id": ObjectId(application_id)},
-                {"$set": {
-                    "shortlisted": update_data["shortlisted"],
-                    "shortlist_note": update_data["shortlist_note"]
-                }},
+                update_query,
                 return_document=ReturnDocument.AFTER
             )
             if updated_application:
                 updated_application["_id"] = str(updated_application["_id"])
-                # updated_application["job_id"] = str(updated_application["job_id"])
             return updated_application
         except errors.PyMongoError as e:
             raise Exception(f"Error updating shortlist: {e}")
-

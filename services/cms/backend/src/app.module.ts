@@ -10,6 +10,7 @@ import { ApplicationsModule } from './applications/applications.module';
 import { ShortListModule } from './short_list/short_list.module';
 import { BulkModule } from './bulk/bulk.module';
 import { redisStore } from 'cache-manager-redis-yet';
+import { RecommendationModule } from './recommendation/recommendation.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { redisStore } from 'cache-manager-redis-yet';
     UsersModule,
     JobsModule,
     InterviewsModule,
+    RecommendationModule,
     ApplicationsModule,
     ShortListModule,
     BulkModule,

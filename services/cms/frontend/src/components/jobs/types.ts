@@ -77,5 +77,11 @@ export interface Job {
       created_at: string;
     } | null;
     shortlisted?: boolean;
-    shortlist_note?: string;
+    shortlist_comments?: Comment[];
+  }
+
+  interface Comment {
+    comment: string;
+    user: string;
+    timestamp: string;
   }

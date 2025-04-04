@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Param, Body, UseGuards, Patch, Put, UseInterceptors, UploadedFile, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, UseGuards, Patch, Put, UseInterceptors, UploadedFile, Logger, Req } from '@nestjs/common';
 import { ApplicationsService } from './applications.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Public, Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/schemas/user.schema';
+import { UsersService } from 'src/users/users.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('applications')
@@ -11,7 +12,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 export class ApplicationsController {
   private readonly logger = new Logger(ApplicationsController.name);
 
-  constructor(private readonly appsService: ApplicationsService) {}
+  constructor(private readonly appsService: ApplicationsService, private readonly usersService: UsersService) {}
 
   @Get()
   @Roles(UserRole.HR, UserRole.ADMIN)
@@ -54,7 +55,16 @@ export class ApplicationsController {
 
   @Put(':id')
   @Roles(UserRole.HM, UserRole.HR)
-  update(@Param('id') id: string, @Body() updateData: any) {
+  async update(@Param('id') id: string, @Body() updateData: any,  @Req() req: any) {
+    let currentUser = req?.user?.sub || "Guest";
+    if (currentUser !== "Guest") {
+      console.debug("Current user ID: ", currentUser);
+      currentUser = await this.usersService.findOne(currentUser);
+      console.debug("Current user: ", currentUser);
+      currentUser = currentUser.firstName + " " + currentUser.lastName;
+    }
+    updateData.user = currentUser;
+    
     this.logger.log(`Updating application with ID: ${id}, Data: ${JSON.stringify(updateData)}`);
     return this.appsService.update(id, updateData);
   }
@@ -66,3 +76,4 @@ export class ApplicationsController {
     return this.appsService.editScore(id, updateData);
   }
 }
+
