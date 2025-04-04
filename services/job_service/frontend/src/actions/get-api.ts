@@ -163,20 +163,10 @@ export interface HealthCheckResponse {
 
 export const OtpAPI = {
   sendOtp: async (email: string): Promise<OtpResponse> => {
-    // Here, you need to adjust the payload to include the 'otp', 'type', 'subject', and 'title'
-    const otp = Math.floor(100000 + Math.random() * 900000).toString(); // Example, you should receive this from backend ideally
-    const payload = {
-      email,
-      otp,
-      type: 'otp_verification',
-      subject: 'Your Verification Code',
-      title: 'Account Verification'
-    };
-    return handleRequest('/otp/send', 'POST', payload);
+    return handleRequest('/otp/send', 'POST', { email });
   },
 
   resendOtp: async (email: string): Promise<OtpResponse> => {
-    // Assuming resend keeps a similar structure
     return handleRequest('/otp/resend', 'POST', { email });
   },
 

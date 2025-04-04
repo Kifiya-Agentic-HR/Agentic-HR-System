@@ -41,14 +41,14 @@ const VerifyEmailText = ({
 
   const isValidEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
 
-  // Handle countdown for resend cooldown
   useEffect(() => {
+    let timer: string | number | NodeJS.Timeout | undefined;
     if (resendCooldown > 0) {
-      const timer = setInterval(() => {
+      timer = setInterval(() => {
         setResendCooldown((prev) => prev - 1);
       }, 1000);
-      return () => clearInterval(timer);
     }
+    return () => clearInterval(timer);
   }, [resendCooldown]);
 
   const handleSendOtp = async () => {
@@ -57,10 +57,8 @@ const VerifyEmailText = ({
     try {
       await OtpAPI.sendOtp(email);
       setShowOtpPopup(true);
-      setResendCooldown(30); // 30-second cooldown
+      setResendCooldown(30);
       setError('');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send OTP');
     } finally {
       setIsSendingOtp(false);
     }
@@ -84,11 +82,13 @@ const VerifyEmailText = ({
     if (otpValue.length !== 6) return;
     setLoading(true);
     try {
-      await OtpAPI.verifyOtp(email, otpValue);
-      onVerified();
-      setShowOtpPopup(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Invalid OTP code');
+      const result = await OtpAPI.verifyOtp(email, otpValue);
+      if (result) {
+        onVerified();
+        setShowOtpPopup(false);
+      } else {
+        setError('Invalid OTP code');
+      }
     } finally {
       setLoading(false);
     }
@@ -97,7 +97,7 @@ const VerifyEmailText = ({
   return (
     <div className="relative mt-2">
       <span 
-        onClick={handleSendOtp} 
+        onClick={!isVerified ? handleSendOtp : undefined} 
         className={`cursor-pointer text-sm font-medium ${
           isValidEmail(email) && !isVerified ? 'text-[#FF8A00]' : 'text-gray-400'
         } ${isSendingOtp ? 'opacity-70' : ''}`}
@@ -143,10 +143,7 @@ const VerifyEmailText = ({
 
               <Input
                 value={otpValue}
-                onChange={(e) => {
-                  setOtpValue(e.target.value.replace(/\D/g, '').slice(0, 6));
-                  setError('');
-                }}
+                onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="••••••"
                 className="mb-4 text-center tracking-[0.5em] font-mono text-xl"
                 maxLength={6}
@@ -329,36 +326,37 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                     />
                   </div>
 
-                  <div>
-                    <Label className="flex items-center gap-2 text-sm font-medium mb-2">
-                      <Mail className="w-4 h-4 text-[#364957]" />
-                      Email Address
-                    </Label>
-                    <div className="flex items-center">
-                      <Input
-                        type="email"
-                        required
-                        value={formData.email}
-                        onChange={(e) => {
-                          setFormData({ ...formData, email: e.target.value });
-                          setTouchedFields({ ...touchedFields, email: true });
-                        }}
-                        className={`focus:ring-2 focus:ring-[#FF8A00]/50 border-[#364957]/30 ${
-                          touchedFields.email && !isValidEmail(formData.email) ? 'border-red-500' : ''
-                        }`}
-                      />
-                      {isValidEmail(formData.email) && (
-                        <VerifyEmailText
-                          email={formData.email}
-                          onVerified={() => setIsEmailVerified(true)}
-                          isVerified={isEmailVerified}
-                        />
-                      )}
-                    </div>
-                    {touchedFields.email && !isValidEmail(formData.email) && (
-                      <p className="text-xs text-red-500 mt-1">Please enter a valid email address</p>
-                    )}
-                  </div>
+                  <div className="space-y-2">
+  <Label className="flex items-center gap-2 text-sm font-medium">
+    <Mail className="w-4 h-4 text-[#364957]" />
+    Email Address
+  </Label>
+  
+  {isValidEmail(formData.email) && (
+    <VerifyEmailText
+      email={formData.email}
+      onVerified={() => setIsEmailVerified(true)}
+      isVerified={isEmailVerified}
+    />
+  )}
+
+  <Input
+    type="email"
+    required
+    value={formData.email}
+    onChange={(e) => {
+      setFormData({ ...formData, email: e.target.value });
+      setTouchedFields({ ...touchedFields, email: true });
+    }}
+    className={`focus:ring-2 focus:ring-[#FF8A00]/50 border-[#364957]/30 ${
+      touchedFields.email && !isValidEmail(formData.email) ? 'border-red-500' : ''
+    }`}
+  />
+  
+  {touchedFields.email && !isValidEmail(formData.email) && (
+    <p className="text-xs text-red-500">Please enter a valid email address</p>
+  )}
+</div>
 
                   <div>
                     <Label className="flex items-center gap-2 text-sm font-medium mb-2">
