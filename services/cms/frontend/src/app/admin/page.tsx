@@ -9,7 +9,8 @@ import { FiLogOut, FiSettings } from "react-icons/fi";
 function DashboardPage() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
-  const containerRef = useRef(null);
+  // Type the ref as HTMLDivElement or null.
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   // Retrieve user's email from localStorage and get the first letter.
   const email = localStorage.getItem("userEmail") || "user@example.com";
@@ -28,8 +29,9 @@ function DashboardPage() {
 
   // Close dropdown if click is outside of containerRef
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
+    function handleClickOutside(event: MouseEvent) {
+      // Ensure containerRef.current exists and check if it contains the target.
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setShowProfileDropdown(false);
       }
     }
