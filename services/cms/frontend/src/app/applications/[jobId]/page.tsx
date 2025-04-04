@@ -1,6 +1,7 @@
 "use client";
 
 import { Application, User} from "@/components/jobs/types";
+import { getMe } from "@/lib/api";
 import { useState, useEffect } from "react";
 import StatusPopup from "@/components/jobs/StatusPopups";
 import Link from "next/link";
@@ -23,19 +24,24 @@ import {
 } from "react-icons/fi";
 import { toast } from "sonner";
 
-function ShortlistPopup({
-  application,
-  onClose,
-  refreshApplications,
-}: {
-  application: Application;
+let currentUser = await getMe();
+currentUser = currentUser && currentUser.name ? currentUser.name : "Guest"; // Fallback to "Guest" if no name is found
+
+interface ShortlistPopupProps {
+  application: Application; 
+  currentUser: string; // Added currentUser prop for alignment
   onClose: () => void;
   refreshApplications: () => Promise<void>;
-}) {
-  const [note, setNote] = useState(application.shortlist_note || "");
-  const [isShortlisted, setIsShortlisted] = useState(
-    application.shortlisted ?? false
-  );
+}
+
+function ShortlistPopup({
+  application,
+  currentUser,
+  onClose,
+  refreshApplications,
+}: ShortlistPopupProps) {
+  const [note, setNote] = useState('');
+  const [isShortlisted, setIsShortlisted] = useState(application.shortlisted ?? false);
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async () => {
@@ -57,6 +63,10 @@ function ShortlistPopup({
       setSaving(false);
     }
   };
+
+  console.log("Current User:", currentUser);
+  console.log("Application Shortlist Comments:", application.shortlist_comments);
+  console.log("Application Shortlisted:", application.shortlisted);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -85,25 +95,58 @@ function ShortlistPopup({
               onClick={() => setIsShortlisted(false)}
               className={`flex-1 py-2 rounded-xl ${
                 !isShortlisted
-                  ? "bg-[#F44336] text-white"
+                  ? "bg-[#FF6A00] text-white"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
-              No
+              Pending
             </button>
           </div>
         </div>
 
+        {application.shortlist_comments && application.shortlist_comments.length > 0 && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Notes
+            </label>
+            <div className="max-h-60 overflow-y-auto space-y-2">
+              {application.shortlist_comments.map((comment, index) => {
+                const isCurrentUser = comment.user === currentUser;
+                return (
+                  <div
+                    key={index}
+                    className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`rounded-xl p-3 max-w-[80%] ${
+                        isCurrentUser
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-200 text-gray-800'
+                      }`}
+                    >
+                      <p>{comment.comment}</p>
+                      <p className="text-xs mt-1">
+                        {isCurrentUser ? 'You' : comment.user} on{' '}
+                        {new Date(comment.timestamp).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Note
+            New Note
           </label>
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF6A00] focus:border-transparent"
             rows={4}
-            placeholder="Add shortlist notes..."
+            placeholder="Type your notes..."
           />
         </div>
 
@@ -120,7 +163,7 @@ function ShortlistPopup({
             className="px-4 py-2 bg-[#FF6A00] text-white rounded-lg hover:bg-[#FF8A00]"
             disabled={saving}
           >
-            {saving ? "Saving..." : "Save Changes"}
+            {saving ? "Saving..." : "Save"}
           </button>
         </div>
       </div>
@@ -800,6 +843,7 @@ const assignReviewer = async (reviewerId: string, jobId: string) => {
           {showShortlistPopup && selectedApp && (
             <ShortlistPopup
               application={selectedApp}
+              currentUser={currentUser}
               onClose={() => {
                 setShowShortlistPopup(false);
                 setSelectedApp(null);
