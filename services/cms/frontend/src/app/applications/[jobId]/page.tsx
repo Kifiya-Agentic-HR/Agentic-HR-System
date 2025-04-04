@@ -5,8 +5,19 @@ import { getMe } from "@/lib/api";
 import { useState, useEffect } from "react";
 import StatusPopup from "@/components/jobs/StatusPopups";
 import Link from "next/link";
-import { useParams, useRouter, useSearchParams  } from "next/navigation";
-import { getGeminiRecommendations, getJobApplications, getOpenJobs, Recommendation, updateShortlist, fetchAllUsers, createShortList, getShortlistByJob} from "@/lib/api";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import {
+  getGeminiRecommendations,
+  getJobApplications,
+  getOpenJobs,
+  Recommendation,
+  updateShortlist,
+  fetchAllUsers,
+  createShortList,
+  getShortlistByJob,
+  createRecommendation,
+  getRecommendationByJob
+} from "@/lib/api";
 import {
   FiChevronLeft,
   FiFileText,
@@ -21,6 +32,7 @@ import {
   FiClock,
   FiCheckCircle,
   FiMapPin,
+  FiUsers,
 } from "react-icons/fi";
 import { toast } from "sonner";
 
@@ -173,96 +185,122 @@ function ShortlistPopup({
 
 export default function ApplicationList() {
   const searchParams = useSearchParams();
-  const fromHM = searchParams.get('fromhm'); 
-  const fromHR = searchParams.get('fromhr');
+  const fromHM = searchParams.get("fromhm");
+  const fromHR = searchParams.get("fromhr");
   const router = useRouter();
   const params = useParams();
-  const jobId = params.jobId as string; 
+  const jobId = params.jobId as string;
   const [applications, setApplications] = useState<Application[]>([]);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [showShortlistPopup, setShowShortlistPopup] = useState(false);
-  const [popupType, setPopupType] = useState<"screening" | "interview">("screening");
+  const [popupType, setPopupType] = useState<"screening" | "interview">(
+    "screening"
+  );
   const [loading, setLoading] = useState(true);
 
   const [filterType, setFilterType] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [genderOpen, setGenderOpen] = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
-  const [dateSortOrder, setDateSortOrder] = useState<"none" | "asc" | "desc">("none");
-  const [scoreSortOrder, setScoreSortOrder] = useState<"none" | "asc" | "desc">("none");
-  const [recommendations, setRecommendations] = useState<Recommendation[] | null>(null);
+  const [dateSortOrder, setDateSortOrder] = useState<"none" | "asc" | "desc">(
+    "none"
+  );
+  const [scoreSortOrder, setScoreSortOrder] = useState<"none" | "asc" | "desc">(
+    "none"
+  );
+  const [recommendations, setRecommendations] = useState<Recommendation[] | null>(
+    null
+  );
   const [isRecommending, setIsRecommending] = useState(false);
-  const [recommendationError, setRecommendationError] = useState<string | null>(null);
+  const [recommendationError, setRecommendationError] = useState<string | null>(
+    null
+  );
   const [processingAppId, setProcessingAppId] = useState<string | null>(null);
 
   // Reviewing
-  const [reviewStatus, setReviewStatus] = useState<{[key: string]: boolean}>({});
+  const [reviewStatus, setReviewStatus] = useState<{ [key: string]: boolean }>(
+    {}
+  );
   const [reviewOpen, setReviewOpen] = useState(false);
-const [availableReviewers, setAvailableReviewers] = useState<User[]>([]);
-const [selectedReviewer, setSelectedReviewer] = useState<string>("");
-const [currentReviewer, setCurrentReviewer] = useState<User | null>(null);
+  const [availableReviewers, setAvailableReviewers] = useState<User[]>([]);
+  const [selectedReviewer, setSelectedReviewer] = useState<string>("");
+  const [currentReviewer, setCurrentReviewer] = useState<User | null>(null);
+
+  // Recommended applicants
+  const [showRecommended, setShowRecommended] = useState(false);
+  const [recommendedApps, setRecommendedApps] = useState<Application[]>([]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
+
+  const [apiRecommendations, setApiRecommendations] = useState<Application[]>([]);
+  const [loadingApiRecommendations, setLoadingApiRecommendations] = useState(false);
 
 
+  const fetchReviewerEmails = async () => {
+    try {
+      const usersResponse = await fetchAllUsers();
+      if (!usersResponse.success) {
+        throw new Error("Failed to fetch users: " + usersResponse.error);
+      }
 
-const fetchReviewerEmails = async () => {
-  try {
-    const usersResponse = await fetchAllUsers();
-    if (!usersResponse.success) {
-      throw new Error("Failed to fetch users: " + usersResponse.error);
-    }
+      const filtered = usersResponse.data.filter(
+        (user: User) => user.role !== "hr" && user.role !== "admin"
+      );
+      setAvailableReviewers(filtered);
 
-    const filtered = usersResponse.data.filter((user: User) => user.role !== "hr" && user.role !== "admin");
-    setAvailableReviewers(filtered);
+      const shortlistResponse = await getShortlistByJob(jobId);
 
-    const shortlistResponse = await getShortlistByJob(jobId);
+      if (
+        !shortlistResponse.success ||
+        !shortlistResponse.short_list.short_list ||
+        shortlistResponse.short_list.short_list.length === 0
+      ) {
+        console.error(
+          "Shortlist API returned empty or invalid: ",
+          shortlistResponse
+        );
+        throw new Error("No shortlist available or failed to fetch shortlist.");
+      }
 
-    if (!shortlistResponse.success || !shortlistResponse.short_list.short_list || shortlistResponse.short_list.short_list.length === 0) {
-      console.error("Shortlist API returned empty or invalid: ", shortlistResponse);
-      throw new Error("No shortlist available or failed to fetch shortlist.");
-    }
+      const shortlist = shortlistResponse.short_list.short_list;
 
-    const shortlist = shortlistResponse.short_list.short_list;
-
-
-    const existingReviewer = filtered.find((user: User) => {
-      const userId = String(user._id).trim();
-      const hiringManagerId = String(shortlist.hiring_manager_id).trim();
-      return userId === hiringManagerId;
-    });
-
-    if (!existingReviewer) {
-      console.error("No match. Raw IDs:", {
-        shortlistHiringManager: shortlist.hiring_manager_id,
-        filteredUsers: filtered.map((u: User) => u._id)
+      const existingReviewer = filtered.find((user: User) => {
+        const userId = String(user._id).trim();
+        const hiringManagerId = String(shortlist.hiring_manager_id).trim();
+        return userId === hiringManagerId;
       });
-      throw new Error("Hiring manager not found.");
+
+      if (!existingReviewer) {
+        console.error("No match. Raw IDs:", {
+          shortlistHiringManager: shortlist.hiring_manager_id,
+          filteredUsers: filtered.map((u: User) => u._id),
+        });
+        throw new Error("Hiring manager not found.");
+      }
+
+      setCurrentReviewer(existingReviewer);
+    } catch (error) {
+      console.error("Failed to load review data:", error);
+      toast.error("Failed to load review data", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
     }
+  };
 
-    setCurrentReviewer(existingReviewer);
-  } catch (error) {
-    console.error("Failed to load review data:", error);
-    toast.error("Failed to load review data", {
-      description: error instanceof Error ? error.message : "Unknown error"
-    });
-  }
-};
- 
-const assignReviewer = async (reviewerId: string, jobId: string) => {
-  try {
-    const response = await createShortList(reviewerId, jobId);
-    if (!response.success) throw new Error(response.error);
+  const assignReviewer = async (reviewerId: string, jobId: string) => {
+    try {
+      const response = await createShortList(reviewerId, jobId);
+      if (!response.success) throw new Error(response.error);
 
-    const newReviewer = availableReviewers.find(u => u._id === reviewerId);
-    setCurrentReviewer(newReviewer || null);
-    toast.success("Reviewer assigned successfully");
-    setReviewOpen(false);
-  } catch (error) {
-    toast.error("Failed to assign reviewer", {
-      description: error instanceof Error ? error.message : "Unknown error"
-    });
-  }
-};
-//reviewing
+      const newReviewer = availableReviewers.find((u) => u._id === reviewerId);
+      setCurrentReviewer(newReviewer || null);
+      toast.success("Reviewer assigned successfully");
+      setReviewOpen(false);
+    } catch (error) {
+      toast.error("Failed to assign reviewer", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  };
 
   const handleRecommend = async (application: Application) => {
     setProcessingAppId(application._id);
@@ -278,22 +316,63 @@ const assignReviewer = async (reviewerId: string, jobId: string) => {
         - CV: ${application.screening?.parsed_cv || "Not parsed yet"}
       `;
 
-      const jobs = jobsResponse.jobs.filter((job: { _id: string }) => job._id !== application.job_id)
+      const jobs = jobsResponse.jobs.filter(
+        (job: { _id: string }) => job._id !== application.job_id
+      );
       console.log("Open jobs:", jobs);
       const recommendations = await getGeminiRecommendations({
         candidateSummary,
-        jobs: jobs
+        jobs: jobs,
       });
 
       setRecommendations(recommendations);
     } catch (error) {
-      setRecommendationError(error instanceof Error ? error.message : "Failed to generate recommendations");
+      setRecommendationError(
+        error instanceof Error ? error.message : "Failed to generate recommendations"
+      );
       setRecommendations(null);
     } finally {
       setIsRecommending(false);
       setProcessingAppId(null);
     }
   };
+
+  const toggleRecommendations = async () => {
+    if (!showRecommended) {
+      setLoadingRecommendations(true);
+      try {
+        const highPotentialApps = applications.filter(
+          (app) =>
+            app.shortlisted === true &&
+            (app.screening?.score ?? 0) >= 7.5 &&
+            app.application_status === "pending"
+        );
+
+        const sorted = [...highPotentialApps].sort(
+          (a, b) => (b.screening?.score ?? 0) - (a.screening?.score ?? 0)
+        );
+
+        setRecommendedApps(sorted);
+      } catch (error) {
+        toast.error("Failed to load recommendations");
+      } finally {
+        setLoadingRecommendations(false);
+      }
+    }
+    setShowRecommended(!showRecommended);
+  };
+
+  useEffect(() => {
+    if (showRecommended) {
+      const recommended = applications.filter(
+        (app) =>
+          app.shortlisted === true &&
+          (app.screening?.score ?? 0) >= 7.5 &&
+          app.application_status === "pending"
+      );
+      setRecommendedApps(recommended);
+    }
+  }, [showRecommended, applications]);
 
   useEffect(() => {
     const loadApplications = async () => {
@@ -323,11 +402,8 @@ const assignReviewer = async (reviewerId: string, jobId: string) => {
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        // Load applications
         const appsResponse = await getJobApplications(jobId);
         if (appsResponse.success) setApplications(appsResponse.applications);
-
-        // Load reviewers and check shortlist
         await fetchReviewerEmails();
       } catch (error) {
         console.error("Initial data load failed:", error);
@@ -352,34 +428,31 @@ const assignReviewer = async (reviewerId: string, jobId: string) => {
     return "none";
   };
 
-  const filteredAndSortedApps = applications
-    .filter((app) => {
-      const genderMatch = fromHM ? true : 
-        filterType === "all" || app.candidate.gender?.toLowerCase() === filterType;
-      const statusMatch =  fromHM ? app.application_status === 'pending' : 
-        statusFilter === "all" || app.application_status === statusFilter;
-      return genderMatch && statusMatch;
-    })
-    .sort((a, b) => {
-      const dateA = new Date(a.created_at).getTime();
-      const dateB = new Date(b.created_at).getTime();
-      const scoreA = a.screening?.score ?? 0;
-      const scoreB = b.screening?.score ?? 0;
+  const filteredAndSortedApps = showRecommended
+    ? recommendedApps
+    : applications
+        .filter((app) => {
+          const genderMatch = fromHM
+            ? true
+            : filterType === "all" ||
+              app.candidate.gender?.toLowerCase() === filterType;
+          const statusMatch = fromHM
+            ? app.application_status === "pending"
+            : statusFilter === "all" || app.application_status === statusFilter;
+          return genderMatch && statusMatch;
+        })
+        .sort((a, b) => {
+          const dateA = new Date(a.created_at).getTime();
+          const dateB = new Date(b.created_at).getTime();
+          const scoreA = a.screening?.score ?? 0;
+          const scoreB = b.screening?.score ?? 0;
 
-      if (dateSortOrder === "asc") return dateA - dateB;
-      if (dateSortOrder === "desc") return dateB - dateA;
-      if (scoreSortOrder === "asc") return scoreA - scoreB;
-      if (scoreSortOrder === "desc") return scoreB - scoreA;
-      return 0;
-    });
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-secondary"></div>
-      </div>
-    );
-  }
+          if (dateSortOrder === "asc") return dateA - dateB;
+          if (dateSortOrder === "desc") return dateB - dateA;
+          if (scoreSortOrder === "asc") return scoreA - scoreB;
+          if (scoreSortOrder === "desc") return scoreB - scoreA;
+          return 0;
+        });
 
   const renderReviewSection = () => (
     <div className="relative">
@@ -398,7 +471,9 @@ const assignReviewer = async (reviewerId: string, jobId: string) => {
           >
             <span className="text-sm text-gray-600 mr-2">Assign Review</span>
             <svg
-              className={`h-4 w-4 transition-transform duration-200 ${reviewOpen ? "rotate-180" : ""}`}
+              className={`h-4 w-4 transition-transform duration-200 ${
+                reviewOpen ? "rotate-180" : ""
+              }`}
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
@@ -449,7 +524,9 @@ const assignReviewer = async (reviewerId: string, jobId: string) => {
                   Cancel
                 </button>
                 <button
-                  onClick={() => selectedReviewer && assignReviewer(selectedReviewer, jobId)}
+                  onClick={() =>
+                    selectedReviewer && assignReviewer(selectedReviewer, jobId)
+                  }
                   className={`flex-1 py-2 text-white rounded-lg ${
                     selectedReviewer
                       ? "bg-[#FF6A00] hover:bg-[#FF8A00]"
@@ -466,6 +543,14 @@ const assignReviewer = async (reviewerId: string, jobId: string) => {
     </div>
   );
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-secondary"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex">
       <div className="w-64 bg-white border-r border-gray-200 p-6 min-h-screen">
@@ -473,7 +558,6 @@ const assignReviewer = async (reviewerId: string, jobId: string) => {
           <img src="/logo.svg" alt="Logo" className="h-12" />
         </div>
         <nav className="space-y-4">
-          
           <Link
             href="/applications"
             className="flex items-center space-x-3 text-[#FF6A00] bg-[#FF6A00]/10 p-3 rounded-lg"
@@ -497,48 +581,94 @@ const assignReviewer = async (reviewerId: string, jobId: string) => {
           <h1 className="text-3xl font-bold text-primary mb-6 flex items-center">
             <FiUser className="mr-3 w-8 h-8" />
             <span className="relative after:content-[''] after:absolute after:left-0 after:-bottom-2 after:w-full after:h-0.5 after:bg-[#FF6A00]">
-              Applications Overview
+              {showRecommended ? "Recommended Applicants" : "Applications Overview"}
             </span>
           </h1>
 
           {!fromHM && (
             <div className="mb-6 w-full flex justify-end gap-4 relative">
+              <button
+                onClick={toggleRecommendations}
+                className={`flex items-center gap-2 p-2 rounded-xl transition-colors ${
+                  showRecommended
+                    ? "bg-[#FF6A00] text-white hover:bg-[#FF8A00]"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+                disabled={loadingRecommendations}
+              >
+                <FiUsers className="mr-2" />
+                {loadingRecommendations
+                  ? "Analyzing..."
+                  : showRecommended
+                  ? "Show All Applicants"
+                  : "Recommend Applicants"}
+              </button>
+
               {renderReviewSection()}
 
-              {/* Gender Filter Dropdown */}
               <div className="relative">
                 <button
                   onClick={() => setGenderOpen(!genderOpen)}
                   className="flex items-center gap-2 bg-gray-100 p-2 rounded-xl"
                 >
-                  <span className="text-sm text-gray-600 mr-2">Gender: {filterType}</span>
+                  <span className="text-sm text-gray-600 mr-2">
+                    Gender: {filterType}
+                  </span>
                   <svg
-                    className={`h-4 w-4 transition-transform duration-200 ${genderOpen ? "rotate-180" : ""}`}
+                    className={`h-4 w-4 transition-transform duration-200 ${
+                      genderOpen ? "rotate-180" : ""
+                    }`}
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </button>
                 {genderOpen && (
                   <div className="absolute right-0 mt-2 w-32 bg-white shadow-lg rounded-xl overflow-hidden z-10">
                     <button
-                      onClick={() => { setFilterType("all"); setGenderOpen(false); }}
-                      className={`block w-full text-left px-4 py-2 text-sm ${filterType === "all" ? "bg-[#FF6A00] text-white" : "bg-white text-gray-600 hover:bg-gray-200"}`}
+                      onClick={() => {
+                        setFilterType("all");
+                        setGenderOpen(false);
+                      }}
+                      className={`block w-full text-left px-4 py-2 text-sm ${
+                        filterType === "all"
+                          ? "bg-[#FF6A00] text-white"
+                          : "bg-white text-gray-600 hover:bg-gray-200"
+                      }`}
                     >
                       All
                     </button>
                     <button
-                      onClick={() => { setFilterType("male"); setGenderOpen(false); }}
-                      className={`block w-full text-left px-4 py-2 text-sm ${filterType === "male" ? "bg-[#FF6A00] text-white" : "bg-white text-gray-600 hover:bg-gray-200"}`}
+                      onClick={() => {
+                        setFilterType("male");
+                        setGenderOpen(false);
+                      }}
+                      className={`block w-full text-left px-4 py-2 text-sm ${
+                        filterType === "male"
+                          ? "bg-[#FF6A00] text-white"
+                          : "bg-white text-gray-600 hover:bg-gray-200"
+                      }`}
                     >
                       Male
                     </button>
                     <button
-                      onClick={() => { setFilterType("female"); setGenderOpen(false); }}
-                      className={`block w-full text-left px-4 py-2 text-sm ${filterType === "female" ? "bg-[#FF6A00] text-white" : "bg-white text-gray-600 hover:bg-gray-200"}`}
+                      onClick={() => {
+                        setFilterType("female");
+                        setGenderOpen(false);
+                      }}
+                      className={`block w-full text-left px-4 py-2 text-sm ${
+                        filterType === "female"
+                          ? "bg-[#FF6A00] text-white"
+                          : "bg-white text-gray-600 hover:bg-gray-200"
+                      }`}
                     >
                       Female
                     </button>
@@ -546,28 +676,43 @@ const assignReviewer = async (reviewerId: string, jobId: string) => {
                 )}
               </div>
 
-              {/* Status Filter Dropdown */}
               <div className="relative">
                 <button
                   onClick={() => setStatusOpen(!statusOpen)}
                   className="flex items-center gap-2 bg-gray-100 p-2 rounded-xl"
                 >
-                  <span className="text-sm text-gray-600 mr-2">Status: {statusFilter}</span>
+                  <span className="text-sm text-gray-600 mr-2">
+                    Status: {statusFilter}
+                  </span>
                   <svg
-                    className={`h-4 w-4 transition-transform duration-200 ${statusOpen ? "rotate-180" : ""}`}
+                    className={`h-4 w-4 transition-transform duration-200 ${
+                      statusOpen ? "rotate-180" : ""
+                    }`}
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </button>
                 {statusOpen && (
                   <div className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-xl overflow-hidden z-10">
                     <button
-                      onClick={() => { setStatusFilter("all"); setStatusOpen(false); }}
-                      className={`block w-full text-left px-4 py-2 text-sm ${statusFilter === "all" ? "bg-[#FF6A00] text-white" : "bg-white text-gray-600 hover:bg-gray-200"}`}
+                      onClick={() => {
+                        setStatusFilter("all");
+                        setStatusOpen(false);
+                      }}
+                      className={`block w-full text-left px-4 py-2 text-sm ${
+                        statusFilter === "all"
+                          ? "bg-[#FF6A00] text-white"
+                          : "bg-white text-gray-600 hover:bg-gray-200"
+                      }`}
                     >
                       All
                     </button>
