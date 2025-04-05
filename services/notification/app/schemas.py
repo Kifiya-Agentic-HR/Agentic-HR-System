@@ -10,6 +10,7 @@ class NotificationType(str, Enum):
     application_passed = "application_passed"
     interview_flagged = "interview_flagged"
     application_rejected = "application_rejected"
+    otp_verification = "otp_verification"
 
 from typing import Literal
 from pydantic import BaseModel, EmailStr
@@ -47,6 +48,11 @@ class ApplicationPassedNotification(BaseNotification):
     name: str
     title: str  # Job title
 
+class OtpVerificationNotification(BaseNotification):
+    type: Literal[NotificationType.otp_verification]
+    otp: str
+    expires_in_minutes: int = 15
+
 class ApplicationRejectedNotification(BaseNotification):
     type: Literal[NotificationType.application_rejected]
     name: str
@@ -61,5 +67,6 @@ NotificationUnion = Union[
     ApplicationReceivedNotification,
     InterviewFlaggedNotification,
     ApplicationPassedNotification,
-    ApplicationRejectedNotification
+    ApplicationRejectedNotification, 
+    OtpVerificationNotification
 ]

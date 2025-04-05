@@ -1,8 +1,7 @@
-// ApplyForm.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CheckCircle, Loader2, UploadCloud, User, Mail, Venus, Mars, Accessibility, Briefcase, FileText, Phone } from 'lucide-react';
+import { CheckCircle, Loader2, UploadCloud, User, Mail, Venus, Mars, Accessibility, Briefcase, FileText, Phone, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,7 +12,7 @@ import confetti from 'canvas-confetti';
 import ProgressBar from '@/components/ui/progress-bar';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
-import { submitApplication, ApplicationFormData } from '@/actions/get-api';
+import { submitApplication, ApplicationFormData, OtpAPI } from '@/actions/get-api';
 
 const PRIMARY_COLOR = '#364957';
 const SECONDARY_COLOR = '#FF8A00';
@@ -22,6 +21,165 @@ const DISABLED_COLOR = '#E2E8F0';
 interface ApplyFormProps {
   jobId: string;
 }
+
+// New component: VerifyEmailText replaces the button with clickable text
+const VerifyEmailText = ({ 
+  email,
+  onVerified,
+  isVerified
+}: {
+  email: string;
+  onVerified: () => void;
+  isVerified: boolean;
+}) => {
+  const [showOtpPopup, setShowOtpPopup] = useState(false);
+  const [otpValue, setOtpValue] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+
+  const isValidEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
+
+  useEffect(() => {
+    let timer: string | number | NodeJS.Timeout | undefined;
+    if (resendCooldown > 0) {
+      timer = setInterval(() => {
+        setResendCooldown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
+
+  const handleSendOtp = async () => {
+    if (!isValidEmail(email)) return;
+    setIsSendingOtp(true);
+    try {
+      await OtpAPI.sendOtp(email);
+      setShowOtpPopup(true);
+      setResendCooldown(30);
+      setError('');
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (resendCooldown > 0) return;
+    setLoading(true);
+    try {
+      await OtpAPI.resendOtp(email);
+      setResendCooldown(30);
+      setError('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to resend OTP');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otpValue.length !== 6) return;
+    setLoading(true);
+    try {
+      const result = await OtpAPI.verifyOtp(email, otpValue);
+      if (result) {
+        onVerified();
+        setShowOtpPopup(false);
+      } else {
+        setError('Invalid OTP code');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="relative mt-2">
+      <span 
+        onClick={!isVerified ? handleSendOtp : undefined} 
+        className={`cursor-pointer text-sm font-medium ${
+          isValidEmail(email) && !isVerified ? 'text-[#FF8A00]' : 'text-gray-400'
+        } ${isSendingOtp ? 'opacity-70' : ''}`}
+      >
+        {isVerified ? (
+          <span className="flex items-center gap-1">
+            <CheckCircle className="w-4 h-4" />
+            Email Verified
+          </span>
+        ) : isSendingOtp ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          'Verify Email'
+        )}
+      </span>
+
+      <AnimatePresence>
+        {showOtpPopup && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              className="bg-white rounded-xl p-6 max-w-md w-full"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Verify OTP</h3>
+                <button 
+                  onClick={() => setShowOtpPopup(false)}
+                  className="text-[#364957]/50 hover:text-[#364957]"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <p className="text-sm text-[#364957]/80 mb-4">
+                Enter the 6-digit code sent to {email}
+              </p>
+
+              <Input
+                value={otpValue}
+                onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="••••••"
+                className="mb-4 text-center tracking-[0.5em] font-mono text-xl"
+                maxLength={6}
+              />
+
+              <div className="flex justify-between items-center mb-6">
+                <button
+                  onClick={handleResendOtp}
+                  disabled={resendCooldown > 0 || loading}
+                  className="text-sm text-[#FF8A00] disabled:text-gray-400"
+                >
+                  {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Code'}
+                </button>
+                {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+              </div>
+
+              {error && (
+                <p className="text-red-500 text-sm mb-4">{error}</p>
+              )}
+
+              <Button
+                onClick={handleVerifyOtp}
+                className="w-full"
+                disabled={loading || otpValue.length !== 6}
+              >
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : 'Verify Code'}
+              </Button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 export default function ApplyForm({ jobId }: ApplyFormProps) {
   const [formData, setFormData] = useState<ApplicationFormData>({
@@ -34,6 +192,7 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
     resume: null,
   });
 
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -59,6 +218,7 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
 
   const isFormValid = () => {
     return (
+      isEmailVerified &&
       formData.full_name &&
       isValidEmail(formData.email) &&
       formData.phone_number &&
@@ -83,12 +243,16 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
     }
   }, [isSubmitted]);
 
+  useEffect(() => {
+    setIsEmailVerified(false);
+  }, [formData.email]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     if (!isFormValid()) {
-      setError('Please fill out all required fields with valid values.');
+      setError('Please fill out all required fields and verify your email.');
       return;
     }
 
@@ -162,27 +326,37 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                     />
                   </div>
 
-                  <div>
-                    <Label className="flex items-center gap-2 text-sm font-medium mb-2">
-                      <Mail className="w-4 h-4 text-[#364957]" />
-                      Email Address
-                    </Label>
-                    <Input
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) => {
-                        setFormData({ ...formData, email: e.target.value });
-                        setTouchedFields({ ...touchedFields, email: true });
-                      }}
-                      className={`focus:ring-2 focus:ring-[#FF8A00]/50 border-[#364957]/30 ${
-                        touchedFields.email && !isValidEmail(formData.email) ? 'border-red-500' : ''
-                      }`}
-                    />
-                    {touchedFields.email && !isValidEmail(formData.email) && (
-                      <p className="text-xs text-red-500 mt-1">Please enter a valid email address</p>
-                    )}
-                  </div>
+                  <div className="space-y-2">
+  <Label className="flex items-center gap-2 text-sm font-medium">
+    <Mail className="w-4 h-4 text-[#364957]" />
+    Email Address
+  </Label>
+  
+  {isValidEmail(formData.email) && (
+    <VerifyEmailText
+      email={formData.email}
+      onVerified={() => setIsEmailVerified(true)}
+      isVerified={isEmailVerified}
+    />
+  )}
+
+  <Input
+    type="email"
+    required
+    value={formData.email}
+    onChange={(e) => {
+      setFormData({ ...formData, email: e.target.value });
+      setTouchedFields({ ...touchedFields, email: true });
+    }}
+    className={`focus:ring-2 focus:ring-[#FF8A00]/50 border-[#364957]/30 ${
+      touchedFields.email && !isValidEmail(formData.email) ? 'border-red-500' : ''
+    }`}
+  />
+  
+  {touchedFields.email && !isValidEmail(formData.email) && (
+    <p className="text-xs text-red-500">Please enter a valid email address</p>
+  )}
+</div>
 
                   <div>
                     <Label className="flex items-center gap-2 text-sm font-medium mb-2">
@@ -190,11 +364,10 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                       Phone Number
                     </Label>
                     <PhoneInput
-                      international
+                      
                       defaultCountry="ET"
                       value={formData.phone_number}
-                      // @ts-ignore - react-phone-number-input types are incorrect
-                      onChange={handlePhoneChange}
+                      onChange={(value) => handlePhoneChange(value || '')}
                       className={`phone-input ${!formData.phone_number && touchedFields.phone_number ? 'invalid' : ''}`}
                       inputComponent={Input}
                       required
@@ -298,9 +471,7 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                   <input {...getInputProps()} required />
                   <div className="flex flex-col items-center gap-3">
                     <UploadCloud className={`w-8 h-8 ${isDragActive ? 'text-[#FF8A00]' : 'text-[#364957]/50'}`} />
-                    <p className={`text-sm ${
-                      isDragActive ? 'text-[#FF8A00]' : 'text-[#364957]/70'
-                    }`}>
+                    <p className={`text-sm ${isDragActive ? 'text-[#FF8A00]' : 'text-[#364957]/70'}`}>
                       {formData.resume ? (
                         <span className="font-medium text-[#364957]">
                           {formData.resume.name}
@@ -342,9 +513,7 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                 >
                   {loading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    'Submit Application'
-                  )}
+                  ) : 'Submit Application'}
                 </Button>
               </div>
             </form>
