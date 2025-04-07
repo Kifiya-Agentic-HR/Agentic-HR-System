@@ -5,15 +5,25 @@ import Dashboard from "@/components/admin/admin_dashboard";
 import withAuth from "@/utils/with_auth";
 import { Button } from "@/components/ui/button";
 import { FiLogOut, FiSettings } from "react-icons/fi";
+import { getMe } from "@/lib/api";
 
 function DashboardPage() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
-  // Type the ref as HTMLDivElement or null.
+  const [email, setEmail] = useState("user@example.com");
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  // Retrieve user's email from localStorage and get the first letter.
-  const email = localStorage.getItem("userEmail") || "user@example.com";
+  // Fetch user email from API
+  useEffect(() => {
+    async function fetchUserEmail() {
+      const response = await getMe();
+      if (response?.success && response.email) {
+        setEmail(response.email);
+      }
+    }
+    fetchUserEmail();
+  }, []);
+
   const firstLetter = email.charAt(0).toUpperCase();
 
   const logoutConfirmed = () => {
@@ -27,10 +37,9 @@ function DashboardPage() {
     }, 50);
   };
 
-  // Close dropdown if click is outside of containerRef
+  // Close dropdown if clicking outside of it
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      // Ensure containerRef.current exists and check if it contains the target.
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setShowProfileDropdown(false);
       }
@@ -58,13 +67,11 @@ function DashboardPage() {
           {/* Dropdown menu */}
           {showProfileDropdown && (
             <div className="absolute right-0 mt-2 w-56 bg-white shadow-lg rounded-md py-2 z-50">
-              {/* User Info Section */}
               <div className="px-4 py-2 border-b border-gray-200">
                 <p className="text-sm text-[#FF8A00]">Signed in as</p>
                 <p className="text-sm font-medium text-[#FF8A00] truncate">{email}</p>
               </div>
 
-              {/* Dropdown Items */}
               <a
                 href="/account-settings"
                 className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
