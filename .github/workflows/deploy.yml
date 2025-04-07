@@ -51,6 +51,7 @@ jobs:
           DEEPGRAM_API_KEY="${{ secrets.DEEPGRAM_API_KEY }}"
           HOST="${{ secrets.HOST }}"
           HUGGINGFACE_API_KEY="${{ secrets.HUGGINGFACE_API_KEY }}"
+          CV_BUCKET="${{ secrets.CV_BUCKET }}"
           EOF
 
       - name: Deploy via SSH
