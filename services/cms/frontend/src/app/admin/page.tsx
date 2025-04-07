@@ -26,18 +26,6 @@ function DashboardPage() {
 
   const firstLetter = email ? email.charAt(0).toUpperCase() : "?";
 
-  const logoutConfirmed = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("userEmail");
-
-    setTimeout(() => {
-      window.location.href = "/";
-    }, 50);
-  };
-
-  // Close dropdown if click is outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -55,7 +43,6 @@ function DashboardPage() {
   return (
     <>
       <div className="w-full px-4 relative">
-        {/* Profile icon and dropdown */}
         <div className="flex justify-end mt-8 relative" ref={containerRef}>
           <button
             onClick={() => setShowProfileDropdown((prev) => !prev)}
@@ -87,10 +74,7 @@ function DashboardPage() {
       </div>
 
       {showLogoutConfirm && (
-        <LogoutConfirmModal
-          onCancel={() => setShowLogoutConfirm(false)}
-          onConfirm={logoutConfirmed}
-        />
+        <LogoutConfirmModal onCancel={() => setShowLogoutConfirm(false)} />
       )}
     </>
   );

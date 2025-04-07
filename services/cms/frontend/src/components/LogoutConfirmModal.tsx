@@ -1,16 +1,32 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
 
-interface LogoutConfirmModalProps {
+type Props = {
   onCancel: () => void;
-  onConfirm: () => void;
-}
+};
 
-export default function LogoutConfirmModal({
-  onCancel,
-  onConfirm,
-}: LogoutConfirmModalProps) {
+export default function LogoutConfirmModal({ onCancel }: Props) {
+  const logoutConfirmed = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("userEmail");
+
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 50);
+  };
+
+  // Optional: prevent scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm space-y-4">
@@ -26,7 +42,7 @@ export default function LogoutConfirmModal({
           </Button>
           <Button
             className="bg-[#FF8A00] text-[#364957] hover:bg-[#FF8A00]/90"
-            onClick={onConfirm}
+            onClick={logoutConfirmed}
           >
             Yes
           </Button>
