@@ -61,7 +61,7 @@ function JobsPage() {
               }}
               onSettingsClick={() => {
                 setShowProfileDropdown(false);
-                window.location.href = "/admin/account-settings";
+                window.location.href = "/hm/account-settings";
               }}
             />
           )}
