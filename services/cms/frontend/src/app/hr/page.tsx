@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { JobList } from "@/components/hm/JobList";
+import { JobList } from "@/components/jobs/JobList";
 import withAuth from "@/utils/with_auth";
 import { getMe } from "@/lib/api";
 import LogoutConfirmModal from "@/components/LogoutConfirmModal";
