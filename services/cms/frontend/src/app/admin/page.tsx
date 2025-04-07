@@ -5,26 +5,27 @@ import Dashboard from "@/components/admin/admin_dashboard";
 import withAuth from "@/utils/with_auth";
 import { Button } from "@/components/ui/button";
 import { FiLogOut, FiSettings } from "react-icons/fi";
-import { getMe } from "@/lib/api";
+import { getMe } from "@/lib/api"; // make sure path is correct
 
 function DashboardPage() {
+  const [email, setEmail] = useState<string>(""); // start empty
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
-  const [email, setEmail] = useState("user@example.com");
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  // Fetch user email from API
+  // Fetch the actual email on mount
   useEffect(() => {
-    async function fetchUserEmail() {
-      const response = await getMe();
-      if (response?.success && response.email) {
-        setEmail(response.email);
+    async function fetchEmail() {
+      const result = await getMe();
+      if (result?.success !== false && result.email) {
+        setEmail(result.email);
       }
     }
-    fetchUserEmail();
+
+    fetchEmail();
   }, []);
 
-  const firstLetter = email.charAt(0).toUpperCase();
+  const firstLetter = email ? email.charAt(0).toUpperCase() : "?";
 
   const logoutConfirmed = () => {
     localStorage.removeItem("accessToken");
@@ -37,7 +38,7 @@ function DashboardPage() {
     }, 50);
   };
 
-  // Close dropdown if clicking outside of it
+  // Close dropdown if click is outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -55,7 +56,7 @@ function DashboardPage() {
   return (
     <>
       <div className="w-full px-4 relative">
-        {/* Profile icon and dropdown container */}
+        {/* Profile icon and dropdown */}
         <div className="flex justify-end mt-8 relative" ref={containerRef}>
           <button
             onClick={() => setShowProfileDropdown((prev) => !prev)}
@@ -92,7 +93,6 @@ function DashboardPage() {
           )}
         </div>
 
-        {/* Dashboard header with orange bottom border */}
         <h2 className="mt-8 text-3xl font-bold text-[#364957] border-b-2 border-orange-500 pb-1">
           Dashboard Overview
         </h2>
@@ -100,7 +100,7 @@ function DashboardPage() {
         <Dashboard />
       </div>
 
-      {/* Logout Confirmation Modal */}
+      {/* Logout modal */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm space-y-4">
