@@ -17,11 +17,11 @@ export function HMSidebar() {
       icon: <LayoutDashboard className="h-5 w-5" />,
     },
 
-    {
-      href: "/hm/account-settings",
-      label: "Account Settings",
-      icon: <Settings className="h-5 w-5" />,
-    },
+    // {
+    //   href: "/hm/account-settings",
+    //   label: "Account Settings",
+    //   icon: <Settings className="h-5 w-5" />,
+    // },
   ];
 
   return (

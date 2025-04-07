@@ -56,16 +56,20 @@ export class UsersController {
   }
 
   @Get("me/name") // for convenience, return the full name of the current user')
-  @Roles(UserRole.HR, UserRole.HM)
+  @Roles(UserRole.HR, UserRole.HM, UserRole.ADMIN)
   async me(@Req() req: any) {
   let currentUser = req?.user?.sub || "Guest";
+  let currentUserName = "Unable to retrieve name";
+  let currentUserEmail = "Unable to retrieve email";
+
       if (currentUser !== "Guest") {
         console.debug("Current user ID: ", currentUser);
         currentUser = await this.usersService.findOne(currentUser);
         console.debug("Current user: ", currentUser);
-        currentUser = currentUser.firstName + " " + currentUser.lastName;
+        currentUserName = currentUser.firstName + " " + currentUser.lastName;
+        currentUserEmail = currentUser.email;
       }
-      return {"name": currentUser}
+      return {"name": currentUserName, "email": currentUserEmail }
   }
 
   /**
