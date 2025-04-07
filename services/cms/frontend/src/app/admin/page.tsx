@@ -5,15 +5,14 @@ import Dashboard from "@/components/admin/admin_dashboard";
 import withAuth from "@/utils/with_auth";
 import { Button } from "@/components/ui/button";
 import { FiLogOut, FiSettings } from "react-icons/fi";
-import { getMe } from "@/lib/api"; // make sure path is correct
+import { getMe } from "@/lib/api";
 
 function DashboardPage() {
-  const [email, setEmail] = useState<string>(""); // start empty
+  const [email, setEmail] = useState<string>("");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  // Fetch the actual email on mount
   useEffect(() => {
     async function fetchEmail() {
       const result = await getMe();
