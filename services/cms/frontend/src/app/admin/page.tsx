@@ -69,12 +69,12 @@ function DashboardPage() {
           {showProfileDropdown && (
             <div className="absolute right-0 mt-2 w-56 bg-white shadow-lg rounded-md py-2 z-50">
               <div className="px-4 py-2 border-b border-gray-200">
-                <p className="text-sm text-[#FF8A00]">Signed in as</p>
+                <p className="text-sm  text-gray-700">Signed in as</p>
                 <p className="text-sm font-medium text-[#FF8A00] truncate">{email}</p>
               </div>
 
               <a
-                href="/account-settings"
+                href="/admin/account-settings"
                 className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => setShowProfileDropdown(false)}
               >

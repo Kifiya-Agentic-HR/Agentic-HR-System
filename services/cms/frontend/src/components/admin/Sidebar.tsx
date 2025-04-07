@@ -37,11 +37,11 @@ export function Sidebar() {
       label: "User management",
       icon: <Users className="h-5 w-5" />,
     },
-    {
-      href: "/admin/account-settings",
-      label: "Account Settings",
-      icon: <Settings className="h-5 w-5" />,
-    },
+    // {
+    //   href: "/admin/account-settings",
+    //   label: "Account Settings",
+    //   icon: <Settings className="h-5 w-5" />,
+    // },
     
   ];
 
