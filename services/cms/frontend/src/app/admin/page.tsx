@@ -4,8 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import Dashboard from "@/components/admin/admin_dashboard";
 import withAuth from "@/utils/with_auth";
 import { Button } from "@/components/ui/button";
-import { FiLogOut, FiSettings } from "react-icons/fi";
 import { getMe } from "@/lib/api";
+import ProfileDropdown from "@/components/ProfileDropdown";
 
 function DashboardPage() {
   const [email, setEmail] = useState<string>("");
@@ -13,6 +13,7 @@ function DashboardPage() {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
+  // Fetch email on mount
   useEffect(() => {
     async function fetchEmail() {
       const result = await getMe();
@@ -37,16 +38,18 @@ function DashboardPage() {
     }, 50);
   };
 
-  // Close dropdown if click is outside
+  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setShowProfileDropdown(false);
       }
     }
+
     if (showProfileDropdown) {
       document.addEventListener("mousedown", handleClickOutside);
     }
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -55,7 +58,7 @@ function DashboardPage() {
   return (
     <>
       <div className="w-full px-4 relative">
-        {/* Profile icon and dropdown */}
+        {/* Profile button + dropdown container */}
         <div className="flex justify-end mt-8 relative" ref={containerRef}>
           <button
             onClick={() => setShowProfileDropdown((prev) => !prev)}
@@ -64,34 +67,22 @@ function DashboardPage() {
             <span className="text-lg font-semibold text-[#364957]">{firstLetter}</span>
           </button>
 
-          {/* Dropdown menu */}
           {showProfileDropdown && (
-            <div className="absolute right-0 mt-2 w-56 bg-white shadow-lg rounded-md py-2 z-50">
-              <div className="px-4 py-2 border-b border-gray-200">
-                <p className="text-sm  text-gray-700">Signed in as</p>
-                <p className="text-sm font-medium text-[#FF8A00] truncate">{email}</p>
-              </div>
-
-              <a
-                href="/admin/account-settings"
-                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => setShowProfileDropdown(false)}
-              >
-                <FiSettings className="mr-2 text-[#FF8A00]" /> Account Settings
-              </a>
-              <button
-                onClick={() => {
-                  setShowProfileDropdown(false);
-                  setShowLogoutConfirm(true);
-                }}
-                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                <FiLogOut className="mr-2 text-[#FF8A00]" /> Logout
-              </button>
-            </div>
+            <ProfileDropdown
+              email={email}
+              onLogoutClick={() => {
+                setShowProfileDropdown(false);
+                setShowLogoutConfirm(true);
+              }}
+              onSettingsClick={() => {
+                setShowProfileDropdown(false);
+                window.location.href = "/admin/account-settings";
+              }}
+            />
           )}
         </div>
 
+        {/* Dashboard heading */}
         <h2 className="mt-8 text-3xl font-bold text-[#364957] border-b-2 border-orange-500 pb-1">
           Dashboard Overview
         </h2>
@@ -99,7 +90,7 @@ function DashboardPage() {
         <Dashboard />
       </div>
 
-      {/* Logout modal */}
+      {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm space-y-4">
