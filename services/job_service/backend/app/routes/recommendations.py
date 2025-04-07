@@ -47,7 +47,8 @@ async def get_recomendation_by_job_id(response: Response,job_id: str):
                 "status": "not processing",
                 "error": f"recommended application with job_id {job_id} not found"
             }
-        return {"success": True, "status" : "processed" , "recommend applications": recommended_applications}
+        
+        return {"success": True, "status" : "processed" , "recommend_applications": recommended_applications}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving recommendations: {e}")
 

@@ -13,7 +13,7 @@ class ApplicationScore(BaseModel):
     created_at: Optional[datetime]
 class RecommedationsCreate(BaseModel):
     job_id: str
-    applications: List[ApplicationScore]
+    application: ApplicationScore
 
 
 

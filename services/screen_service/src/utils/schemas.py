@@ -18,6 +18,7 @@ class RecommendationCreate(BaseModel):
     job_id: str
     application_id: str
     score: float
+    reasonining: dict
 
 
 
