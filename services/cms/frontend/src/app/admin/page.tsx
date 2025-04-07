@@ -8,52 +8,22 @@ import LogoutConfirmModal from "@/components/LogoutConfirmModal";
 import ProfileDropdown from "@/components/ProfileDropdown";
 
 function DashboardPage() {
-  const [email, setEmail] = useState<string>("");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    async function fetchEmail() {
-      const result = await getMe();
-      if (result?.success !== false && result.email) {
-        setEmail(result.email);
-      }
-    }
-
-    fetchEmail();
-  }, []);
-
-  const firstLetter = email ? email.charAt(0).toUpperCase() : "?";
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setShowProfileDropdown(false);
-      }
-    }
-    if (showProfileDropdown) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showProfileDropdown]);
 
   return (
     <>
       <div className="w-full px-4 relative">
-        <div className="flex justify-end mt-8 relative" ref={containerRef}>
+        <div className="flex justify-end mt-8 relative">
           <button
             onClick={() => setShowProfileDropdown((prev) => !prev)}
             className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center"
           >
-            <span className="text-lg font-semibold text-[#364957]">{firstLetter}</span>
+            <span className="text-lg font-semibold text-[#364957]">?</span>
           </button>
 
           {showProfileDropdown && (
             <ProfileDropdown
-              email={email}
               onLogoutClick={() => {
                 setShowProfileDropdown(false);
                 setShowLogoutConfirm(true);
@@ -69,7 +39,6 @@ function DashboardPage() {
         <h2 className="mt-8 text-3xl font-bold text-[#364957] border-b-2 border-orange-500 pb-1">
           Dashboard Overview
         </h2>
-
         <Dashboard />
       </div>
 
