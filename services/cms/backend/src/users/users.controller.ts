@@ -69,7 +69,7 @@ export class UsersController {
         currentUserName = currentUser.firstName + " " + currentUser.lastName;
         currentUserEmail = currentUser.email;
       }
-      return {"name": currentUserName, "email": currentUserEmail; }
+      return {"name": currentUserName, "email": currentUserEmail }
   }
 
   /**
