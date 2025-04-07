@@ -139,7 +139,7 @@ export default function ApplicationsTable({
                     className="flex items-center px-4 py-2 rounded-xl bg-[#FF8A00]/10"
                   >
                     <FiStar className="mr-2" />
-                    {app.screening?.score?.toFixed(1) || "Add Score"}
+                    {app.screening?.score || "Add Score"}
                   </button>
                 </td>
                 <td className="px-6 py-4">
