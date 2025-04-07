@@ -59,13 +59,17 @@ export class UsersController {
   @Roles(UserRole.HR, UserRole.HM)
   async me(@Req() req: any) {
   let currentUser = req?.user?.sub || "Guest";
+  let currentUserName = "Unable to retrieve name";
+  let currentUserEmail = "Unable to retrieve email";
+
       if (currentUser !== "Guest") {
         console.debug("Current user ID: ", currentUser);
         currentUser = await this.usersService.findOne(currentUser);
         console.debug("Current user: ", currentUser);
-        currentUser = currentUser.firstName + " " + currentUser.lastName;
+        currentUserName = currentUser.firstName + " " + currentUser.lastName;
+        currentUserEmail = currentUser.email;
       }
-      return {"name": currentUser}
+      return {"name": currentUserName, "email": currentUserEmail; }
   }
 
   /**
