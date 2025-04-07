@@ -11,6 +11,8 @@ import {
   fetchAllUsers,
   createShortList,
   getShortlistByJob,
+  getMe,
+  Recommendation,
 } from "@/lib/api";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -21,6 +23,9 @@ import ApplicationsTable from "@/components/applications/ApplicationsTable";
 import ReviewSection from "@/components/applications/ReviewSection";
 import FilterDropdown from "@/components/applications/FilterDropdown";
 import RecommendationModal from "@/components/applications/RecommendationModal";
+
+let currentUser = await getMe();
+currentUser = currentUser && currentUser.name ? currentUser.name : "Guest"; // Fallback to "Guest" if no name is found
 
 export default function ApplicationList() {
   const searchParams = useSearchParams();
