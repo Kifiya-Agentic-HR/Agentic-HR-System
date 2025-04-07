@@ -304,6 +304,7 @@ export default function ApplicationList() {
 
           {showShortlistPopup && selectedApp && (
             <ShortlistPopup
+              currentUser={currentUser}
               application={selectedApp}
               onClose={() => {
                 setShowShortlistPopup(false);

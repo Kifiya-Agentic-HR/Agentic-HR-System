@@ -39,7 +39,7 @@ const StatusPopup = ({
   const [error, setError] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [editableScore, setEditableScore] = useState(
-    application.screening?.score ? Number(application.screening.score).toFixed(1) : ''
+    application.screening?.score ? Number(application.screening.score) : ''
   );
   
   const [screeningComment, setScreeningComment] = useState(application.screening?.comment || '');
@@ -208,7 +208,7 @@ const StatusPopup = ({
               <div>
               <div className="text-3xl font-bold text-[#364957]">
   {application.screening?.score && !isNaN(Number(application.screening.score))
-    ? Number(application.screening.score).toFixed(1)
+    ? Number(application.screening.score)
     : 'N/A'}
 </div>
 
@@ -289,7 +289,7 @@ const StatusPopup = ({
             <div className="flex items-baseline gap-4">
             <div className="text-3xl font-bold text-[#364957]">
   {application.screening?.score && !isNaN(Number(application.screening.score))
-    ? Number(application.screening.score).toFixed(1)
+    ? Number(application.screening.score)
     : 'N/A'}
 </div>
 
