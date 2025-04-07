@@ -5,7 +5,7 @@ from .sessions import router as sessions_router
 from .chat import router as chat_router
 from .flag import router as flag_router
 from src.api.db.dependencies import get_mongo_db, get_redis_client
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 import logging
 
@@ -30,11 +30,14 @@ async def get_interview(interview_id: str,
 
     interview_date = result.get("interview_date")
     current_time = datetime.now(ZoneInfo("Etc/GMT-3"))
+    current_time = datetime.now(timezone.utc)
 
     
     status = result.get("interview_status", None)
 
-    interview_date + timedelta(hours=72) < current_time
+    # If interview_date is naive, convert it:
+    if interview_date.tzinfo is None:
+        interview_date = interview_date.replace(tzinfo=timezone.utc)
 
 
     if status == "scheduled":
