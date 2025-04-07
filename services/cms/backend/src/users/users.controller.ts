@@ -56,7 +56,7 @@ export class UsersController {
   }
 
   @Get("me/name") // for convenience, return the full name of the current user')
-  @Roles(UserRole.HR, UserRole.HM)
+  @Roles(UserRole.HR, UserRole.HM, UserRole.ADMIN)
   async me(@Req() req: any) {
   let currentUser = req?.user?.sub || "Guest";
   let currentUserName = "Unable to retrieve name";
