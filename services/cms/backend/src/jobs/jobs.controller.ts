@@ -8,7 +8,7 @@ import { UserRole } from '../users/schemas/user.schema';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('jobs')
-// @UseGuards(AuthGuard, RolesGuard)
+@UseGuards(AuthGuard, RolesGuard)
 export class JobsController {
   constructor(private readonly jobsService: JobsService) {}
 
