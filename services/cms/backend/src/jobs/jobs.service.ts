@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 
+import * as FormData from 'form-data';
 @Injectable()
 export class JobsService {
   private readonly baseUrl: string;
@@ -76,7 +77,37 @@ export class JobsService {
       return { success: false, error: 'Error creating job' };
     }
   }
-
+  
+  async create_job_file(createdBy: string, job_file: Express.Multer.File) {
+    // Log file details for debugging
+    this.logger.debug(
+      `Calling POST ${this.baseUrl}/jobs/job_with_file/ with file: ${job_file.originalname} createdBy: ${createdBy}`
+    );
+  
+    try {
+      const formData = new FormData();
+      // Append the file as a stream or buffer:
+      formData.append('job_file', job_file.buffer, {
+        filename: job_file.originalname,
+        contentType: job_file.mimetype,
+      });
+      // Append the hr_id value as required by the FastAPI endpoint:
+      formData.append('hr_id', createdBy);
+  
+      // Make sure to include the multipart headers that FormData generates
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/jobs/job_with_file/`, formData, {
+          headers: formData.getHeaders(),
+        })
+      );
+      return response.data;
+    } catch (error) {
+      this.logger.error(`Error in create_job_file()`, error.stack);
+      this.logger.error(error?.response?.data || error?.message);
+      return { success: false, error: 'Error creating job' };
+    }
+  }
+  
   async update(id: string, jobData: any) {
     this.logger.debug(`Calling PATCH ${this.baseUrl}/jobs/${id} [update()] with data: ${JSON.stringify(jobData)}`);
     try {
