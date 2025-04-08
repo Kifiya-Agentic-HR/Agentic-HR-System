@@ -10,6 +10,7 @@ import ProfileDropdown from "@/components/ProfileDropdown";
 
 function JobsPage() {
   const [email, setEmail] = useState<string>("");
+  const [name, setName] = useState<string>("");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -19,13 +20,14 @@ function JobsPage() {
       const result = await getMe();
       if (result?.success !== false && result.email) {
         setEmail(result.email);
+        setName(result.name)
       }
     }
 
     fetchEmail();
   }, []);
 
-  const firstLetter = email ? email.charAt(0).toUpperCase() : "?";
+  const firstLetter = name ? name.charAt(0).toUpperCase() : email ? email.charAt(0).toUpperCase() : "?";
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -55,6 +57,7 @@ function JobsPage() {
           {showProfileDropdown && (
             <ProfileDropdown
               email={email}
+              name={name}
               onLogoutClick={() => {
                 setShowProfileDropdown(false);
                 setShowLogoutConfirm(true);
