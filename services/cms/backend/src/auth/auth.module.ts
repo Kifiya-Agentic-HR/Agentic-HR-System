@@ -10,8 +10,8 @@ import { AuthGuard } from './guards/auth.guard';
   imports: [
     forwardRef(() => UsersModule),
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'defaultSecret',
-      signOptions: { expiresIn: '1d' },
+      secret: process.env.JWT_SECRET || 'superSecretKey',
+      signOptions: { expiresIn: '1h' },
     }),
   ],
   controllers: [AuthController],
