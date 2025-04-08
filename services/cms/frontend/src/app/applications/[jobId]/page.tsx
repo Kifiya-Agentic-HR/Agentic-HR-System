@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Application, User } from "@/components/jobs/types";
+import { Application, RecommendationResponse, User } from "@/components/jobs/types";
 import {
   getGeminiRecommendations,
   getJobApplications,
@@ -11,16 +11,21 @@ import {
   fetchAllUsers,
   createShortList,
   getShortlistByJob,
+  createRecommendation,
+  getRecommendationByJob,
 } from "@/lib/api";
 import { toast } from "sonner";
+import { FileWarning } from 'lucide-react';  
+
 import Link from "next/link";
-import { FiChevronLeft, FiUser, FiList } from "react-icons/fi";
+import { FiChevronLeft, FiUser, FiList, FiRefreshCw } from "react-icons/fi";
 import StatusPopup from "@/components/applications/StatusPopups";
 import ShortlistPopup from "@/components/applications/ShortlistPopup";
 import ApplicationsTable from "@/components/applications/ApplicationsTable";
 import ReviewSection from "@/components/applications/ReviewSection";
 import FilterDropdown from "@/components/applications/FilterDropdown";
 import RecommendationModal from "@/components/applications/RecommendationModal";
+import RecommendationTable from "@/components/applications/RecommendationTable";
 
 export default function ApplicationList() {
   const searchParams = useSearchParams();
@@ -43,9 +48,9 @@ export default function ApplicationList() {
   const [scoreSortOrder, setScoreSortOrder] = useState<"none" | "asc" | "desc">(
     "none"
   );
-  const [recommendations, setRecommendations] = useState<
-    Recommendation[] | null
-  >(null);
+  const [recommendations, setRecommendations] = useState<Recommendation[] | null>(
+    null
+  );
   const [isRecommending, setIsRecommending] = useState(false);
   const [recommendationError, setRecommendationError] = useState<string | null>(
     null
@@ -55,6 +60,9 @@ export default function ApplicationList() {
   const [selectedReviewer, setSelectedReviewer] = useState<string>("");
   const [currentReviewer, setCurrentReviewer] = useState<User | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [recommendedApplicants, setRecommendedApplicants] = useState<RecommendationResponse[]>([]);
+  const [isFetchingRecommendations, setIsFetchingRecommendations] = useState(false);
+  const [showRecommendations, setShowRecommendations] = useState(false);
 
   const fromHM = searchParams.get("fromhm");
   const fromHR = searchParams.get("fromhr");
@@ -133,8 +141,89 @@ export default function ApplicationList() {
       setProcessingAppId(null);
     }
   };
+  
+  const [showEmptyState, setShowEmptyState] = useState(false);
 
-  useEffect(() => {
+const checkRecommendationStatus = async () => {
+  try {
+    setShowEmptyState(false); // Reset empty state on new check
+    const response = await getRecommendationByJob(jobId);
+    
+    if (response.success) {
+      const status = response.recommendations?.status;
+
+      if (status === "processed") {
+        const hasRecommendations = response.recommendations.recommend_applications?.length > 0;
+        setShowEmptyState(!hasRecommendations);
+        setShowRecommendations(hasRecommendations);
+        setRecommendedApplicants(response.recommendations.recommend_applications || []);
+        setIsFetchingRecommendations(false);
+      } else if (status === "not_processed") {
+        console.log("Initiating recommendation creation");
+        const createResp = await createRecommendation(jobId);
+        if (createResp.success) {
+          setIsFetchingRecommendations(true);
+          startRecommendationPolling();
+        } else {
+          // Handle specific "no recommendations" error
+          if (createResp.error?.includes("no recommended applications")) {
+            setShowEmptyState(true);
+            setShowRecommendations(false);
+          } else {
+            toast.error("Error creating recommendation", {
+              description: createResp.error || "Unknown error",
+            });
+          }
+          setIsFetchingRecommendations(false);
+        }
+      } else if (status === "processing") {
+        startRecommendationPolling();
+      }
+    } else {
+      throw new Error(response.error || "Error checking recommendation status");
+    }
+  } catch (error) {
+    setShowEmptyState(true);
+    setIsFetchingRecommendations(false);
+    toast.error("Error checking recommendation status", {
+      description: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+const startRecommendationPolling = () => {
+  const interval = setInterval(async () => {
+    try {
+      const response = await getRecommendationByJob(jobId);
+      if (response.success) {
+        const status = response.recommendations?.status;
+        if (status === "processed") {
+          clearInterval(interval);
+          const hasRecommendations = response.recommendations.recommend_applications?.length > 0;
+          setShowEmptyState(!hasRecommendations);
+          setShowRecommendations(hasRecommendations);
+          setRecommendedApplicants(response.recommendations.recommend_applications || []);
+          setIsFetchingRecommendations(false);
+        } else if (status === "failed") {
+          clearInterval(interval);
+          setShowEmptyState(true);
+          setIsFetchingRecommendations(false);
+          toast.error("Recommendation process failed");
+        }
+      }
+    } catch (error) {
+      clearInterval(interval);
+      setShowEmptyState(true);
+      setIsFetchingRecommendations(false);
+      toast.error("Polling error", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }, 10000);
+  return () => clearInterval(interval);
+};
+
+    useEffect(() => {
     const loadApplications = async () => {
       try {
         const resp = await getJobApplications(jobId);
@@ -234,68 +323,110 @@ export default function ApplicationList() {
           </h1>
 
           {!fromHM && (
-            <div className="mb-6 w-full flex justify-end gap-4 relative">
-              <ReviewSection jobId={jobId} />
-              <FilterDropdown
-                label="Gender"
-                options={[
-                  { label: "All", value: "all" },
-                  { label: "Male", value: "male" },
-                  { label: "Female", value: "female" },
-                ]}
-                selected={filterType}
-                onSelect={setFilterType}
-              />
-              <FilterDropdown
-                label="Status"
-                options={[
-                  { label: "All", value: "all" },
-                  { label: "Pending", value: "pending" },
-                  { label: "Hired", value: "hired" },
-                  { label: "Rejected", value: "rejected" },
-                ]}
-                selected={statusFilter}
-                onSelect={setStatusFilter}
-              />
+            <div className="mb-6 w-full flex justify-between items-center">
+              <div className="flex gap-4">
+                <ReviewSection jobId={jobId} />
+                <FilterDropdown
+                  label="Gender"
+                  options={[
+                    { label: "All", value: "all" },
+                    { label: "Male", value: "male" },
+                    { label: "Female", value: "female" },
+                  ]}
+                  selected={filterType}
+                  onSelect={setFilterType}
+                />
+                <FilterDropdown
+                  label="Status"
+                  options={[
+                    { label: "All", value: "all" },
+                    { label: "Pending", value: "pending" },
+                    { label: "Hired", value: "hired" },
+                    { label: "Rejected", value: "rejected" },
+                  ]}
+                  selected={statusFilter}
+                  onSelect={setStatusFilter}
+                />
+              </div>
+              <button
+                onClick={checkRecommendationStatus}
+                disabled={isFetchingRecommendations}
+                className="flex items-center gap-2 bg-[#FF6A00] text-white px-4 py-2 rounded-lg hover:bg-[#FF6A00]/90 transition-colors disabled:opacity-50"
+              >
+                {isFetchingRecommendations ? (
+                  <>
+                    <FiRefreshCw className="animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  "Recommend Applicants"
+                )}
+              </button>
             </div>
           )}
 
-          <ApplicationsTable
-            applications={filteredAndSortedApps}
-            fromHM={!!fromHM}
-            handleRecommend={handleRecommend}
-            processingAppId={processingAppId}
-            setSelectedApp={setSelectedApp}
-            setShowShortlistPopup={setShowShortlistPopup}
-            setPopupType={setPopupType}
-            dateSortOrder={dateSortOrder}
-            scoreSortOrder={scoreSortOrder}
-            setDateSortOrder={setDateSortOrder}
-            setScoreSortOrder={setScoreSortOrder}
-          />
+{showRecommendations ? (
+  <div className="mb-8">
+    <h2 className="text-xl font-semibold mb-4">Recommended Applicants</h2>
+    <RecommendationTable recommendations={recommendedApplicants} />
+    <button
+      onClick={() => setShowRecommendations(false)}
+      className="mt-4 text-[#FF6A00] hover:underline"
+    >
+      Show all applicants
+    </button>
+  </div>
+) : (
+  <ApplicationsTable
+    applications={filteredAndSortedApps}
+    fromHM={!!fromHM}
+    handleRecommend={handleRecommend}
+    processingAppId={processingAppId}
+    setSelectedApp={setSelectedApp}
+    setShowShortlistPopup={setShowShortlistPopup}
+    setPopupType={setPopupType}
+    dateSortOrder={dateSortOrder}
+    scoreSortOrder={scoreSortOrder}
+    setDateSortOrder={setDateSortOrder}
+    setScoreSortOrder={setScoreSortOrder}
+  />
+)}
+{showEmptyState && (
+  <div className="empty-state">
+    <div className="empty-state-content">
+      <FileWarning className="empty-state-icon" />
+      <h3 className="empty-state-title">No Recommended Applicants</h3>
+      <p className="empty-state-description">
+        There are no recommended applicants for this position at this time.
+      </p>
+    </div>
+  </div>
+)}
 
-          {(recommendations || recommendationError) && (
-            <RecommendationModal
-              recommendations={recommendations}
-              recommendationError={recommendationError}
-              onClose={() => {
-                setRecommendations(null);
-                setRecommendationError(null);
-              }}
-            />
-          )}
 
-          {selectedApp && !showShortlistPopup && (
-            <StatusPopup
-              application={selectedApp}
-              type={popupType}
-              onClose={() => setSelectedApp(null)}
-              refreshApplications={async () => {
-                const resp = await getJobApplications(jobId);
-                if (resp.success) setApplications(resp.applications);
-              }}
-            />
-          )}
+{(recommendations || recommendationError) && (
+  <RecommendationModal
+    recommendations={recommendations}
+    recommendationError={recommendationError}
+    onClose={() => {
+      setRecommendations(null);
+      setRecommendationError(null);
+    }}
+  />
+)}
+
+{selectedApp && !showShortlistPopup && (
+  <StatusPopup
+    application={selectedApp}
+    type={popupType}
+    onClose={() => setSelectedApp(null)}
+    refreshApplications={async () => {
+      const resp = await getJobApplications(jobId);
+      if (resp.success) setApplications(resp.applications);
+    }}
+  />
+)}
+
 
           {showShortlistPopup && selectedApp && (
             <ShortlistPopup

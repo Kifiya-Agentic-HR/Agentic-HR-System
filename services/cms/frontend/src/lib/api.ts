@@ -732,7 +732,7 @@ export const getShortlistByJob = async (jobId: string) => {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json',  ...getAuthHeaders() 
+        'Content-Type': 'application/jsonrecommendations',  ...getAuthHeaders() 
       }
     });
 
@@ -747,50 +747,65 @@ export const getShortlistByJob = async (jobId: string) => {
   }
 };
 
-// recommendation end-point
+// Add these to your existing api.ts
+
 export const createRecommendation = async (jobId: string) => {
   const url = `${API_BASE}/recommendations`;
 
   try {
-      const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-              ...getAuthHeaders() 
-          },
-          body: JSON.stringify({ job_id: jobId }) 
-      });
+    console.log("Creating recommendation for job ID:", jobId);
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify({ job_id: jobId })
+    });
 
-      if (!response.ok) {
-          throw new Error('Network response was not ok');
-      }
+    const responseData = await response.json();  // Parse response once
 
-      const result = await response.json();
-      return result;
+    if (!response.ok) {
+      // Server returned 4xx/5xx response
+      console.error('API Error:', responseData);
+      return responseData;  // Return server's error response directly
+    }
+
+    console.log("Recommendation created from api.tsx response:", responseData);
+    return responseData;  // Return actual API response data
+
   } catch (error) {
-      console.error('Error:', error);
-      return { success: false, error: error.message };
+    console.error('Network/Client Error:', error);
+    return { 
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      // Include additional error context if needed
+      isNetworkError: !(error instanceof Error)
+    };
   }
 };
-
 export const getRecommendationByJob = async (jobId: string) => {
-  const url = `${API_BASE}/recommendations`;
+  const url = `${API_BASE}/recommendations/${jobId}`;
 
   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json',  ...getAuthHeaders() 
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
       }
     });
 
-    const recommendations = await response.json();
-    return { success: true, recommendations };
-    
-  } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to fetch recommendations');
     }
-    return { success: false, error: 'Unknown network error occurred' };
+
+    const data = await response.json();
+    console.log('Response from api recommendation service:', data);
+    return { success: true, recommendations: data };
+  } catch (error) {
+    console.error('Error fetching recommendations:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 };

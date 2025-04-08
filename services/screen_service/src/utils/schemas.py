@@ -11,9 +11,6 @@ class ApplicationScore(BaseModel):
     application_id: str
     score: float
     created_at: Optional[datetime]
-class RecommendationsResponse(BaseModel):
-    job_id: str
-    applications: List[ApplicationScore]
 class RecommendationCreate(BaseModel):
     job_id: str
     application_id: str

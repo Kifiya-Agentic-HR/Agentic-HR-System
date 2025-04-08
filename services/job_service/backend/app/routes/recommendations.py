@@ -19,8 +19,15 @@ async def create_recommendations(response: Response,job_id: str):
                 "error": f"job with id {job_id} not found"
             }
         existed_applications = ApplicationDocument.get_applications_by_job(job_id)
+        
         existed_application_ids = [app['_id'] for app in existed_applications]
         applications = [application for application in ApplicationDocument.get_applications() if application["_id"] not in existed_application_ids ]
+        if len(applications) == 0:
+            response.status_code = status.HTTP_201_CREATED            
+            return {
+                "sucess": False,
+                "error": f"job with id {job_id} has no recommended applications"
+            }
         for application in applications:
             await publish_application({
                 "job_description": str(job["description"]),
@@ -31,7 +38,6 @@ async def create_recommendations(response: Response,job_id: str):
                 "job_id": job_id,
             })
         response.status_code = status.HTTP_201_CREATED
-
         return {"success": True, "detail": "All the applicants data send to the screening service" , "status": "processing"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting recommendations: {e}")
@@ -39,13 +45,19 @@ async def create_recommendations(response: Response,job_id: str):
 @router.get("/{job_id}", response_model=dict)
 async def get_recomendation_by_job_id(response: Response,job_id: str):
     try:
-        recommended_applications = RecommendationDocument.get_recommendationsby_job_id(job_id)
-        if not recommended_applications:
+        job = JobDocument.get_job_by_id(job_id)
+        if not job:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {
                 "sucess": False,
-                "status": "not processing",
-                "error": f"recommended application with job_id {job_id} not found"
+                "error": f"job with id {job_id} not found"
+            }
+        recommended_applications = RecommendationDocument.get_recommendationsby_job_id(job_id)
+        if not recommended_applications:
+            return {
+                "sucess": True,
+                "status": "not_processed",
+                "error": f"recommended application with job_id {job_id} not processed yet"
             }
         
         return {"success": True, "status" : "processed" , "recommend_applications": recommended_applications}
