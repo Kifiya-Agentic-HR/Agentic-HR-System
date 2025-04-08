@@ -38,7 +38,7 @@ export class JobsController {
   @Post()
   @Roles(UserRole.HR)
   async create(@Body() jobData: any, @Req() req: any) {
-    const id = 'this.extractUserId(req);'
+    const id = this.extractUserId(req);
     if (!id) {
       return { success: false, error: 'No id found in the token' };
     
