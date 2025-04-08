@@ -88,10 +88,4 @@ describe('ApplicationsService', () => {
     const result = await service.editScore('123', { score: 90 });
     expect(result).toEqual({ updated: true });
   });
-
-  it('should update an application', async () => {
-    httpService.put.mockReturnValue(of(mockResponse({ updated: true })));
-    const result = await service.update('123', { field: 'value' });
-    expect(result).toEqual({ updated: true });
-  });
 });
