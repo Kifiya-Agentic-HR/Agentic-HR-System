@@ -14,11 +14,9 @@ export class JobsService {
 
   async findAll() {
     try {
-      this.logger.debug(`Calling GET ${this.baseUrl}/jobs/`); 
       const response = await firstValueFrom(
         this.httpService.get(`${this.baseUrl}/jobs/`),
       );
-      // this.logger.debug(`Got response: ${JSON.stringify(response.data)}`);
       return response.data;
     } catch (error) {
       this.logger.error(`Error fetching jobs`, error.stack); 
@@ -28,12 +26,10 @@ export class JobsService {
   }
 
   async findOne(id: string) {
-    this.logger.debug(`Calling GET ${this.baseUrl}/jobs/${id} [findOne()]`);
     try {
       const response = await firstValueFrom(
         this.httpService.get(`${this.baseUrl}/jobs/${id}`),
       );
-      // this.logger.debug(`Success [findOne(${id})]: ${JSON.stringify(response.data)}`);
       return response.data;
     } catch (error) {
       this.logger.error(`Error in findOne(${id})`, error.stack);
@@ -43,14 +39,10 @@ export class JobsService {
   }
 
   async getRequests(hiringManagerId: string) {
-    this.logger.debug(
-      `Calling get ${this.baseUrl}/jobs/short_list_request/${hiringManagerId}`
-    );
     try {
       const response = await firstValueFrom(
         this.httpService.get(`${this.baseUrl}/jobs/short_list_request/${hiringManagerId}`)
       );
-      // this.logger.debug(`Success [getRequests(${hiringManagerId})]`);
       return response.data;
     } catch (error) {
       this.logger.error(`Error in getRequests(${hiringManagerId})`, error.stack);
@@ -60,16 +52,12 @@ export class JobsService {
   }
 
   async create(jobData: any, createdBy: string) {
-    this.logger.debug(
-      `Calling POST ${this.baseUrl}/jobs [create()] with data: ${JSON.stringify(jobData)} createdBy: ${createdBy}`
-    );
     try {
       const payload = { ...jobData, created_by: createdBy};
   
       const response = await firstValueFrom(
         this.httpService.post(`${this.baseUrl}/jobs/?hr_id=${createdBy}`, payload)
       );
-      // this.logger.debug(`Success [create()]: ${JSON.stringify(response.data)}`);
       return response.data;
     } catch (error) {
       this.logger.error(`Error in create()`, error.stack);
@@ -79,10 +67,6 @@ export class JobsService {
   }
   
   async create_job_file(createdBy: string, job_file: Express.Multer.File) {
-    // Log file details for debugging
-    this.logger.debug(
-      `Calling POST ${this.baseUrl}/jobs/job_with_file/ with file: ${job_file.originalname} createdBy: ${createdBy}`
-    );
   
     try {
       const formData = new FormData();
@@ -94,7 +78,6 @@ export class JobsService {
       // Append the hr_id value as required by the FastAPI endpoint:
       formData.append('hr_id', createdBy);
   
-      // Make sure to include the multipart headers that FormData generates
       const response = await firstValueFrom(
         this.httpService.post(`${this.baseUrl}/jobs/job_with_file/`, formData, {
           headers: formData.getHeaders(),
