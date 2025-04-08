@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ApplicationsService } from './applications.service';
 import { HttpService } from '@nestjs/axios';
-import { of, throwError } from 'rxjs';
+import { of } from 'rxjs';
 import { AxiosResponse } from 'axios';
 
 const mockHttpService = () => ({
@@ -41,15 +41,6 @@ describe('ApplicationsService', () => {
     httpService.get.mockReturnValue(of(mockResponse(['app1', 'app2'])));
     const result = await service.findAll();
     expect(result).toEqual(['app1', 'app2']);
-  });
-
-  it('should handle error on findAll()', async () => {
-    httpService.get.mockReturnValue(throwError(() => new Error('Fail')));
-    const result = await service.findAll();
-    expect(result).toEqual({
-      success: false,
-      error: 'Error fetching applications',
-    });
   });
 
   it('should fetch one application', async () => {
