@@ -3,6 +3,11 @@ import { RecommendationService } from './recommendation.service';
 import { HttpService } from '@nestjs/axios';
 import { of, throwError } from 'rxjs';
 import { AxiosResponse } from 'axios';
+import { Logger } from '@nestjs/common';
+
+beforeAll(() => {
+  jest.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+});
 
 describe('RecommendationService', () => {
   let service: RecommendationService;

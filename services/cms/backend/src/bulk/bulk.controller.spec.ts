@@ -2,6 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BulkController } from './bulk.controller';
 import { BulkService } from './bulk.service';
 import { BadRequestException } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
+
+beforeAll(() => {
+  jest.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+});
 
 const mockBulkApplication = { message: 'Bulk applications created' };
 

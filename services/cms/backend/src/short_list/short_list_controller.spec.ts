@@ -4,6 +4,11 @@ import { ShortListService } from './short_list.service';
 import { ExecutionContext, CanActivate } from '@nestjs/common';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { Logger } from '@nestjs/common';
+
+beforeAll(() => {
+  jest.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+});
 
 
 class MockAuthGuard implements CanActivate {
