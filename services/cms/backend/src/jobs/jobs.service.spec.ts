@@ -31,26 +31,34 @@ describe('JobsService', () => {
 
   describe('findAll', () => {
     it('should return jobs on success', async () => {
-      const response: AxiosResponse = { data: ['job1'], status: 200, statusText: 'OK', headers: {}, config: {
-          headers: undefined
-      } };
+      const response: AxiosResponse = {
+        data: ['job1'],
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: { headers: undefined },
+      };
       mockHttpService.get.mockReturnValue(of(response));
       const result = await service.findAll();
       expect(result).toEqual(['job1']);
     });
 
-    it('should return error on failure', async () => {
+    it('should return error object on failure', async () => {
       mockHttpService.get.mockReturnValue(throwError(() => new Error('fail')));
       const result = await service.findAll();
-      expect(result).toHaveProperty('success', false);
+      expect(result).toEqual({ success: false, error: 'Error fetching jobs'  }); 
     });
   });
 
   describe('findOne', () => {
     it('should return a job by id', async () => {
-      const response: AxiosResponse = { data: { id: '1' }, status: 200, statusText: 'OK', headers: {}, config: {
-          headers: undefined
-      } };
+      const response: AxiosResponse = {
+        data: { id: '1' },
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: { headers: undefined },
+      };
       mockHttpService.get.mockReturnValue(of(response));
       const result = await service.findOne('1');
       expect(result).toEqual({ id: '1' });
@@ -59,9 +67,13 @@ describe('JobsService', () => {
 
   describe('create', () => {
     it('should post job data', async () => {
-      const response: AxiosResponse = { data: { id: '123' }, status: 201, statusText: 'Created', headers: {}, config: {
-          headers: undefined
-      } };
+      const response: AxiosResponse = {
+        data: { id: '123' },
+        status: 201,
+        statusText: 'Created',
+        headers: {},
+        config: { headers: undefined },
+      };
       mockHttpService.post.mockReturnValue(of(response));
       const result = await service.create({ title: 'test' }, 'creator1');
       expect(result).toEqual({ id: '123' });
@@ -70,9 +82,13 @@ describe('JobsService', () => {
 
   describe('update', () => {
     it('should patch job data', async () => {
-      const response: AxiosResponse = { data: { id: '123' }, status: 200, statusText: 'OK', headers: {}, config: {
-          headers: undefined
-      } };
+      const response: AxiosResponse = {
+        data: { id: '123' },
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: { headers: undefined },
+      };
       mockHttpService.patch.mockReturnValue(of(response));
       const result = await service.update('123', { title: 'updated' });
       expect(result).toEqual({ id: '123' });
@@ -81,9 +97,13 @@ describe('JobsService', () => {
 
   describe('remove', () => {
     it('should delete job by id', async () => {
-      const response: AxiosResponse = { data: { deleted: true }, status: 200, statusText: 'OK', headers: {}, config: {
-          headers: undefined
-      } };
+      const response: AxiosResponse = {
+        data: { deleted: true },
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: { headers: undefined },
+      };
       mockHttpService.delete.mockReturnValue(of(response));
       const result = await service.remove('123');
       expect(result).toEqual({ deleted: true });
@@ -92,9 +112,13 @@ describe('JobsService', () => {
 
   describe('findApplicationsByJob', () => {
     it('should return applications for job id', async () => {
-      const response: AxiosResponse = { data: ['app1'], status: 200, statusText: 'OK', headers: {}, config: {
-          headers: undefined
-      } };
+      const response: AxiosResponse = {
+        data: ['app1'],
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: { headers: undefined },
+      };
       mockHttpService.get.mockReturnValue(of(response));
       const result = await service.findApplicationsByJob('job123');
       expect(result).toEqual(['app1']);
@@ -103,9 +127,13 @@ describe('JobsService', () => {
 
   describe('shortList', () => {
     it('should return shortlist for hiringManagerId', async () => {
-      const response: AxiosResponse = { data: ['shortlist1'], status: 200, statusText: 'OK', headers: {}, config: {
-          headers: undefined
-      } };
+      const response: AxiosResponse = {
+        data: ['shortlist1'],
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: { headers: undefined },
+      };
       mockHttpService.get.mockReturnValue(of(response));
       const result = await service.shortList('manager123');
       expect(result).toEqual(['shortlist1']);
@@ -114,9 +142,13 @@ describe('JobsService', () => {
 
   describe('getRequests', () => {
     it('should return requests for hiringManagerId', async () => {
-      const response: AxiosResponse = { data: ['request1'], status: 200, statusText: 'OK', headers: {}, config: {
-          headers: undefined
-      } };
+      const response: AxiosResponse = {
+        data: ['request1'],
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: { headers: undefined },
+      };
       mockHttpService.get.mockReturnValue(of(response));
       const result = await service.getRequests('manager123');
       expect(result).toEqual(['request1']);
