@@ -87,7 +87,6 @@ describe('ApplicationsService', () => {
     httpService.get.mockReturnValue(throwError(() => new Error('Fail')));
     const result = await service.findAll();
     expect(result.success).toBe(false);
-    expect(result.error).toBe('Error fetching applications'); 
+    expect(result.error).toBe('Error fetching applications');
   });
-  
 });
