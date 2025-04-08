@@ -40,7 +40,7 @@ const StatusPopup = ({
   const [editMode, setEditMode] = useState(false);
   const [editableScore, setEditableScore] = useState(
     application.screening?.score
-      ? Number(application.screening.score).toFixed(1)
+      ? Number(application.screening.score)
       : ""
   );
 
@@ -251,7 +251,7 @@ const StatusPopup = ({
                 <div className="text-3xl font-bold text-[#364957]">
                   {application.screening?.score &&
                   !isNaN(Number(application.screening.score))
-                    ? Number(application.screening.score).toFixed(1)
+                    ? Number(application.screening.score)
                     : "N/A"}
                 </div>
 
@@ -345,7 +345,7 @@ const StatusPopup = ({
                 <div className="text-3xl font-bold text-[#364957]">
                   {application.screening?.score &&
                   !isNaN(Number(application.screening.score))
-                    ? Number(application.screening.score).toFixed(1)
+                    ? Number(application.screening.score)
                     : "N/A"}
                 </div>
 

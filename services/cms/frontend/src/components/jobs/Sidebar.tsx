@@ -26,11 +26,11 @@ export function HRSidebar() {
       label: "Bulk Screening",
       icon: <Folder className="h-5 w-5" />,
     },
-    {
-      href: "/hr/account-settings",
-      label: "Account Settings",
-      icon: <Settings className="h-5 w-5" />,
-    }
+    // {
+    //   href: "/hr/account-settings",
+    //   label: "Account Settings",
+    //   icon: <Settings className="h-5 w-5" />,
+    // }
   ];
 
   return (

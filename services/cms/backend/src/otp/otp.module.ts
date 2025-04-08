@@ -16,7 +16,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       useFactory: (configService: ConfigService): RedisModuleOptions => {
         const redisUri = configService.get<string>('REDIS_URI');
         if (redisUri) {
-          return { type: 'single', url: redisUri };
+          return { config: { url: redisUri } };
         }
   
         const host = configService.get<string>('REDIS_HOST', 'localhost');
@@ -32,7 +32,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
           url += `/${db}`;
         }
   
-        return { type: 'single', url };
+        return { config: { url } };
       },
       inject: [ConfigService],
     }),

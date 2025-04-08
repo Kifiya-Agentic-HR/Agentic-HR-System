@@ -13,6 +13,8 @@ import {
   getShortlistByJob,
   createRecommendation,
   getRecommendationByJob,
+  getMe,
+  Recommendation,
 } from "@/lib/api";
 import { toast } from "sonner";
 import { FileWarning } from 'lucide-react';  
@@ -26,6 +28,9 @@ import ReviewSection from "@/components/applications/ReviewSection";
 import FilterDropdown from "@/components/applications/FilterDropdown";
 import RecommendationModal from "@/components/applications/RecommendationModal";
 import RecommendationTable from "@/components/applications/RecommendationTable";
+
+let currentUser = await getMe();
+currentUser = currentUser && currentUser.name ? currentUser.name : "Guest"; // Fallback to "Guest" if no name is found
 
 export default function ApplicationList() {
   const searchParams = useSearchParams();
@@ -430,6 +435,7 @@ const startRecommendationPolling = () => {
 
           {showShortlistPopup && selectedApp && (
             <ShortlistPopup
+              currentUser={currentUser}
               application={selectedApp}
               onClose={() => {
                 setShowShortlistPopup(false);
