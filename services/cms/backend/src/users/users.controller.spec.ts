@@ -135,10 +135,12 @@ describe('UsersController', () => {
       expect(service.findOne).toHaveBeenCalledWith('userid123');
     });
 
-    it('should return "Guest" if no user', async () => {
+    it('should return fallback message if user not found', async () => {
       const req = {};
       const result = await controller.me(req);
-      expect(result).toEqual({ name: 'Guest' });
+      expect(result).toEqual({
+        name: 'Guest',
+      });
     });
   });
 
