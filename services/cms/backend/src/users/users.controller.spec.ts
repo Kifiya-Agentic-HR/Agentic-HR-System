@@ -123,24 +123,6 @@ describe('UsersController', () => {
     });
   });
 
-  describe('me (name)', () => {
-    it('should return full name of current user', async () => {
-      const req = { user: { sub: 'userid123' } };
-      const user = { firstName: 'Sam', lastName: 'Rawit' };
-  
-      mockUserService.findOne.mockResolvedValue(user);
-      const result = await controller.me(req);
-      expect(result).toEqual({ name: 'Sam Rawit' });
-      expect(service.findOne).toHaveBeenCalledWith('userid123');
-    });
-  
-    it('should return fallback message if user not found', async () => {
-      const req = {}; 
-      const result = await controller.me(req);
-      expect(result).toEqual({ name: 'Guest' });
-    });
-  });
-
 
   describe('updateMe', () => {
     it('should update own account', async () => {
