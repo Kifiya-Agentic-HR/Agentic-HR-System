@@ -19,7 +19,9 @@ export class RecommendationService {
           params: { job_id },
         }),
       );
-      this.logger.debug(`Success [createRecommendations()]`);
+      
+      console.log(`Response from post recommendation service:`, response.data);
+      this.logger.debug(`Success response from createRecommendations()`, response.data);
       return response.data;
     } catch (error) {
       this.logger.error(`Error in createRecommendations()`, error.stack);
@@ -34,6 +36,9 @@ export class RecommendationService {
       const response = await firstValueFrom(
         this.httpService.get(`${this.baseUrl}/recommendations/${job_id}`),
       );
+      console.log('Response from get recommendation service:', response.data);
+      console.log(response.data);
+
       this.logger.debug(`Success [getRecommendationsByJobId(${job_id})]`);
       return response.data;
     } catch (error) {

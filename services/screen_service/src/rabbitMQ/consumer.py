@@ -1,4 +1,3 @@
-print("Consumer script started")
 import time
 start = time.time()
 import asyncio
@@ -7,8 +6,8 @@ import logging
 from concurrent.futures import ThreadPoolExecutor
 import aio_pika
 from config_local import Config
-from src.models import ScreeningResultDocument
-from src.models import RecommendationDocument
+from src.database.model.screen_result_model import ScreeningResultDocument
+from src.database.model.recommendation_model import RecommendationDocument
 
 import sys
 m = time.time() - start
@@ -53,6 +52,7 @@ async def process_message(message: aio_pika.IncomingMessage):
                 result = {
                     "job_id":job_id,
                     "score" : round(final_score, 1),
+                    "reasoning": llm_output.get("score_breakdown", {}),
                     "application_id": application_id,
                 }
                 await loop.run_in_executor(

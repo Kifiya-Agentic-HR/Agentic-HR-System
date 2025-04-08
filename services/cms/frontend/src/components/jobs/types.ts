@@ -20,6 +20,15 @@ export interface Job {
     };
     error?: string;
   }
+  export interface RecommendationResponse {
+    _id: string;
+    application_id: string;
+    full_name: string;
+    email: string;
+    reasoning: string;
+    score: number;
+    cv_link: string;
+    created_at: string;}
 
   export type User = {
    // id: string;

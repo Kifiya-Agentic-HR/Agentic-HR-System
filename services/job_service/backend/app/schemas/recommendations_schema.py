@@ -11,10 +11,11 @@ class ApplicationScore(BaseModel):
     application_id: str
     score: float
     created_at: Optional[datetime]
-class RecommedationsCreate(BaseModel):
+class RecommendationCreate(BaseModel):
     job_id: str
-    applications: List[ApplicationScore]
-
+    application_id: str
+    score: float
+    reasonining: dict
 
 
 
