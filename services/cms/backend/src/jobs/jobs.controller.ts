@@ -51,12 +51,11 @@ export class JobsController {
     @Body() body: any, // if you need additional fields
     @Req() req: any
   ) {
-    const id = '2222'; // or extract from token / req
+    const id = this.extractUserId(req); 
     console.log("id", id);
     if (!id) {
       return { success: false, error: 'No id found in the token' };
     }
-    // You might also want to merge any additional form fields from the body if needed.
     return this.jobsService.create_job_file(id, job_file);
   }
 
