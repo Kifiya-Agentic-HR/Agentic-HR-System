@@ -4,6 +4,10 @@ import { ApplicationsService } from './applications.service';
 import { UsersService } from '../users/users.service';
 import { Logger } from '@nestjs/common';
 
+beforeAll(() => {
+  jest.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+});
+
 describe('ApplicationsController', () => {
   let controller: ApplicationsController;
   let appsService: Partial<ApplicationsService>;

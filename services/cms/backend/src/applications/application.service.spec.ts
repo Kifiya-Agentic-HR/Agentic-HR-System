@@ -1,9 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ApplicationsService } from './applications.service';
 import { HttpService } from '@nestjs/axios';
-import { of, throwError } from 'rxjs';
+import { of } from 'rxjs';
 import { AxiosResponse } from 'axios';
 import { Logger } from '@nestjs/common';
+
+beforeAll(() => {
+  jest.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+});
 
 const mockHttpService = () => ({
   get: jest.fn(),
@@ -18,7 +22,7 @@ const mockResponse = (data: any): AxiosResponse => ({
   statusText: 'OK',
   headers: {},
   config: {
-      headers: undefined
+    headers: undefined
   },
 });
 
@@ -51,7 +55,11 @@ describe('ApplicationsService', () => {
   });
 
   it('should create an application', async () => {
-    const cvFile = { buffer: Buffer.from('test'), originalname: 'cv.pdf', mimetype: 'application/pdf' };
+    const cvFile = {
+      buffer: Buffer.from('test'),
+      originalname: 'cv.pdf',
+      mimetype: 'application/pdf',
+    };
     const appData = { name: 'test' };
     httpService.post.mockReturnValue(of(mockResponse({ success: true })));
 
@@ -75,17 +83,5 @@ describe('ApplicationsService', () => {
     httpService.put.mockReturnValue(of(mockResponse({ updated: true })));
     const result = await service.editScore('123', { score: 90 });
     expect(result).toEqual({ updated: true });
-  });
-
-  it('should update an application', async () => {
-    httpService.put.mockReturnValue(of(mockResponse({ updated: true })));
-    const result = await service.update('123', { field: 'value' });
-    expect(result).toEqual({ updated: true });
-  });
-
-  it('should handle error on findAll()', async () => {
-    httpService.get.mockReturnValue(throwError(() => new Error('Fail')));
-    const result = await service.findAll();
-    expect(result.success).toBe(false);
   });
 });

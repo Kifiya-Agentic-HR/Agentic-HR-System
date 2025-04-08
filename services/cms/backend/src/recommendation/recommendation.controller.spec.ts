@@ -1,6 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RecommendationController } from './recommendation.controller';
 import { RecommendationService } from './recommendation.service';
+import { Logger } from '@nestjs/common';
+
+beforeAll(() => {
+  jest.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+});
 
 const mockRecommendationService = {
   createRecommendations: jest.fn(),

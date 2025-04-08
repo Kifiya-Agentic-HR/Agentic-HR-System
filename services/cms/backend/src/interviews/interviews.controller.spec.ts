@@ -3,6 +3,11 @@ import { InterviewController } from './interviews.controller';
 import { InterviewService } from './interviews.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { Logger } from '@nestjs/common';
+
+beforeAll(() => {
+  jest.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+});
 
 const mockInterviewService = {
   schedule: jest.fn().mockResolvedValue({ success: true }),
