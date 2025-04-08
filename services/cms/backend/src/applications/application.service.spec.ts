@@ -3,7 +3,6 @@ import { ApplicationsService } from './applications.service';
 import { HttpService } from '@nestjs/axios';
 import { of, throwError } from 'rxjs';
 import { AxiosResponse } from 'axios';
-import { Logger } from '@nestjs/common';
 
 const mockHttpService = () => ({
   get: jest.fn(),
@@ -18,7 +17,7 @@ const mockResponse = (data: any): AxiosResponse => ({
   statusText: 'OK',
   headers: {},
   config: {
-      headers: undefined
+    headers: undefined
   },
 });
 
@@ -51,7 +50,11 @@ describe('ApplicationsService', () => {
   });
 
   it('should create an application', async () => {
-    const cvFile = { buffer: Buffer.from('test'), originalname: 'cv.pdf', mimetype: 'application/pdf' };
+    const cvFile = {
+      buffer: Buffer.from('test'),
+      originalname: 'cv.pdf',
+      mimetype: 'application/pdf',
+    };
     const appData = { name: 'test' };
     httpService.post.mockReturnValue(of(mockResponse({ success: true })));
 
@@ -82,6 +85,7 @@ describe('ApplicationsService', () => {
     const result = await service.update('123', { field: 'value' });
     expect(result).toEqual({ updated: true });
   });
+
 
   it('should handle error on findAll()', async () => {
     httpService.get.mockReturnValue(throwError(() => new Error('Fail')));
