@@ -43,6 +43,15 @@ describe('ApplicationsService', () => {
     expect(result).toEqual(['app1', 'app2']);
   });
 
+  it('should handle error on findAll()', async () => {
+    httpService.get.mockReturnValue(throwError(() => new Error('Fail')));
+    const result = await service.findAll();
+    expect(result).toEqual({
+      success: false,
+      error: 'Error fetching applications',
+    });
+  });
+
   it('should fetch one application', async () => {
     httpService.get.mockReturnValue(of(mockResponse({ id: '123' })));
     const result = await service.findOne('123');
@@ -84,13 +93,5 @@ describe('ApplicationsService', () => {
     httpService.put.mockReturnValue(of(mockResponse({ updated: true })));
     const result = await service.update('123', { field: 'value' });
     expect(result).toEqual({ updated: true });
-  });
-
-
-  it('should handle error on findAll()', async () => {
-    httpService.get.mockReturnValue(throwError(() => new Error('Fail')));
-    const result = await service.findAll();
-    expect(result.success).toBe(false);
-    expect(result.error).toBe('Error fetching applications');
   });
 });
