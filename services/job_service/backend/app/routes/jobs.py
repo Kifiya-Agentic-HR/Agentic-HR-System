@@ -1,8 +1,10 @@
-from fastapi import APIRouter, HTTPException, status, Response
+from fastapi import APIRouter, HTTPException, status, Response, UploadFile,File, Form
 from app.schemas.job_schema import JobCreate, JobUpdate
 from app.database.models.job_model import JobDocument
 from app.database.models.application_model import  ApplicationDocument
 from datetime import datetime
+from app.utils.extract_job_requirement import extract_job_requirement
+from app.utils.cloud_storage import upload_file
 
 router = APIRouter()
 
@@ -27,6 +29,35 @@ async def create_job(job: JobCreate, hr_id: str):
         return {"success": True, "job": new_job}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error creating job: {e}")
+@router.post("/job_with_file", status_code=status.HTTP_201_CREATED, response_model=dict)
+async def create_job_file(
+    response: Response,
+    job_file: UploadFile = File(...),
+    hr_id: str = Form(...)
+
+):
+    allowed_file_types = {"application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}
+    if job_file.content_type not in allowed_file_types:
+        
+            response.status_code=status.HTTP_400_BAD_REQUEST
+            return {
+                "sucess": False,
+                "error":"job file must be a PDF or DOCX file"
+            }
+    
+    try:
+        file_path = await upload_file(job_file)
+        extracted_job_requirement = extract_job_requirement(file_path)
+        job = JobDocument.create_job(extracted_job_requirement, hr_id)
+        job_id = str(job["_id"])
+        # job = JobDocument.get_job_by_id(job_id)
+        return {
+            "success": True,
+            "job_id": job_id
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
+
 
 @router.get("/{job_id}", response_model=dict)
 async def get_job(response: Response,job_id: str):

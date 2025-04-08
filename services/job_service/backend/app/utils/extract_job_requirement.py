@@ -69,8 +69,9 @@ def extract_job_requirement(job_file_path):
       "step": 2,
       "action": "Extract Description Section",
       "details": [
-        "Within the description object, extract summary, type, commitment, qualification_level, responsibilities, and location.",
+        "Within the description object, extract summary, type("inperson", "remote"), commitment("full_time", "part_time", "internship"), qualification_level, responsibilities, and location.",
         "Preserve HTML or any formatting present in responsibilities."
+
       ]
     }},
     {{
