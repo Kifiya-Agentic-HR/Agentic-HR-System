@@ -26,7 +26,7 @@ import {
 import { motion } from "framer-motion";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { jobPost } from "@/lib/api";
-import { Bot } from "lucide-react";
+import { Bot, Upload } from "lucide-react";
 import { Chatbot } from "@/components/JobPostingChatbot";
 
 const formSchema = z.object({
@@ -47,11 +47,7 @@ const formSchema = z.object({
       })
     )
     .min(1, "At least one skill is required"),
-
-   jobDescriptionFile: z.any().refine(
-      (value) => value instanceof File || value === undefined, 
-      "Must be a valid file"
-    ).optional(),
+  jobDescriptionFile: z.instanceof(File).optional(),
 });
 
 export type FormSchemaType = z.infer<typeof formSchema>;
@@ -59,6 +55,8 @@ export type FormSchemaType = z.infer<typeof formSchema>;
 export default function JobPostingForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("form");
+  const [fileUploading, setFileUploading] = useState(false);
   const router = useRouter();
 
   const form = useForm<FormSchemaType>({
@@ -87,7 +85,6 @@ export default function JobPostingForm() {
         method: "POST",
         body: formData,
       });
-
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
@@ -105,7 +102,7 @@ export default function JobPostingForm() {
       setFileUploading(false);
     }
   };
-    
+
   async function onSubmit(values: FormSchemaType) {
     const hr_id = localStorage.getItem("userId");
     if (!hr_id) {
@@ -171,6 +168,7 @@ export default function JobPostingForm() {
         <Chatbot
           isOpen={isChatbotOpen}
           onClose={() => setIsChatbotOpen(false)}
+          form={form}
         />
 
         <motion.div
@@ -187,11 +185,37 @@ export default function JobPostingForm() {
               Post New Job
             </h2>
 
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-8"
+            <div className="flex gap-4 mb-8">
+              <Button
+                variant={activeTab === "form" ? "default" : "outline"}
+                onClick={() => setActiveTab("form")}
+                className={`${
+                  activeTab === "form"
+                    ? "bg-[#FF8A00] text-white"
+                    : "text-[#364957] border-[#364957]/20"
+                }`}
               >
+                Manual Entry
+              </Button>
+              <Button
+                variant={activeTab === "upload" ? "default" : "outline"}
+                onClick={() => setActiveTab("upload")}
+                className={`${
+                  activeTab === "upload"
+                    ? "bg-[#FF8A00] text-white"
+                    : "text-[#364957] border-[#364957]/20"
+                }`}
+              >
+                Upload JD
+              </Button>
+            </div>
+
+            {activeTab === "form" ? (
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-8"
+                >
                 <FormField
                   control={form.control}
                   name="title"
@@ -385,12 +409,17 @@ export default function JobPostingForm() {
                         Key Responsibilities
                       </FormLabel>
                       <FormControl>
-                        <RichTextEditor
+                      <Input
+                          placeholder="Describe the job responsibilities..."
+                          className="border-2 border-[#364957]/20 text-lg"
+                          {...field}
+                        />
+                        {/* <RichTextEditor
                           value={field.value}
                           onChange={field.onChange}
                           placeholder="Describe the job responsibilities..."
                           className="bg-white"
-                        />
+                        /> */}
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -424,8 +453,34 @@ export default function JobPostingForm() {
                 >
                   {isSubmitting ? "Posting..." : "Post Job"}
                 </Button>
-              </form>
-            </Form>
+                </form>
+              </Form>
+            ) : (
+              <div className="border-2 border-dashed border-[#364957]/20 rounded-xl p-8 text-center">
+                <div className="mb-4">
+                  <Upload className="h-12 w-12 text-[#364957]/50 mx-auto" />
+                </div>
+                <input
+                  type="file"
+                  id="jobDescriptionFile"
+                  accept=".pdf,.docx"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleFileUpload(file);
+                  }}
+                />
+                <label
+                  htmlFor="jobDescriptionFile"
+                  className="cursor-pointer bg-[#FF8A00] text-white px-6 py-3 rounded-lg hover:bg-[#FF8A00]/90"
+                >
+                  {fileUploading ? "Uploading..." : "Upload Job Description"}
+                </label>
+                <p className="mt-4 text-[#364957]/50">
+                  Supported formats: PDF, DOCX
+                </p>
+              </div>
+            )}
           </motion.div>
         </motion.div>
       </div>
