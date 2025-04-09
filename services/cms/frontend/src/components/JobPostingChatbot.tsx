@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { toast } from "sonner";
 import { useFormContext } from "react-hook-form";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Wand2, User, X } from "lucide-react";
+import { Wand2, User, X, CheckCircle } from "lucide-react";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { FormSchemaType } from "@/app/hr/job-post/page";
 
@@ -14,17 +15,29 @@ type ChatMessage = {
   content: string;
 };
 
+type ParsedData = {
+  title?: string;
+  description?: {
+    summary?: string;
+    responsibilities?: string;
+    location?: string;
+  };
+  skills?: Array<{ skill: string; level: string }>;
+};
+
 export const Chatbot = ({
   isOpen,
   onClose,
+  form,
 }: {
   isOpen: boolean;
   onClose: () => void;
+  form: any;
 }) => {
-  const { setValue, getValues } = useFormContext<FormSchemaType>();
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [isLoadingResponse, setIsLoadingResponse] = useState(false);
+  const [autoFillData, setAutoFillData] = useState<ParsedData | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback(() => {
@@ -35,38 +48,111 @@ export const Chatbot = ({
     scrollToBottom();
   }, [chatMessages, scrollToBottom]);
 
-  const handleAutoFillSuggestions = useCallback(
-    (reply: string) => {
-      try {
-        const summaryMatch = reply.match(
-          /Suggested Summary:\s*(.+?)(?=\n\*\*|\n$)/i
-        );
-        if (summaryMatch) {
-          setValue("description.summary", summaryMatch[1].trim());
-        }
+  const parseAssistantReply = (reply: string): ParsedData => {
+    const parsedData: ParsedData = {
+      title: "",
+      description: {
+        summary: "",
+        responsibilities: "",
+        location: "Addis Ababa, Ethiopia",
+      },
+      skills: [],
+    };
 
-        const skillsMatch = reply.match(
-          /Suggested Skills:\s*(.+?)(?=\n\*\*|\n$)/i
-        );
-        if (skillsMatch) {
-          const skills = skillsMatch[1]
-            .split(",")
-            .map((skill) => ({
-              skill: skill.trim().replace(/[-•]/g, "").trim(),
-              level: "intermediate",
-            }))
-            .filter((skill) => skill.skill.length > 0);
+    try {
+      const sanitizedReply = reply.replace(/\*/g, '');
 
-          if (skills.length > 0) {
-            setValue("skills", skills);
-          }
-        }
-      } catch (error) {
-        console.error("Auto-fill error:", error);
+      const titleMatch = sanitizedReply.match(/Suggested Title:\s*(.+?)(?=\n|$)/i);
+      if (titleMatch) parsedData.title = titleMatch[1].trim();
+
+      const summaryMatch = sanitizedReply.match(
+        /Suggested Summary:\s*(.+?)(?=\n|$)/i
+      );
+      if (summaryMatch) parsedData.description!.summary = summaryMatch[1].trim();
+
+      const responsibilitiesMatch = sanitizedReply.match(
+        /Suggested Responsibilities:\s*([\s\S]+?)(?=\nSuggested|\n$)/i
+      );
+      if (responsibilitiesMatch) {
+        parsedData.description!.responsibilities = responsibilitiesMatch[1]
+          .split('\n')
+          .filter(line => line.trim().length > 0)
+          .map(line => line.replace(/^[-•]\s*/, '').trim()) // remove bullets
+          .join('\n'); // join with new lines for textarea
       }
-    },
-    [setValue]
-  );
+
+      const locationMatch = sanitizedReply.match(
+        /Suggested Location:\s*(.+?)(?=\n|$)/i
+      );
+      if (locationMatch) {
+        parsedData.description!.location = locationMatch[1].trim();
+      }
+
+      const skillsMatch = sanitizedReply.match(
+        /Suggested Skills:\s*([\s\S]+?)(?=\nSuggested|\n$)/i
+      );
+      if (skillsMatch) {
+        parsedData.skills = skillsMatch[1]
+          .split("\n")
+          .map((skill) => {
+            const match = skill.match(/(.+?)\s*-\s*(beginner|intermediate|expert)/i);
+            return match ? {
+              skill: match[1].trim(),
+              level: match[2].toLowerCase()
+            } : {
+              skill: skill.replace(/[-•]/g, '').trim(),
+              level: "intermediate"
+            };
+          })
+          .filter(skill => skill.skill.length > 0);
+      }
+
+      return parsedData;
+    } catch (error) {
+      console.error("Parsing error:", error);
+      return parsedData;
+    }
+  };
+
+  const handleAutoFill = useCallback(() => {
+    if (!autoFillData) return;
+  
+    form.setValue("title", autoFillData.title || "", {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  
+    form.setValue("description.summary", autoFillData.description?.summary || "", {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  
+    form.setValue(
+      "description.responsibilities",
+      autoFillData.description?.responsibilities || "",
+      {
+        shouldValidate: true,
+        shouldDirty: true,
+      }
+    );
+  
+    form.setValue(
+      "description.location",
+      autoFillData.description?.location || "Addis Ababa, Ethiopia",
+      {
+        shouldValidate: true,
+        shouldDirty: true,
+      }
+    );
+  
+    form.setValue("skills", autoFillData.skills || [], {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  
+    toast.success("Form fields auto-filled successfully!");
+  }, [autoFillData, form]);
+  
 
   const handleSendMessage = useCallback(async () => {
     if (!chatInput.trim()) return;
@@ -82,25 +168,40 @@ export const Chatbot = ({
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-      const context = JSON.stringify(getValues(), null, 2);
-      const prompt = `You are a job posting assistant. NOTICE: Respond in plain text format without using **asterisks** or any markdown formatting. Use normal punctuation instead of special characters for emphasis. Help the user with their job post based on:
+      const context = JSON.stringify(form.getValues(), null, 2);
+      const prompt = `You are a job posting assistant. NOTICE:make sure each responsibilities are in new line.
+      Respond in this EXACT format:
+Suggested Title: [Job Title]
+
+Suggested Summary: [2-3 sentence summary]
+
+Suggested Responsibilities:
+[Bullet point 1]
+[Bullet point 2]
+[Bullet point 3]
+
+Suggested Location: Addis Ababa, Ethiopia
+
+Suggested Skills:
+[Skill 1] - [Level]
+[Skill 2] - [Level]
+
+Help the user with their job post based on:
 - Current form data: ${context}
 - User request: ${newMessage}
-
-Format responses with clear section headers:
-~Suggested Summary: [text] 
-~Suggested Skills: [comma-separated list]
-~Other Advice: [text]`;
+- Always use Addis Ababa, Ethiopia as default location unless specified otherwise`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = await response.text();
 
+      const parsedData = parseAssistantReply(text);
+      setAutoFillData(parsedData);
+
       setChatMessages((prev) => [
         ...prev,
-        { role: "assistant", content: text },
+        { role: "assistant", content: text.replace(/\*/g, '') },
       ]);
-      handleAutoFillSuggestions(text);
     } catch (error) {
       console.error("Chatbot error:", error);
       setChatMessages((prev) => [
@@ -113,7 +214,7 @@ Format responses with clear section headers:
     } finally {
       setIsLoadingResponse(false);
     }
-  }, [chatInput, getValues, handleAutoFillSuggestions]);
+  }, [chatInput, form]);
 
   const ChatMessageBubble = useCallback(
     ({ role, content }: ChatMessage) => (
@@ -140,10 +241,19 @@ Format responses with clear section headers:
             <div className="whitespace-pre-wrap">{content}</div>
             {role === "user" && <User className="h-5 w-5 mt-1" />}
           </div>
+          {role === "assistant" && autoFillData && (
+            <Button
+              onClick={handleAutoFill}
+              className="mt-2 bg-[#364957] hover:bg-[#364957]/90 text-xs h-8 text-white"
+            >
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Autofill Form
+            </Button>
+          )}
         </div>
       </motion.div>
     ),
-    []
+    [autoFillData, handleAutoFill]
   );
 
   if (!isOpen) return null;
