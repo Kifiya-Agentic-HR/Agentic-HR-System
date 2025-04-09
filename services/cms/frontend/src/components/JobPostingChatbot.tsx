@@ -64,9 +64,78 @@ export const Chatbot = ({
       } catch (error) {
         console.error("Auto-fill error:", error);
       }
-    },
-    [setValue]
-  );
+      const locationMatch = sanitizedReply.match(
+        /Suggested Location:\s*(.+?)(?=\n|$)/i
+      );
+      if (locationMatch) {
+        parsedData.description!.location = locationMatch[1].trim();
+      }
+
+      const skillsMatch = sanitizedReply.match(
+        /Suggested Skills:\s*([\s\S]+?)(?=\nSuggested|\n$)/i
+      );
+      if (skillsMatch) {
+        parsedData.skills = skillsMatch[1]
+          .split("\n")
+          .map((skill) => {
+            const match = skill.match(/(.+?)\s*-\s*(beginner|intermediate|expert)/i);
+            return match ? {
+              skill: match[1].trim(),
+              level: match[2].toLowerCase()
+            } : {
+              skill: skill.replace(/[-•]/g, '').trim(),
+              level: "intermediate"
+            };
+          })
+          .filter(skill => skill.skill.length > 0);
+      }
+
+      return parsedData;
+    } catch (error) {
+      console.error("Parsing error:", error);
+      return parsedData;
+    }
+  };
+
+  const handleAutoFill = useCallback(() => {
+    if (!autoFillData) return;
+  
+    form.setValue("title", autoFillData.title || "", {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  
+    form.setValue("description.summary", autoFillData.description?.summary || "", {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  
+    form.setValue(
+      "description.responsibilities",
+      autoFillData.description?.responsibilities || "",
+      {
+        shouldValidate: true,
+        shouldDirty: true,
+      }
+    );
+  
+    form.setValue(
+      "description.location",
+      autoFillData.description?.location || "Addis Ababa, Ethiopia",
+      {
+        shouldValidate: true,
+        shouldDirty: true,
+      }
+    );
+  
+    form.setValue("skills", autoFillData.skills || [], {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  
+    toast.success("Form fields auto-filled successfully!");
+  }, [autoFillData, form]);
+
 
   const handleSendMessage = useCallback(async () => {
     if (!chatInput.trim()) return;

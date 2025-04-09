@@ -47,6 +47,7 @@ const formSchema = z.object({
       })
     )
     .min(1, "At least one skill is required"),
+
    jobDescriptionFile: z.any().refine(
       (value) => value instanceof File || value === undefined, 
       "Must be a valid file"
@@ -76,6 +77,35 @@ export default function JobPostingForm() {
     },
   });
 
+  const handleFileUpload = async (file: File) => {
+    setFileUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      
+      const response = await fetch("/api/parse-job-description", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      
+      const data = await response.json();
+      if (data.success) {
+        form.reset(data.data);
+        toast.success("Job description parsed successfully!");
+      } else {
+        throw new Error(data.error || "Failed to parse file");
+      }
+    } catch (error) {
+      toast.error("File upload failed: " + (error as Error).message);
+    } finally {
+      setFileUploading(false);
+    }
+  };
+    
   async function onSubmit(values: FormSchemaType) {
     const hr_id = localStorage.getItem("userId");
     if (!hr_id) {
