@@ -26,7 +26,7 @@ import {
 import { motion } from "framer-motion";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { jobPost } from "@/lib/api";
-import { Bot, Upload } from "lucide-react";
+import { Bot } from "lucide-react";
 import { Chatbot } from "@/components/JobPostingChatbot";
 
 const formSchema = z.object({
@@ -47,7 +47,6 @@ const formSchema = z.object({
       })
     )
     .min(1, "At least one skill is required"),
-  jobDescriptionFile: z.instanceof(File).optional(),
 });
 
 export type FormSchemaType = z.infer<typeof formSchema>;
@@ -55,8 +54,6 @@ export type FormSchemaType = z.infer<typeof formSchema>;
 export default function JobPostingForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("form");
-  const [fileUploading, setFileUploading] = useState(false);
   const router = useRouter();
 
   const form = useForm<FormSchemaType>({
@@ -74,33 +71,6 @@ export default function JobPostingForm() {
       skills: [{ skill: "", level: "beginner" }],
     },
   });
-
-  const handleFileUpload = async (file: File) => {
-    setFileUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      
-      const response = await fetch("/api/parse-job-description", {
-        method: "POST",
-        body: formData,
-      });
-      if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-      const data = await response.json();
-      if (data.success) {
-        form.reset(data.data);
-        toast.success("Job description parsed successfully!");
-      } else {
-        throw new Error(data.error || "Failed to parse file");
-      }
-    } catch (error) {
-      toast.error("File upload failed: " + (error as Error).message);
-    } finally {
-      setFileUploading(false);
-    }
-  };
 
   async function onSubmit(values: FormSchemaType) {
     const hr_id = localStorage.getItem("userId");
@@ -167,7 +137,6 @@ export default function JobPostingForm() {
         <Chatbot
           isOpen={isChatbotOpen}
           onClose={() => setIsChatbotOpen(false)}
-          form={form}
         />
 
         <motion.div
@@ -184,37 +153,11 @@ export default function JobPostingForm() {
               Post New Job
             </h2>
 
-            <div className="flex gap-4 mb-8">
-              <Button
-                variant={activeTab === "form" ? "default" : "outline"}
-                onClick={() => setActiveTab("form")}
-                className={`${
-                  activeTab === "form"
-                    ? "bg-[#FF8A00] text-white"
-                    : "text-[#364957] border-[#364957]/20"
-                }`}
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-8"
               >
-                Manual Entry
-              </Button>
-              <Button
-                variant={activeTab === "upload" ? "default" : "outline"}
-                onClick={() => setActiveTab("upload")}
-                className={`${
-                  activeTab === "upload"
-                    ? "bg-[#FF8A00] text-white"
-                    : "text-[#364957] border-[#364957]/20"
-                }`}
-              >
-                Upload JD
-              </Button>
-            </div>
-
-            {activeTab === "form" ? (
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-8"
-                >
                 <FormField
                   control={form.control}
                   name="title"
@@ -408,17 +351,12 @@ export default function JobPostingForm() {
                         Key Responsibilities
                       </FormLabel>
                       <FormControl>
-                      <Input
-                          placeholder="Describe the job responsibilities..."
-                          className="border-2 border-[#364957]/20 text-lg"
-                          {...field}
-                        />
-                        {/* <RichTextEditor
+                        <RichTextEditor
                           value={field.value}
                           onChange={field.onChange}
                           placeholder="Describe the job responsibilities..."
                           className="bg-white"
-                        /> */}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -452,34 +390,8 @@ export default function JobPostingForm() {
                 >
                   {isSubmitting ? "Posting..." : "Post Job"}
                 </Button>
-                </form>
-              </Form>
-            ) : (
-              <div className="border-2 border-dashed border-[#364957]/20 rounded-xl p-8 text-center">
-                <div className="mb-4">
-                  <Upload className="h-12 w-12 text-[#364957]/50 mx-auto" />
-                </div>
-                <input
-                  type="file"
-                  id="jobDescriptionFile"
-                  accept=".pdf,.docx"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleFileUpload(file);
-                  }}
-                />
-                <label
-                  htmlFor="jobDescriptionFile"
-                  className="cursor-pointer bg-[#FF8A00] text-white px-6 py-3 rounded-lg hover:bg-[#FF8A00]/90"
-                >
-                  {fileUploading ? "Uploading..." : "Upload Job Description"}
-                </label>
-                <p className="mt-4 text-[#364957]/50">
-                  Supported formats: PDF, DOCX
-                </p>
-              </div>
-            )}
+              </form>
+            </Form>
           </motion.div>
         </motion.div>
       </div>
