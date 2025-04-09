@@ -6,6 +6,7 @@ import { Public, Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/schemas/user.schema';
 import { UsersService } from '../users/users.service';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApplicationInvitePayload } from './interfaces/application-invite-payload.interface';
 
 @Controller('applications')
 @UseGuards(AuthGuard, RolesGuard)
@@ -74,6 +75,11 @@ export class ApplicationsController {
   editScore(@Param('id') id: string, @Body() updateData: any) {
     this.logger.log(`Editing score for application ID: ${id}, Data: ${JSON.stringify(updateData)}`);
     return this.appsService.editScore(id, updateData);
+  }
+
+  @Post('invite')
+  async inviteApplication(@Body() payload: ApplicationInvitePayload): Promise<any> {
+    return await this.appsService.invite(payload);
   }
 }
 

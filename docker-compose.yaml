@@ -21,6 +21,7 @@ services:
       NOTIFICATION_PORT: "8000" 
       NOTIFICATION_SERVICE_URL: "http://notification:${NOTIFICATION_PORT}/api/v1/"
       FRONTEND_BASE_URL: "http://${HOST}:${CMS_FRONTEND_PORT}"
+      CAREERS_PAGE: "http://${HOST}:${JOB_PORTAL_PORT}"
       INTERVIEW_BACKEND_URL: "http://interview_backend:8080/api/v1"
       JWT_SECRET: "${JWT_SECRET}"
       ADMIN_EMAIL: "${ADMIN_EMAIL}"

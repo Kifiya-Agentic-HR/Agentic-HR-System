@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Application, RecommendationResponse, User } from "@/components/jobs/types";
+import { Application, RecommendationResponse, User, Recommendation } from "@/components/jobs/types";
 import {
   getGeminiRecommendations,
   getJobApplications,
@@ -13,8 +13,7 @@ import {
   getShortlistByJob,
   createRecommendation,
   getRecommendationByJob,
-  getMe,
-  Recommendation,
+  getMe
 } from "@/lib/api";
 import { toast } from "sonner";
 import { FileWarning } from 'lucide-react';  
@@ -373,7 +372,7 @@ const startRecommendationPolling = () => {
 {showRecommendations ? (
   <div className="mb-8">
     <h2 className="text-xl font-semibold mb-4">Recommended Applicants</h2>
-    <RecommendationTable recommendations={recommendedApplicants} />
+    <RecommendationTable recommendations={recommendedApplicants} jobId={jobId} />
     <button
       onClick={() => setShowRecommendations(false)}
       className="mt-4 text-[#FF6A00] hover:underline"
