@@ -47,6 +47,10 @@ const formSchema = z.object({
       })
     )
     .min(1, "At least one skill is required"),
+   jobDescriptionFile: z.any().refine(
+      (value) => value instanceof File || value === undefined, 
+      "Must be a valid file"
+    ).optional(),
 });
 
 export type FormSchemaType = z.infer<typeof formSchema>;
