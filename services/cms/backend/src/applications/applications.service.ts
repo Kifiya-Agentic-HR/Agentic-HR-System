@@ -161,17 +161,17 @@ export class ApplicationsService {
     // Use a default subject if none provided.
 
     let job = await this.jobService.findOne(payload.apply_link);
-
-    const subject =  `We would like to invite you to apply to ${payload.title} at Kifiya Financial Technologies`;
+    let title = job?.job ? job.job.title : "the job";
+    const subject =  `We would like to invite you to apply to ${title} at Kifiya Financial Technologies`;
 
     
     const requestPayload = {
       to: payload.to,
-      title: job.data ? job?.data?.title : 'New Job',
+      title: title,
       type: 'application_invite',
       subject,
       name: payload.name,
-      apply_link: `${this.jobUrl}/jobs/${payload.apply_link}`,
+      apply_link: `${this.jobUrl}/jobs/${payload.apply_link}/apply`,
     };
 
 
