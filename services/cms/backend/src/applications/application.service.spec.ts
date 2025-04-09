@@ -4,6 +4,7 @@ import { HttpService } from '@nestjs/axios';
 import { of } from 'rxjs';
 import { AxiosResponse } from 'axios';
 import { Logger } from '@nestjs/common';
+import { JobsService } from '../jobs/jobs.service'; 
 
 beforeAll(() => {
   jest.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
@@ -16,13 +17,17 @@ const mockHttpService = () => ({
   put: jest.fn(),
 });
 
+const mockJobsService = {
+  findJobById: jest.fn(), 
+};
+
 const mockResponse = (data: any): AxiosResponse => ({
   data,
   status: 200,
   statusText: 'OK',
   headers: {},
   config: {
-    headers: undefined
+    headers: undefined,
   },
 });
 
@@ -35,6 +40,7 @@ describe('ApplicationsService', () => {
       providers: [
         ApplicationsService,
         { provide: HttpService, useFactory: mockHttpService },
+        { provide: JobsService, useValue: mockJobsService }, // <- added this
       ],
     }).compile();
 

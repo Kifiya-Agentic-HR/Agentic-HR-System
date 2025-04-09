@@ -2,8 +2,8 @@ import { Injectable, Logger, HttpException, HttpStatus} from '@nestjs/common';
 import { HttpService} from '@nestjs/axios';
 import { firstValueFrom} from 'rxjs';
 import * as FormData from 'form-data';
-import { ApplicationInvitePayload } from 'src/applications/interfaces/application-invite-payload.interface';
-import { JobsService } from 'src/jobs/jobs.service';
+import { ApplicationInvitePayload } from '../applications/interfaces/application-invite-payload.interface';
+import { JobsService } from '../jobs/jobs.service';
 
 @Injectable()
 export class ApplicationsService {
