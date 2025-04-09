@@ -162,7 +162,7 @@ export const Chatbot = ({
     setIsLoadingResponse(true);
 
     try {
-      const apiKey = process.env.GEMINI_API_KEY;
+      const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || AIzaSyCjym5MYnST-sE9UdytGoTD8CxOGRJwpUM;
       if (!apiKey) throw new Error("Gemini API key not configured");
 
       const genAI = new GoogleGenerativeAI(apiKey);
