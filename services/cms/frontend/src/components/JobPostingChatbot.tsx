@@ -135,8 +135,6 @@ export const Chatbot = ({
         shouldDirty: true,
       }
     );
-    console.log("Autofill responsibilities:", autoFillData.description?.responsibilities);
-
   
     form.setValue(
       "description.location",
