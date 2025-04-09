@@ -49,7 +49,7 @@ def extract_job_requirement(job_file_path):
       "type": "{{string}}",
       "commitment": "{{string}}",
       "qualification_level": "{{string}}",
-      "responsibilities": "{{string}}",
+      "responsibilities": "{{string}}"(use this example for formating: "<ul><li><p>Design, train, and deploy ML models for various business applications.</p></li><li><p>Optimize models for performance and scalability.</p></li><li><p>Work with data engineers to preprocess and manage large datasets.</p></li><li><p>Develop APIs and integrate models into production systems.</p></li><li><p>Monitor model performance and implement improvements over time.</p></li></ul>"),
       "location": "{{string}}"
     }},
     "job_status": "{{string}}",
