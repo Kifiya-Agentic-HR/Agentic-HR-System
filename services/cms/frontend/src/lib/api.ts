@@ -579,6 +579,43 @@ export const bulkUpload = async (formData: FormData)=> {
     return { success: false, error: "Bulk upload failed" };
   }
 };
+export const uploadJobFile = async (jobFile: File, additionalFields: Record<string, any> = {}) => {
+  const url = `${API_BASE}/jobs/job_with_file`;
+  const formData = new FormData();
+
+  // Append file
+  formData.append("job_file", jobFile);
+
+  // Append any additional fields if needed
+  Object.entries(additionalFields).forEach(([key, value]) => {
+    formData.append(key, value);
+  });
+
+  try {
+    const headers = {
+      ...getAuthHeaders(),
+      // DO NOT set Content-Type when using FormData, browser will auto-set it
+    };
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      return { success: false, error: errorData.error || "Upload failed" };
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Upload failed:", error);
+    return { success: false, error: "Upload failed" };
+  }
+};
+
 
 export async function getOpenJobs() {
   return getJobs(); // Reuse existing getJobs function
