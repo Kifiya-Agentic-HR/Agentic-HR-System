@@ -47,7 +47,10 @@ const formSchema = z.object({
       })
     )
     .min(1, "At least one skill is required"),
-  jobDescriptionFile: z.instanceof(File).optional(),
+    jobDescriptionFile: z.any().refine(
+      (value) => value instanceof File || value === undefined, 
+      "Must be a valid file"
+    ).optional(),
 });
 
 export type FormSchemaType = z.infer<typeof formSchema>;
@@ -85,6 +88,10 @@ export default function JobPostingForm() {
         method: "POST",
         body: formData,
       });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
       
       const data = await response.json();
       if (data.success) {
