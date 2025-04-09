@@ -14,6 +14,12 @@ export default function ProfileDropdown({
   onLogoutClick,
   onSettingsClick,
 }: ProfileDropdownProps) {
+
+  // if "undefined" in name string just name it Admin
+  if (name === "undefined undefined") {
+    name = "Admin";
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -10 }}

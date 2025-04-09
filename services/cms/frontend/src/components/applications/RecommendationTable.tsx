@@ -4,19 +4,40 @@ import { RecommendationResponse } from "@/components/jobs/types";
 import Link from "next/link";
 import { FiCalendar, FiFileText, FiStar, FiCheckCircle, FiAlertTriangle } from "react-icons/fi";
 import { useState } from "react";
+import { getJobApplications, inviteRecommendation } from "@/lib/api";
 
 interface RecommendationTableProps {
   recommendations: RecommendationResponse[];
+  jobId: string;
 }
+
+export const extractUserData = (rec: RecommendationResponse): { name: string; email: string } => {
+  const { full_name, email } = rec;
+  return { name: full_name, email };
+};
 
 export default function RecommendationTable({
   recommendations,
+  jobId
 }: RecommendationTableProps) {
   const [selectedReasoning, setSelectedReasoning] = useState<RecommendationResponse | null>(null);
   const [invitedRecommendations, setInvitedRecommendations] = useState<Set<string>>(new Set());
 
-  const handleInviteClick = (recommendationId: string) => {
-    setInvitedRecommendations(prev => new Set(prev.add(recommendationId)));
+  const handleInviteClick = async (recommendation: RecommendationResponse) => {
+    
+    const payload = {
+      to: recommendation.email ,
+      title: jobId,          
+      type: "application_invite" as const,
+      subject: "We would like to invite you to apply to an open Job role at Kifiya Financial Technologies.",
+      name: recommendation.full_name,      // Replace with the candidate's name
+      apply_link: jobId //
+    };
+    
+    await inviteRecommendation(payload);
+    
+    setInvitedRecommendations(prev => new Set(prev.add(recommendation._id)));
+
   };
 
   return (
@@ -64,7 +85,7 @@ export default function RecommendationTable({
                 </td>
                 <td className="pr-8 pl-6 py-4">
                 <button
-                    onClick={() => handleInviteClick(rec._id)}
+                    onClick={() => handleInviteClick(rec)}
                     disabled={invitedRecommendations.has(rec._id)}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors disabled:opacity-50 ${
                         invitedRecommendations.has(rec._id)

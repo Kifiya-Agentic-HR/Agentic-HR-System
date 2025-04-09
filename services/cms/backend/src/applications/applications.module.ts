@@ -4,9 +4,10 @@ import { ApplicationsController } from './applications.controller';
 import { ApplicationsService } from './applications.service';
 import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
+import { JobsModule } from 'src/jobs/jobs.module';
 
 @Module({
-  imports: [HttpModule, AuthModule, UsersModule],
+  imports: [HttpModule, AuthModule, UsersModule, JobsModule],
   controllers: [ApplicationsController],
   providers: [ApplicationsService],
   exports: [ApplicationsService],

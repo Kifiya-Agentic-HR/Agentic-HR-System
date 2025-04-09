@@ -1,3 +1,6 @@
+
+import { Recommendation, ApplicationInvitePayload } from "@/components/jobs/types";
+
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL
 const INTERVIEW_BASE = process.env.NEXT_PUBLIC_API_BASE_URL
 interface JobCreate {
@@ -664,14 +667,6 @@ Output format (strictly follow):
   }
 }
 
-export interface Recommendation {
-  title: string;
-  location: string;
-  type: string;
-  reason: string;
-}
-
-
 // --------- shortlisting -----------------
 export const createShortList = async (hiringManagerId: string, jobId: string) => {
   const url = `${API_BASE}/short_list/${encodeURIComponent(hiringManagerId)}?job_id=${encodeURIComponent(jobId)}`;
@@ -808,3 +803,17 @@ export const getRecommendationByJob = async (jobId: string) => {
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 };
+
+export async function inviteRecommendation(payload: ApplicationInvitePayload) {
+  const response = await fetch(`${API_BASE}/applications/invite`, {
+    method: 'POST',
+    headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to send invitation');
+  }
+
+  return response.json();
+}

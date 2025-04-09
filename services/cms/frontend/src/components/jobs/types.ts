@@ -6,6 +6,25 @@ export interface Job {
     applications: Application[];
   }
 
+  export interface Recommendation {
+    title: string;
+    location: string;
+    type: string;
+    reason: string;
+  }
+
+
+  export interface ApplicationInvitePayload {
+    to: string;
+    title: string;
+    type: 'application_invite';
+    subject: string;
+    name: string;
+    apply_link: string;
+  }
+  
+  
+  
   export interface ShortList {
     _id: string;
     job_id: string;
