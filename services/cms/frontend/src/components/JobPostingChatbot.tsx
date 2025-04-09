@@ -169,7 +169,7 @@ export const Chatbot = ({
       const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
       const context = JSON.stringify(form.getValues(), null, 2);
-      const prompt = `You are a job posting assistant.NOTICE:make sure each responsibilities are in new line.
+      const prompt = `You are a job posting assistant. NOTICE:make sure each responsibilities are in new line.
       Respond in this EXACT format:
 Suggested Title: [Job Title]
 
