@@ -24,6 +24,8 @@ async function bootstrap() {
 async function bootstrapAdminUser(usersService: UsersService) {
   const adminEmail = process.env.ADMIN_EMAIL;
   const adminPassword = process.env.ADMIN_PASSWORD;
+  const adminFirstName = process.env.ADMIN_FIRST_NAME;
+  const adminLastName = process.env.ADMIN_LAST_NAME;
 
   // If you haven't provided admin credentials in .env, skip
   if (!adminEmail || !adminPassword) {
@@ -40,6 +42,8 @@ async function bootstrapAdminUser(usersService: UsersService) {
       email: adminEmail,
       password: adminPassword,
       role: UserRole.ADMIN,
+      firstName: adminFirstName,
+      lastName: adminLastName,
     });
     console.log('Admin user created.');
   } else {
