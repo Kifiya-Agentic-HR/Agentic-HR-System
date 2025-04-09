@@ -4,7 +4,7 @@ import { HttpService } from '@nestjs/axios';
 import { of } from 'rxjs';
 import { AxiosResponse } from 'axios';
 import { Logger } from '@nestjs/common';
-import { JobsService } from '../jobs/jobs.service'; // Make sure this path is correct
+import { JobsService } from '../jobs/jobs.service'; 
 
 beforeAll(() => {
   jest.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
@@ -18,8 +18,7 @@ const mockHttpService = () => ({
 });
 
 const mockJobsService = {
-  // Mock methods if ApplicationsService uses any of them
-  findJobById: jest.fn(), // Example
+  findJobById: jest.fn(), 
 };
 
 const mockResponse = (data: any): AxiosResponse => ({
