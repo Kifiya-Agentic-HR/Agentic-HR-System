@@ -85,7 +85,9 @@ export default function JobPostingForm() {
         method: "POST",
         body: formData,
       });
-      
+      if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
       const data = await response.json();
       if (data.success) {
         form.reset(data.data);
