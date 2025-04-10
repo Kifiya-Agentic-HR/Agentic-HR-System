@@ -343,9 +343,9 @@ const StatusPopup = ({
               </div>
               <div className="flex items-baseline gap-4">
                 <div className="text-3xl font-bold text-[#364957]">
-                  {application.screening?.score &&
-                  !isNaN(Number(application.screening.score))
-                    ? Number(application.screening.score)
+                  {application.interview?.score &&
+                  !isNaN(Number(application.interview.score))
+                    ? Number(application.interview.score)
                     : "N/A"}
                 </div>
 
