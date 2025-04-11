@@ -15,10 +15,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService): RedisModuleOptions => {
         const redisUri = configService.get<string>('REDIS_URI');
+
         if (redisUri) {
-          return { config: { url: redisUri } };
+          return {
+            type: 'single',
+            url: redisUri,
+          };
         }
-  
+
         const host = configService.get<string>('REDIS_HOST', 'localhost');
         const port = configService.get<number>('REDIS_PORT', 6379);
         const password = configService.get<string>('REDIS_PASSWORD');
@@ -31,8 +35,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         if (db) {
           url += `/${db}`;
         }
-  
-        return { config: { url } };
+
+        return {
+          type: 'single',
+          url,
+        };
       },
       inject: [ConfigService],
     }),
