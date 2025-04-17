@@ -42,7 +42,7 @@ const VerifyEmailText = ({
   const isValidEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
 
   useEffect(() => {
-    let timer: string | number | NodeJS.Timeout | undefined;
+    let timer: NodeJS.Timeout | undefined;
     if (resendCooldown > 0) {
       timer = setInterval(() => {
         setResendCooldown((prev) => prev - 1);
@@ -59,6 +59,8 @@ const VerifyEmailText = ({
       setShowOtpPopup(true);
       setResendCooldown(30);
       setError('');
+    } catch (err) {
+      setError('Failed to send OTP. Please try again.');
     } finally {
       setIsSendingOtp(false);
     }
@@ -72,7 +74,7 @@ const VerifyEmailText = ({
       setResendCooldown(30);
       setError('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to resend OTP');
+      setError('Failed to resend OTP. Please try again in a moment.');
     } finally {
       setLoading(false);
     }
@@ -87,8 +89,10 @@ const VerifyEmailText = ({
         onVerified();
         setShowOtpPopup(false);
       } else {
-        setError('Invalid OTP code');
+        setError('Invalid OTP code. Try again.');
       }
+    } catch {
+      setError('Verification failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -120,7 +124,7 @@ const VerifyEmailText = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
           >
             <motion.div
               initial={{ scale: 0.95 }}
@@ -137,13 +141,22 @@ const VerifyEmailText = ({
                 </button>
               </div>
               
-              <p className="text-sm text-[#364957]/80 mb-4">
+              <p className="text-sm text-[#364957]/80 mb-2">
                 Enter the 6-digit code sent to {email}
               </p>
 
+              {error && (
+                <div className="bg-red-100 text-red-700 px-4 py-2 rounded-md mb-4 text-sm">
+                  {error}
+                </div>
+              )}
+
               <Input
                 value={otpValue}
-                onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                onChange={(e) => {
+                  setOtpValue(e.target.value.replace(/\D/g, '').slice(0, 6));
+                  if (error) setError('');
+                }}
                 placeholder="••••••"
                 className="mb-4 text-center tracking-[0.5em] font-mono text-xl"
                 maxLength={6}
@@ -159,10 +172,6 @@ const VerifyEmailText = ({
                 </button>
                 {loading && <Loader2 className="w-4 h-4 animate-spin" />}
               </div>
-
-              {error && (
-                <p className="text-red-500 text-sm mb-4">{error}</p>
-              )}
 
               <Button
                 onClick={handleVerifyOtp}
