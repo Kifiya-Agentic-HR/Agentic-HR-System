@@ -7,6 +7,7 @@ from src.utils.cv_parser import parse_cv
 from src.service.job_requirement_service import analyze_job_requirements
 from src.utils.file_reader import extract_text_from_file
 from src.utils.vector_keyword_similarity import calculate_scores
+from src.utils.sanitizer import sanitizer
 
 load_dotenv()
 
@@ -33,14 +34,25 @@ def scoreResume(description_text, job_skills, resume_file_path):
     """
     Evaluates an applicant's resume against job requirements using Gemini AI.
     Returns a JSON analysis with scores, strengths, and critical gaps.
+    
     """
+
+     # Sanitize inputs
+    description_text = sanitizer(description_text)
+    job_skills = sanitizer(job_skills)
+
     # Extract text from the resume file
     extracted_applicant_resume = extract_text_from_file(resume_file_path)
+    extracted_applicant_resume = sanitizer(extracted_applicant_resume) # sanitize
     parsed_cv = parse_cv(extracted_applicant_resume)
+    parsed_cv = sanitizer(parsed_cv) # sanitize
+
     weight = analyze_job_requirements(description_text)
     scores = calculate_scores(description_text, extracted_applicant_resume)
     keyword_weight = scores["weighted_keyword"]
     vector_weight = scores["weighted_vector"]
+
+   
 
     # Construct the AI prompt
     prompt = f"""

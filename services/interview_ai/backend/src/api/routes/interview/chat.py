@@ -6,6 +6,7 @@ from src.api.models.schemas import ChatRequest, ChatResponse, SessionData
 from src.api.db.dependencies import get_mongo_db, get_redis_client
 from src.api.core.config import get_settings
 from src.api.services.email import send_email_notification
+from src.api.utils import sanitizer
 from src.interview_ai import unified_interface
 
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -52,6 +53,7 @@ async def process_chat(
         logger.info(f"CHAT: Session data found: {session_data}")
 
         if chat_request.user_answer:
+            chat_request.user_answer = sanitizer(chat_request.user_answer)
             session_data.conversation_history.append(f"User: {chat_request.user_answer}")
     
         session_data.user_answer = chat_request.user_answer
