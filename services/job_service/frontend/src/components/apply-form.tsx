@@ -10,8 +10,6 @@ import { Card } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import ProgressBar from '@/components/ui/progress-bar';
-import PhoneInput from 'react-phone-number-input';
-import 'react-phone-number-input/style.css';
 import { submitApplication, ApplicationFormData, OtpAPI } from '@/actions/get-api';
 
 const PRIMARY_COLOR = '#364957';
@@ -302,258 +300,259 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
   };
 
   return (
-    <Card className="p-8 h-fit sticky top-20 border border-[#364957]/20 shadow-2xl">
-      <AnimatePresence mode="wait">
-        {!isSubmitted ? (
-          <motion.div
-            key="form"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold mb-2" style={{ color: PRIMARY_COLOR }}>
-                Apply for the Position
-              </h2>
-              <p className="text-[#364957]/80">Complete the form below to submit your application</p>
-            </div>
+    <>
+      <Card className="p-8 h-fit sticky top-20 border border-[#364957]/20 shadow-2xl">
+        <AnimatePresence mode="wait">
+          {!isSubmitted ? (
+            <motion.div
+              key="form"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold mb-2" style={{ color: PRIMARY_COLOR }}>
+                  Apply for the Position
+                </h2>
+                <p className="text-[#364957]/80">Complete the form below to submit your application</p>
+              </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-4">
-                  <div>
-                    <Label className="flex items-center gap-2 text-sm font-medium mb-2">
-                      <User className="w-4 h-4 text-[#364957]" />
-                      Full Name
-                    </Label>
-                    <Input
-                      required
-                      value={formData.full_name}
-                      onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                      className="focus:ring-2 focus:ring-[#FF8A00]/50 border-[#364957]/30"
-                    />
-                  </div>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="flex items-center gap-2 text-sm font-medium mb-2">
+                        <User className="w-4 h-4 text-[#364957]" />
+                        Full Name
+                      </Label>
+                      <Input
+                        required
+                        value={formData.full_name}
+                        onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                        className="focus:ring-2 focus:ring-[#FF8A00]/50 border-[#364957]/30"
+                      />
+                    </div>
 
-                  <div className="space-y-2">
-  <Label className="flex items-center gap-2 text-sm font-medium">
-    <Mail className="w-4 h-4 text-[#364957]" />
-    Email Address
-  </Label>
-  
-  {isValidEmail(formData.email) && (
-    <VerifyEmailText
-      email={formData.email}
-      onVerified={() => setIsEmailVerified(true)}
-      isVerified={isEmailVerified}
-    />
-  )}
-
-  <Input
-    type="email"
-    required
-    value={formData.email}
-    onChange={(e) => {
-      setFormData({ ...formData, email: e.target.value });
-      setTouchedFields({ ...touchedFields, email: true });
-    }}
-    className={`focus:ring-2 focus:ring-[#FF8A00]/50 border-[#364957]/30 ${
-      touchedFields.email && !isValidEmail(formData.email) ? 'border-red-500' : ''
-    }`}
-  />
-  
-  {touchedFields.email && !isValidEmail(formData.email) && (
-    <p className="text-xs text-red-500">Please enter a valid email address</p>
-  )}
-</div>
-
-                  <div>
-                    <Label className="flex items-center gap-2 text-sm font-medium mb-2">
-                      <Phone className="w-4 h-4 text-[#364957]" />
-                      Phone Number
-                    </Label>
-                    <PhoneInput
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-sm font-medium">
+                        <Mail className="w-4 h-4 text-[#364957]" />
+                        Email Address
+                      </Label>
                       
-                      defaultCountry="ET"
-                      value={formData.phone_number}
-                      onChange={(value) => handlePhoneChange(value || '')}
-                      className={`phone-input ${!formData.phone_number && touchedFields.phone_number ? 'invalid' : ''}`}
-                      inputComponent={Input}
-                      required
-                    />
-                  </div>
-                </div>
+                      {isValidEmail(formData.email) && (
+                        <VerifyEmailText
+                          email={formData.email}
+                          onVerified={() => setIsEmailVerified(true)}
+                          isVerified={isEmailVerified}
+                        />
+                      )}
 
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2 text-sm font-medium mb-2">
-                      <Venus className="w-4 h-4 text-[#364957]" />
-                      Gender
-                    </Label>
-                    <div className="flex gap-3">
-                      <label className="flex-1">
-                        <input
-                          type="radio"
-                          name="gender"
-                          value="Female"
-                          checked={formData.gender === 'Female'}
-                          onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                          className="hidden peer"
-                        />
-                        <div className="w-full p-3 text-center border border-[#364957]/30 rounded-md peer-checked:border-[#FF8A00] peer-checked:bg-[#FF8A00]/10 transition-all cursor-pointer">
-                          <div className="flex items-center justify-center gap-2">
-                            <Venus className="w-5 h-5 text-[#364957] peer-checked:text-[#FF8A00]" />
-                            <span className="text-sm text-[#364957]">Female</span>
-                          </div>
-                        </div>
-                      </label>
+                      <Input
+                        type="email"
+                        required
+                        value={formData.email}
+                        onChange={(e) => {
+                          setFormData({ ...formData, email: e.target.value });
+                          setTouchedFields({ ...touchedFields, email: true });
+                        }}
+                        className={`focus:ring-2 focus:ring-[#FF8A00]/50 border-[#364957]/30 ${
+                          touchedFields.email && !isValidEmail(formData.email) ? 'border-red-500' : ''
+                        }`}
+                      />
                       
-                      <label className="flex-1">
-                        <input
-                          type="radio"
-                          name="gender"
-                          value="Male"
-                          checked={formData.gender === 'Male'}
-                          onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                          className="hidden peer"
-                        />
-                        <div className="w-full p-3 text-center border border-[#364957]/30 rounded-md peer-checked:border-[#FF8A00] peer-checked:bg-[#FF8A00]/10 transition-all cursor-pointer">
-                          <div className="flex items-center justify-center gap-2">
-                            <Mars className="w-5 h-5 text-[#364957] peer-checked:text-[#FF8A00]" />
-                            <span className="text-sm text-[#364957]">Male</span>
-                          </div>
-                        </div>
-                      </label>
+                      {touchedFields.email && !isValidEmail(formData.email) && (
+                        <p className="text-xs text-red-500">Please enter a valid email address</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label className="flex items-center gap-2 text-sm font-medium mb-2">
+                        <Phone className="w-4 h-4 text-[#364957]" />
+                        Phone Number
+                      </Label>
+                      <Input
+                        type="tel"
+                        required
+                        value={formData.phone_number}
+                        onChange={(e) => handlePhoneChange(e.target.value)}
+                        placeholder="+251XXXXXXXXX"
+                        className="focus:ring-2 focus:ring-[#FF8A00]/50 border-[#364957]/30"
+                      />
                     </div>
                   </div>
 
-                  <div>
-                    <Label className="flex items-center gap-2 text-sm font-medium mb-2">
-                      <Accessibility className="w-4 h-4 text-[#364957]" />
-                      Disability Status
-                    </Label>
-                    <select
-                      className="w-full border border-[#364957]/30 rounded-md px-3 py-2.5 bg-white text-[#364957]/90 focus:ring-2 focus:ring-[#FF8A00]/50"
-                      value={formData.disability}
-                      onChange={(e) => setFormData({ ...formData, disability: e.target.value })}
-                      required
-                    >
-                      <option value="" disabled>Select an option</option>
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                      <option value="Prefer not to say">Prefer not to say</option>
-                    </select>
-                  </div>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-sm font-medium mb-2">
+                        <Venus className="w-4 h-4 text-[#364957]" />
+                        Gender
+                      </Label>
+                      <div className="flex gap-3">
+                        <label className="flex-1">
+                          <input
+                            type="radio"
+                            name="gender"
+                            value="Female"
+                            checked={formData.gender === 'Female'}
+                            onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                            className="hidden peer"
+                          />
+                          <div className="w-full p-3 text-center border border-[#364957]/30 rounded-md peer-checked:border-[#FF8A00] peer-checked:bg-[#FF8A00]/10 transition-all cursor-pointer">
+                            <div className="flex items-center justify-center gap-2">
+                              <Venus className="w-5 h-5 text-[#364957] peer-checked:text-[#FF8A00]" />
+                              <span className="text-sm text-[#364957]">Female</span>
+                            </div>
+                          </div>
+                        </label>
+                        
+                        <label className="flex-1">
+                          <input
+                            type="radio"
+                            name="gender"
+                            value="Male"
+                            checked={formData.gender === 'Male'}
+                            onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                            className="hidden peer"
+                          />
+                          <div className="w-full p-3 text-center border border-[#364957]/30 rounded-md peer-checked:border-[#FF8A00] peer-checked:bg-[#FF8A00]/10 transition-all cursor-pointer">
+                            <div className="flex items-center justify-center gap-2">
+                              <Mars className="w-5 h-5 text-[#364957] peer-checked:text-[#FF8A00]" />
+                              <span className="text-sm text-[#364957]">Male</span>
+                            </div>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
 
-                  <div>
-                    <Label className="flex items-center gap-2 text-sm font-medium mb-2">
-                      <Briefcase className="w-4 h-4 text-[#364957]" />
-                      Experience
-                    </Label>
-                    <select
-                      className="w-full border border-[#364957]/30 rounded-md px-3 py-2.5 bg-white text-[#364957]/90 focus:ring-2 focus:ring-[#FF8A00]/50"
-                      value={formData.experience_years}
-                      onChange={(e) => setFormData({ ...formData, experience_years: e.target.value })}
-                      required
-                    >
-                      <option value="" disabled>Select experience</option>
-                      <option value="0-1">0-1 years</option>
-                      <option value="2-3">2-3 years</option>
-                      <option value="4-5">4-5 years</option>
-                      <option value="6+">6+ years</option>
-                    </select>
+                    <div>
+                      <Label className="flex items-center gap-2 text-sm font-medium mb-2">
+                        <Accessibility className="w-4 h-4 text-[#364957]" />
+                        Disability Status
+                      </Label>
+                      <select
+                        className="w-full border border-[#364957]/30 rounded-md px-3 py-2.5 bg-white text-[#364957]/90 focus:ring-2 focus:ring-[#FF8A00]/50"
+                        value={formData.disability}
+                        onChange={(e) => setFormData({ ...formData, disability: e.target.value })}
+                        required
+                      >
+                        <option value="" disabled>Select an option</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                        <option value="Prefer not to say">Prefer not to say</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <Label className="flex items-center gap-2 text-sm font-medium mb-2">
+                        <Briefcase className="w-4 h-4 text-[#364957]" />
+                        Experience
+                      </Label>
+                      <select
+                        className="w-full border border-[#364957]/30 rounded-md px-3 py-2.5 bg-white text-[#364957]/90 focus:ring-2 focus:ring-[#FF8A00]/50"
+                        value={formData.experience_years}
+                        onChange={(e) => setFormData({ ...formData, experience_years: e.target.value })}
+                        required
+                      >
+                        <option value="" disabled>Select experience</option>
+                        <option value="0-1">0-1 years</option>
+                        <option value="2-3">2-3 years</option>
+                        <option value="4-5">4-5 years</option>
+                        <option value="6+">6+ years</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div>
-                <Label className="flex items-center gap-2 text-sm font-medium mb-2">
-                  <FileText className="w-4 h-4 text-[#364957]" />
-                  Resume Upload
-                </Label>
-                <div
-                  {...getRootProps()}
-                  className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
-                    isDragActive ? 'border-[#FF8A00] bg-[#FF8A00]/10' : 'border-[#364957]/30'
-                  }`}
-                >
-                  <input {...getInputProps()} required />
-                  <div className="flex flex-col items-center gap-3">
-                    <UploadCloud className={`w-8 h-8 ${isDragActive ? 'text-[#FF8A00]' : 'text-[#364957]/50'}`} />
-                    <p className={`text-sm ${isDragActive ? 'text-[#FF8A00]' : 'text-[#364957]/70'}`}>
-                      {formData.resume ? (
-                        <span className="font-medium text-[#364957]">
-                          {formData.resume.name}
-                        </span>
-                      ) : (
-                        <>
-                          Drag & drop or <span className="text-[#FF8A00]">browse files</span>
-                        </>
-                      )}
-                    </p>
-                    <p className="text-xs text-[#364957]/50">PDF or DOCX (Max 5MB)</p>
+                <div>
+                  <Label className="flex items-center gap-2 text-sm font-medium mb-2">
+                    <FileText className="w-4 h-4 text-[#364957]" />
+                    Resume Upload
+                  </Label>
+                  <div
+                    {...getRootProps()}
+                    className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
+                      isDragActive ? 'border-[#FF8A00] bg-[#FF8A00]/10' : 'border-[#364957]/30'
+                    }`}
+                  >
+                    <input {...getInputProps()} required />
+                    <div className="flex flex-col items-center gap-3">
+                      <UploadCloud className={`w-8 h-8 ${isDragActive ? 'text-[#FF8A00]' : 'text-[#364957]/50'}`} />
+                      <p className={`text-sm ${isDragActive ? 'text-[#FF8A00]' : 'text-[#364957]/70'}`}>
+                        {formData.resume ? (
+                          <span className="font-medium text-[#364957]">
+                            {formData.resume.name}
+                          </span>
+                        ) : (
+                          <>
+                            Drag & drop or <span className="text-[#FF8A00]">browse files</span>
+                          </>
+                        )}
+                      </p>
+                      <p className="text-xs text-[#364957]/50">PDF or DOCX (Max 5MB)</p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {error && (
-                <div className="p-4 bg-red-50 rounded-lg border border-red-200">
-                  <p className="text-sm text-red-600">{error}</p>
-                </div>
-              )}
-
-              <div className="space-y-4">
-                {loading && (
-                  <ProgressBar
-                    value={uploadProgress}
-                    color={SECONDARY_COLOR}
-                    className="h-2 rounded-full"
-                  />
+                {error && (
+                  <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+                    <p className="text-sm text-red-600">{error}</p>
+                  </div>
                 )}
 
-                <Button
-                  type="submit"
-                  className="w-full h-12 transition-all font-medium rounded-lg"
-                  style={{
-                    backgroundColor: isFormValid() ? SECONDARY_COLOR : DISABLED_COLOR,
-                    color: isFormValid() ? 'white' : '#64748B',
-                  }}
-                  disabled={!isFormValid() || loading}
-                >
-                  {loading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : 'Submit Application'}
-                </Button>
-              </div>
-            </form>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="success"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.3 }}
-            className="flex flex-col items-center justify-center p-8 text-center"
-          >
-            <CheckCircle className="w-16 h-16 text-green-500 mb-4" strokeWidth={1.5} />
-            <h3 className="text-2xl font-bold text-[#364957] mb-2">Application Submitted!</h3>
-            <p className="text-[#364957]/80 mb-6">
-              Thank you for applying. We'll review your application and get back to you soon.
-            </p>
-            <div className="w-full max-w-xs">
-              <ProgressBar
-                value={100}
-                color={SECONDARY_COLOR}
-                className="h-2 rounded-full mb-4"
-              />
-              <p className="text-sm text-[#364957]/60">
-                Redirecting to homepage in 3 seconds...
+                <div className="space-y-4">
+                  {loading && (
+                    <ProgressBar
+                      value={uploadProgress}
+                      color={SECONDARY_COLOR}
+                      className="h-2 rounded-full"
+                    />
+                  )}
+
+                  <Button
+                    type="submit"
+                    className="w-full h-12 transition-all font-medium rounded-lg"
+                    style={{
+                      backgroundColor: isFormValid() ? SECONDARY_COLOR : DISABLED_COLOR,
+                      color: isFormValid() ? 'white' : '#64748B',
+                    }}
+                    disabled={!isFormValid() || loading}
+                  >
+                    {loading ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : 'Submit Application'}
+                  </Button>
+                </div>
+              </form>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="success"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              className="flex flex-col items-center justify-center p-8 text-center"
+            >
+              <CheckCircle className="w-16 h-16 text-green-500 mb-4" strokeWidth={1.5} />
+              <h3 className="text-2xl font-bold text-[#364957] mb-2">Application Submitted!</h3>
+              <p className="text-[#364957]/80 mb-6">
+                Thank you for applying. We'll review your application and get back to you soon.
               </p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </Card>
+              <div className="w-full max-w-xs">
+                <ProgressBar
+                  value={100}
+                  color={SECONDARY_COLOR}
+                  className="h-2 rounded-full mb-4"
+                />
+                <p className="text-sm text-[#364957]/60">
+                  Redirecting to homepage in 3 seconds...
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Card>
+    </>
   );
 }
