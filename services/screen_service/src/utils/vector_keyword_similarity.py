@@ -3,6 +3,11 @@ import re
 from config_local import Config
 import nltk
 import google.generativeai as genai
+import os
+import torch
+from transformers import AutoTokenizer, AutoModel
+import numpy as np
+import hashlib
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -30,6 +35,12 @@ if not gemini_api_key:
 # Configure Gemini API
 genai.configure(api_key=gemini_api_key)
 model = genai.GenerativeModel("gemini-2.0-flash")
+
+# Initialize Hugging Face embedding model
+TOKENIZER = AutoTokenizer.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
+HF_MODEL = AutoModel.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
+EMBEDDING_CACHE = {}
+EXPECTED_DIM = HF_MODEL.config.hidden_size
 
 def preprocess_text(text):
     """Cleans and tokenizes text efficiently."""
@@ -80,10 +91,33 @@ def calculate_keyword_match(resume_kws, job_kws):
     return (len(set(resume_kws) & set(job_kws)) / len(job_kws)) * 100 if job_kws else 0.0
 
 def calculate_vector_similarity(job_text, resume_text):
-    """Calculates TF-IDF cosine similarity."""
-    vectorizer = TfidfVectorizer()
-    tfidf_matrix = vectorizer.fit_transform([preprocess_text(job_text), preprocess_text(resume_text)])
-    return cosine_similarity(tfidf_matrix[0], tfidf_matrix[1])[0][0] * 100  # Convert to percentage
+    """Calculates embedding cosine similarity using Hugging Face with caching and integrity check."""
+    # Compute hashes for caching
+    job_hash = hashlib.sha256(job_text.encode()).hexdigest()
+    resume_hash = hashlib.sha256(resume_text.encode()).hexdigest()
+
+    def get_embedding(text, text_hash):
+        # Use cached if valid
+        emb = EMBEDDING_CACHE.get(text_hash)
+        if isinstance(emb, (list, tuple, np.ndarray)) and len(emb) == EXPECTED_DIM:
+            return emb
+        # Compute new embedding
+        inputs = TOKENIZER(text, return_tensors="pt", truncation=True, padding=True)
+        with torch.no_grad():
+            outputs = HF_MODEL(**inputs)
+        last_hidden = outputs.last_hidden_state
+        mask = inputs["attention_mask"].unsqueeze(-1)
+        summed = (last_hidden * mask).sum(dim=1)
+        counts = mask.sum(dim=1)
+        vector = (summed / counts).squeeze().cpu().numpy()
+        EMBEDDING_CACHE[text_hash] = vector
+        return vector
+
+    job_emb = get_embedding(job_text, job_hash)
+    resume_emb = get_embedding(resume_text, resume_hash)
+    # Cosine similarity
+    similarity = np.dot(job_emb, resume_emb) / (np.linalg.norm(job_emb) * np.linalg.norm(resume_emb))
+    return similarity * 100  # Convert to percentage
 
 def calculate_scores(job_text, resume_text):
     """Calculates keyword and vector similarity scores."""
