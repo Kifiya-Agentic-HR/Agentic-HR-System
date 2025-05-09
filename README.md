@@ -96,10 +96,9 @@ Agentic-HR-System
    ```
 2. Copy environment templates and configure variables:
    ```bash
-   cp .env.example services/screen_service/.env
-   cp services/notification/.env.example services/notification/.env
-   # ...repeat for other services
+   cp .env.example .env
    ```
+3. Make sure to check the .env to fill everything.
 
 ### Configuration
 - Each service has its own `.env` file—configure connection URLs, API keys, and ports accordingly.
