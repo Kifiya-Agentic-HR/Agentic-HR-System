@@ -1,4 +1,3 @@
-
 python-multipart
 pytesseract
 pdf2image
@@ -24,6 +23,10 @@ python-docx
 requests
 # AI and Processing
 google-generativeai
+openai
+numpy
+sentence_transformers
+huggingface-hub
 PyPDF2
 docx2txt
 pytesseract
