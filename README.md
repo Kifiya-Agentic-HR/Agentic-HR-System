@@ -1,4 +1,4 @@
-# Agentic HR System 
+# Kifiya Agentic HR System 
 
 *An AI-powered recruitment platform, simplified for all.*
 
