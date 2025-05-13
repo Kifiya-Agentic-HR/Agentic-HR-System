@@ -8,8 +8,11 @@ from src.service.job_requirement_service import analyze_job_requirements
 from src.utils.file_reader import extract_text_from_file
 from src.utils.vector_keyword_similarity import calculate_scores
 from src.utils.sanitizer import sanitizer
-
+import logging
 load_dotenv()
+
+
+logger = logging.getLogger(__name__)
 
 # Load API key
 gemini_api_key = Config.GEMINI_KEY
@@ -149,6 +152,7 @@ def scoreResume(description_text, job_skills, resume_file_path):
         return result, keyword_weight, vector_weight, parsed_cv
 
     except Exception as e:
+        logger.error(f"Gemini API error: {e}")
         return {
             "error": f"Failed to process resume: {str(e)}",
             "resume_content": extracted_applicant_resume[:500]  # Show first 500 chars for debugging
