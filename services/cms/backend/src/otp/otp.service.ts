@@ -44,7 +44,7 @@ export class OtpService {
   }
 
   async sendOtp(email: string): Promise<void> {
-    const otp = "111111";
+    const otp = this.generateOtp();
 
     await this.redis.set(`otp:${email}`, JSON.stringify({ otp }), 'EX', this.otpExpirySeconds);
 
