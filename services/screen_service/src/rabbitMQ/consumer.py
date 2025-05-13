@@ -52,7 +52,7 @@ async def process_message(message: aio_pika.IncomingMessage):
             if source == "recommendation":
                 result = {
                     "job_id":job_id,
-                    "score" : round(final_score, 1),
+                    "score" : float(round(final_score, 1)),
                     "reasoning": llm_output.get("score_breakdown", {}),
                     "application_id": application_id,
                 }
@@ -64,7 +64,7 @@ async def process_message(message: aio_pika.IncomingMessage):
             else:
                 result = {
                     "application_id": application_id,
-                    "score": round(final_score, 1),
+                    "score": float(round(final_score, 1)),
                     "reasoning": llm_output.get("score_breakdown", {}),
                     "parsed_cv": parsed_resume,
                 }
