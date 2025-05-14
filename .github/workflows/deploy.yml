@@ -35,10 +35,6 @@ jobs:
           NOTIFICATION_PORT="${{ secrets.NOTIFICATION_PORT }}"
           REDIS_PORT="${{ secrets.REDIS_PORT }}"
           MONGO_PORT="${{ secrets.MONGO_PORT }}"
-          S3_WEB_PORT="${{ secrets.S3_WEB_PORT }}"
-          S3_API_PORT="${{ secrets.S3_API_PORT }}"
-          MINIO_ROOT_USER="${{ secrets.MINIO_ROOT_USER }}"
-          MINIO_ROOT_PASSWORD="${{ secrets.MINIO_ROOT_PASSWORD }}"
           MODEL="${{ secrets.MODEL }}"
           OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}"
           SMTP_HOST="${{ secrets.SMTP_HOST }}"
@@ -55,7 +51,10 @@ jobs:
           HUGGINGFACE_API_KEY="${{ secrets.HUGGINGFACE_API_KEY }}"
           CV_BUCKET="${{ secrets.CV_BUCKET }}"
           INTERVIEW_BUCKET="${{ secrets.INTERVIEW_BUCKET }}"
-  
+          UPLOAD_URL="${{ secrets.UPLOAD_URL }}"
+          UPLOAD_USER="${{ secrets.UPLOAD_USER }}"
+          UPLOAD_PASSWORD="${{ secrets.UPLOAD_PASSWORD }}"
+
           EOF
 
       - name: Deploy via SSH
