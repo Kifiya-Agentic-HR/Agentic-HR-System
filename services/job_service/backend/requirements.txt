@@ -20,7 +20,7 @@ pillow
 pdfminer.six 
 python-docx 
 requests
-
+httpx
 
 tenacity
 aiofiles

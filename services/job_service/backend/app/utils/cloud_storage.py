@@ -1,103 +1,83 @@
 import os
-import boto3
 import logging
+import httpx
+import uuid
 from fastapi import HTTPException, UploadFile
-from botocore.client import Config
-import botocore.exceptions
 from app.utils.config_local import Config as config
 import json
 
-# Set up logging
+# logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Retrieve configuration from environment variables
-CV_BUCKET = config.CV_BUCKET
-MINIO_URL = config.MINIO_URL
-MINIO_ROOT_USER = config.MINIO_ROOT_USER
-MINIO_ROOT_PASSWORD = config.MINIO_ROOT_PASSWORD
+# Constants
+HR_UPLOAD_URL = config.UPLOAD_URL
+HR_UPLOAD_USER = config.UPLOAD_USER
+HR_UPLOAD_PASSWORD = config.UPLOAD_PASSWORD
 
-def random_file_name(file_name: str) -> str:
+async def upload_file(
+    file: UploadFile,
+    document_category: str = "other"
+) -> str:
     """
-    Generate a random file name to ensure uniqueness.
+    Uploads an incoming file to the Agentic HR HTTP API and returns its public URL.
+    Raises HTTPException on invalid type or upload failure.
     """
-    return f"{os.urandom(8).hex()}_{file_name}"
-
-# Set up the boto3 client
-s3_client = boto3.client(
-    "s3",
-    endpoint_url=MINIO_URL,
-    aws_access_key_id=MINIO_ROOT_USER,
-    aws_secret_access_key=MINIO_ROOT_PASSWORD,
-    config=Config(signature_version="s3v4")
-)
-
-# Ensure the bucket exists; if not, create it.
-try:
-    s3_client.head_bucket(Bucket=CV_BUCKET)
-except botocore.exceptions.ClientError:
-    try:
-        s3_client.create_bucket(Bucket=CV_BUCKET)
-        logger.info("Bucket '%s' created.", CV_BUCKET)
-        
-        # Set bucket policy to allow public read
-        bucket_policy = {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Effect": "Allow",
-                    "Principal": "*",
-                    "Action": "s3:GetObject",
-                    "Resource": f"arn:aws:s3:::{CV_BUCKET}/*"
-                }
-            ]
-        }
-        s3_client.put_bucket_policy(
-            Bucket=CV_BUCKET,
-            Policy=json.dumps(bucket_policy)
-        )
-        logger.info("Public read access policy set for bucket '%s'.", CV_BUCKET)
-    except Exception as e:
-        logger.error("Failed to configure bucket: %s", e)
-        logger.error("Failed to create bucket '%s': %s", CV_BUCKET, e)
-        raise Exception(f"Bucket {CV_BUCKET} not found and could not be created.")
-   
-async def upload_file(file: UploadFile) -> str:
-    """
-    Uploads an incoming file to the S3-compatible object store and returns
-    its public URL.
-
-    Raises:
-        HTTPException: If the file type is not allowed or upload fails.
-    """
-    allowed_types = [
+    # 1. Validate MIME type
+    allowed_types = {
         "application/pdf",
         "application/msword",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    ]
-    
+    }
     if file.content_type not in allowed_types:
         raise HTTPException(
             status_code=400,
             detail="Invalid file type. Only PDF and DOCX allowed."
         )
-    
-    file_name = random_file_name(file.filename)  # Ensure unique names.
-    
-    try:
-        # Upload the file object directly to the bucket with public-read ACL.
-        s3_client.upload_fileobj(
-            file.file,
-            CV_BUCKET,
-            file_name,
-            ExtraArgs={'ACL': 'public-read'}
+
+    # 2. Validate or coerce document_category
+    valid_categories = {"resume", "contract", "id_document", "timesheet", "other"}
+    if document_category not in valid_categories:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid document_category. Must be one of {valid_categories}."
         )
-    except Exception as e:
+
+    # 3. Generate a random UUID4 for file_id
+    file_id = str(uuid.uuid4()) 
+
+    # 4. Construct the upload URL
+    url = f"{HR_UPLOAD_URL}/api/hr-upload/upload/{file_id}"
+
+    # 5. Perform the POST with Basic Auth and multipart/form-data
+    try:
+        async with httpx.AsyncClient(auth=(HR_UPLOAD_USER, HR_UPLOAD_PASSWORD)) as client:
+            response = await client.post(
+                url,
+                headers={"x-document-category": document_category},
+                files={"file": (file.filename, file.file, file.content_type)}
+            )  # :contentReference[oaicite:1]{index=1}
+
+    except httpx.HTTPError as e:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Error connecting to upload service: {str(e)}"
+        )
+
+    # 6. Handle non-200 responses
+    if response.status_code != 200:
+        raise HTTPException(
+            status_code=response.status_code,
+            detail=f"Upload failed: {response.text}"
+        )
+
+    # 7. Parse and return the uploaded file URL
+    data = response.json()
+    file_url = data.get("file_url")
+    if not file_url:
         raise HTTPException(
             status_code=500,
-            detail=f"Error uploading file: {str(e)}"
+            detail="Unexpected response format: missing 'file_url'"
         )
-    
-    # Construct the public URL of the uploaded file.
-    public_url = f"{MINIO_URL}/{CV_BUCKET}/{file_name}"
-    return public_url
+
+    return file_url
