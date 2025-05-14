@@ -5,6 +5,9 @@ import Link from "next/link";
 import { FiCalendar, FiFileText, FiStar, FiCheckCircle, FiAlertTriangle } from "react-icons/fi";
 import { useState } from "react";
 import { getJobApplications, inviteRecommendation } from "@/lib/api";
+import { Viewer, Worker } from '@react-pdf-viewer/core';
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 
 interface RecommendationTableProps {
   recommendations: RecommendationResponse[];
@@ -22,6 +25,9 @@ export default function RecommendationTable({
 }: RecommendationTableProps) {
   const [selectedReasoning, setSelectedReasoning] = useState<RecommendationResponse | null>(null);
   const [invitedRecommendations, setInvitedRecommendations] = useState<Set<string>>(new Set());
+  const [showCvPopup, setShowCvPopup] = useState(false);
+  const [selectedCvLink, setSelectedCvLink] = useState("");
+  const [isPdfLoading, setIsPdfLoading] = useState(true);
 
   const handleInviteClick = async (recommendation: RecommendationResponse) => {
     
@@ -75,13 +81,17 @@ export default function RecommendationTable({
                   {rec.score.toFixed(1)}
                 </td>
                 <td className="px-6 py-4">
-                  <Link
-                    href={rec.cv_link}
-                    className="flex items-center text-secondary"
+                  <button
+                    onClick={() => {
+                      setSelectedCvLink(rec.cv_link);
+                      setShowCvPopup(true);
+                      setIsPdfLoading(true);
+                    }}
+                    className="flex items-center text-secondary hover:text-[#FF6A00] transition-colors"
                   >
                     <FiFileText className="mr-2" />
                     View CV
-                  </Link>
+                  </button>
                 </td>
                 <td className="pr-8 pl-6 py-4">
                 <button
@@ -120,7 +130,7 @@ export default function RecommendationTable({
             </div>
             
             <div className="space-y-4">
-              {selectedReasoning.reasoning.map((criterion, index) => (
+              {Array.isArray(selectedReasoning.reasoning) && selectedReasoning.reasoning.map((criterion: any, index: number) => (
                 <div
                   key={index}
                   className="p-4 bg-white rounded-lg border border-[#364957]/20"
@@ -134,9 +144,9 @@ export default function RecommendationTable({
                       <FiCheckCircle className="w-4 h-4" />
                       <span>Supporting Evidence</span>
                     </div>
-                    {criterion.evidence?.length > 0 ? (
+                    {Array.isArray(criterion.evidence) && criterion.evidence.length > 0 ? (
                       <ul className="list-disc pl-5 space-y-1">
-                        {criterion.evidence.map((item, i) => (
+                        {criterion.evidence.map((item: string, i: number) => (
                           <li key={i} className="text-[#364957]/80">
                             {item}
                           </li>
@@ -154,9 +164,9 @@ export default function RecommendationTable({
                       <FiAlertTriangle className="w-4 h-4" />
                       <span>Missing Elements</span>
                     </div>
-                    {criterion.missing_elements?.length > 0 ? (
+                    {Array.isArray(criterion.missing_elements) && criterion.missing_elements.length > 0 ? (
                       <ul className="list-disc pl-5 space-y-1">
-                        {criterion.missing_elements.map((item, i) => (
+                        {criterion.missing_elements.map((item: string, i: number) => (
                           <li key={i} className="text-[#364957]/80">
                             {item}
                           </li>
@@ -170,6 +180,47 @@ export default function RecommendationTable({
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CV Popup */}
+      {showCvPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 relative max-w-4xl w-full h-[80vh] flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold">Candidate CV</h3>
+              <button
+                onClick={() => setShowCvPopup(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <span style={{fontSize: 24}}>&times;</span>
+              </button>
+            </div>
+            <div className="flex-1 flex items-center justify-center overflow-auto">
+              <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+                <Viewer
+                  fileUrl={selectedCvLink}
+                  onDocumentLoad={() => setIsPdfLoading(false)}
+                />
+              </Worker>
+              {isPdfLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                </div>
+              )}
+            </div>
+            <div className="mt-4 flex justify-end space-x-4">
+              <a
+                href={selectedCvLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center px-6 py-2 bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors"
+              >
+                <FiFileText className="mr-2" />
+                Download CV
+              </a>
             </div>
           </div>
         </div>

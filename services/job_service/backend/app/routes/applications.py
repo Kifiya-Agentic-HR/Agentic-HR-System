@@ -182,6 +182,15 @@ async def create_application(
                 "sucess": False,
                 "error":"CV must be a PDF or DOCX file"
             }
+
+    # Validate CV file size
+    max_file_size = 5 * 1024 * 1024  # 5 MB
+    if cv.file._file.tell() > max_file_size:
+        response.status_code=status.HTTP_400_BAD_REQUEST
+        return {
+            "success": False,
+            "error": "CV file size exceeds 5 MB"
+        }
     
     try:
         # Save file locally and get file path
