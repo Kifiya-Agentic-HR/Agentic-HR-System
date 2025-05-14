@@ -5,9 +5,6 @@ import Link from "next/link";
 import { FiCalendar, FiFileText, FiStar, FiCheckCircle, FiAlertTriangle } from "react-icons/fi";
 import { useState } from "react";
 import { getJobApplications, inviteRecommendation } from "@/lib/api";
-import { Viewer, Worker } from '@react-pdf-viewer/core';
-import '@react-pdf-viewer/core/lib/styles/index.css';
-import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 
 interface RecommendationTableProps {
   recommendations: RecommendationResponse[];
@@ -199,12 +196,12 @@ export default function RecommendationTable({
               </button>
             </div>
             <div className="flex-1 flex items-center justify-center overflow-auto">
-              <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-                <Viewer
-                  fileUrl={selectedCvLink}
-                  onDocumentLoad={() => setIsPdfLoading(false)}
-                />
-              </Worker>
+                <iframe
+                src={selectedCvLink}
+                className="w-full h-full border-0"
+                onLoad={() => setIsPdfLoading(false)}
+                title="CV Preview"
+                ></iframe>
               {isPdfLoading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
