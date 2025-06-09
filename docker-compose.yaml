@@ -47,7 +47,7 @@ services:
     networks:
       - app_network
     volumes:
-      - shared_volume:/shared_volume
+      - shared_volume_new:/shared_volume
 
   interview_backend:
     build: ./services/interview_ai/backend
@@ -70,7 +70,7 @@ services:
     networks:
       - app_network
     volumes:
-      - shared_volume:/shared_volume
+      - shared_volume_new:/shared_volume
 
   interview_frontend:
     build:
@@ -103,7 +103,7 @@ services:
       UPLOAD_PASSWORD: "${UPLOAD_PASSWORD}"
       UPLOAD_URL: "${UPLOAD_URL}"
     volumes:
-      - shared_volume:/shared_volume
+      - shared_volume_new:/shared_volume
     restart: unless-stopped
     depends_on:
       mongo:
@@ -141,7 +141,7 @@ services:
       GEMINI_API_KEY: "${GEMINI_API_KEY}"
       PYTHONPATH: "/src"
     volumes:
-      - shared_volume:/shared_volume
+      - shared_volume_new:/shared_volume
     depends_on:
       mongo:
         condition: service_started
@@ -178,7 +178,7 @@ services:
         max-size: "200k"
         max-file: "10"
     volumes:
-      - redis-data:/data
+      - redis-data_new:/data
 
   notification:
     build: ./services/notification
@@ -204,7 +204,7 @@ services:
       - "5672:5672"
       - "15673:15672"
     volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
+      - rabbitmq_data_new:/var/lib/rabbitmq
     networks:
       - app_network
     healthcheck:
@@ -219,6 +219,6 @@ networks:
     driver: bridge
 
 volumes:
-  shared_volume:
-  rabbitmq_data:
-  redis-data:
+  shared_volume_new:
+  rabbitmq_data_new:
+  redis-data_new:
