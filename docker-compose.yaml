@@ -155,7 +155,7 @@ services:
     command: mongod --quiet --logpath /dev/null
     container_name: Mongo
     ports:
-      - "27017:27017"
+      - "27027:27017"
     restart: always
     volumes:
       - ./data/mongo:/data/db
