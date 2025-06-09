@@ -212,7 +212,7 @@ services:
     image: rabbitmq:4.0-management
     ports:
       - "5672:5672"
-      - "15672:15672"
+      - "15673:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
