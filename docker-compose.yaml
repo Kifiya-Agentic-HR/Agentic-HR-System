@@ -44,13 +44,11 @@ services:
     environment:
       NEXT_PUBLIC_API_BASE: "http://${HOST}:${CMS_BACKEND_PORT}"
       NEXT_PUBLIC_GEMINI_API_KEY: "${GEMINI_API_KEY}"
-
     networks:
       - app_network
-    volumes:
-      - shared_volume:/shared_volume  # Added shared volume
+    # volumes:
+    #   - shared_volume:/shared_volume
 
-    
   interview_backend:
     build: ./services/interview_ai/backend
     container_name: InterviewBackend
@@ -69,11 +67,10 @@ services:
       FRONTEND_BASE_URL: "http://${HOST}:${INTERVIEW_FRONTEND_PORT}"
       WEAVIATE_HOST: "weaviate"
       WEAVIATE_PORT: 8081
-
     networks:
       - app_network
-    volumes:
-      - shared_volume:/shared_volume  # Added shared volume
+    # volumes:
+    #   - shared_volume:/shared_volume
 
   interview_frontend:
     build:
@@ -93,22 +90,20 @@ services:
     networks:
       - app_network
 
-  # Screening Microservice
   job_service_backend:
     build: ./services/job_service/backend
     container_name: job_service_backend
     env_file: .env
     environment:
       RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
-      MONGODB_URI: "mongodb://mongo:27017/hr_db"  # Using local MongoDB
-      GEMINI_API_KEY: "${GEMINI_API_KEY}"  # Consider moving to .env
+      MONGODB_URI: "mongodb://mongo:27017/hr_db"
+      GEMINI_API_KEY: "${GEMINI_API_KEY}"
       NOTIFICATION_SERVICE_URL: "http://notification:${NOTIFICATION_PORT}/api/v1/"
       UPLOAD_USER: "${UPLOAD_USER}"
       UPLOAD_PASSWORD: "${UPLOAD_PASSWORD}"
       UPLOAD_URL: "${UPLOAD_URL}"
-
-    volumes:
-      - shared_volume:/shared_volume
+    # volumes:
+    #   - shared_volume:/shared_volume
     restart: unless-stopped
     depends_on:
       mongo:
@@ -145,20 +140,16 @@ services:
       MONGODB_URI: "mongodb://mongo:27017/hr_db"
       GEMINI_API_KEY: "${GEMINI_API_KEY}"
       PYTHONPATH: "/src"
-
-    volumes:
-      - shared_volume:/shared_volume
-    # restart: unless-stopped
+    # volumes:
+    #   - shared_volume:/shared_volume
     depends_on:
       mongo:
         condition: service_started
       rabbitmq:
         condition: service_healthy
-
     networks:
       - app_network
 
-  # Shared Infrastructure Services
   mongo:
     image: mongo:latest
     command: mongod --quiet --logpath /dev/null
@@ -166,8 +157,8 @@ services:
     ports:
       - "27027:27017"
     restart: always
-    volumes:
-      - ./data/mongo:/data/db
+    # volumes:
+    #   - ./data/mongo:/data/db
     environment:
       MONGO_INITDB_DATABASE: hr_db
     networks:
@@ -186,15 +177,14 @@ services:
       options:
         max-size: "200k"
         max-file: "10"
-    volumes:
-      - redis-data:/data
+    # volumes:
+    #   - redis-data:/data
 
   notification:
     build: ./services/notification
     ports:
       - "${NOTIFICATION_PORT}:8000"
     env_file: .env
-    
     environment:
       PORT: 8000
       SMTP_HOST: ${SMTP_HOST}
@@ -213,8 +203,8 @@ services:
     ports:
       - "5672:5672"
       - "15673:15672"
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
+    # volumes:
+    #   - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - app_network
     healthcheck:
@@ -223,12 +213,12 @@ services:
       timeout: 10s
       retries: 5
       start_period: 10s
-  
+
 networks:
   app_network:
     driver: bridge
 
-volumes:
-  shared_volume:
-  rabbitmq_data:
-  redis-data:
+# volumes:
+#   shared_volume:
+#   rabbitmq_data:
+#   redis-data:
