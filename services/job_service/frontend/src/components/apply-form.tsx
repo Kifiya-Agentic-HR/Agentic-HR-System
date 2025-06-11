@@ -194,7 +194,7 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
     email: '',
     phone_number: '',
     gender: '',
-    disability: '',
+    disability: 'Not Provided',
     experience_years: '',
     resume: null,
   });
@@ -230,7 +230,6 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
       isValidEmail(formData.email) &&
       formData.phone_number &&
       formData.gender &&
-      formData.disability &&
       formData.experience_years &&
       formData.resume
     );
@@ -425,7 +424,7 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                       </div>
                     </div>
 
-                    <div>
+{/*                     <div>
                       <Label className="flex items-center gap-2 text-sm font-medium mb-2">
                         <Accessibility className="w-4 h-4 text-[#364957]" />
                         Disability Status
@@ -441,7 +440,7 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                         <option value="No">No</option>
                         <option value="Prefer not to say">Prefer not to say</option>
                       </select>
-                    </div>
+                    </div> */}
 
                     <div>
                       <Label className="flex items-center gap-2 text-sm font-medium mb-2">
