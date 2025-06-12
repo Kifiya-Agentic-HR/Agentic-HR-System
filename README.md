@@ -49,7 +49,7 @@ The end-to-end recruitment workflow consists of five stages:
 
 ## Tech Stack
 - **Frontend**: Next.js, React, TypeScript, Tailwind CSS
-- **Backend**: FastAPI (Job Service, Notification Service, Screen Service), NestJS (CMS), Flask/Django (Technical Assessment)
+- **Backend**: FastAPI (Job Service, Notification Service, Screening Service), NestJS (CMS), Flask/Django (Technical Assessment)
 - **AI & Orchestration**: Python, crewAI, OpenAI/Gemini
 - **Data Stores**: MongoDB, PostgreSQL
 - **Messaging & Queue**: RabbitMQ
