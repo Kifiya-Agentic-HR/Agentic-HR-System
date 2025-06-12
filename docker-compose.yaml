@@ -182,8 +182,8 @@ services:
 
   notification:
     build: ./services/notification
-   ports:
-     - "7788:8000"
+    ports:
+      - "7788:8000"
     env_file: .env
     environment:
       PORT: 8000
