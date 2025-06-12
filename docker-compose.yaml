@@ -18,7 +18,7 @@ services:
       REDIS_HOST: "redis"
       REDIS_PORT: "6379"
       REDIS_URI: "redis://redis:6379"
-      NOTIFICATION_PORT: "8000" 
+      NOTIFICATION_PORT: "7788" 
       NOTIFICATION_SERVICE_URL: "http://notification:${NOTIFICATION_PORT}/api/v1/"
       FRONTEND_BASE_URL: "http://${HOST}:${CMS_FRONTEND_PORT}"
       CAREERS_PAGE: "http://${HOST}:${JOB_PORTAL_PORT}"
