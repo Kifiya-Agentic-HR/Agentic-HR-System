@@ -71,7 +71,7 @@ export class ApplicationsController {
   }
 
   @Put('edit_score/:id')
-  @Roles(UserRole.HR)
+  @Roles(UserRole.HR, UserRole.HM)
   editScore(@Param('id') id: string, @Body() updateData: any) {
     this.logger.log(`Editing score for application ID: ${id}, Data: ${JSON.stringify(updateData)}`);
     return this.appsService.editScore(id, updateData);
