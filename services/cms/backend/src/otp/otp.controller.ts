@@ -1,26 +1,36 @@
-import { Controller, Post, Get, Body, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Body, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { OtpService } from './otp.service';
+
 
 @Controller('otp')
 export class OtpController {
   constructor(private readonly otpService: OtpService) {}
 
-  @Post('send')
-  async sendOtp(@Body('email') email: string) {
-    if (!email || !this.isValidEmail(email)) {
-      throw new HttpException('Invalid email address', HttpStatus.BAD_REQUEST);
-    }
 
-    try {
-      await this.otpService.sendOtp(email);
-      return { message: 'OTP sent successfully' };
-    } catch (error) {
-      throw new HttpException(
-        'Failed to send OTP',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+@Post('send')
+async sendOtp(@Body('email') email: string) {
+  const logger = new Logger('OtpController');
+
+  logger.log(`Received OTP request for email: ${email}`);
+
+  if (!email || !this.isValidEmail(email)) {
+    logger.warn(`Invalid email received: ${email}`);
+    throw new HttpException('Invalid email address', HttpStatus.BAD_REQUEST);
   }
+
+  try {
+    logger.log(`Sending OTP to: ${email}`);
+    await this.otpService.sendOtp(email);
+    logger.log(`OTP sent successfully to: ${email}`);
+    return { message: 'OTP sent successfully' };
+  } catch (error) {
+    logger.error(`Failed to send OTP to: ${email}`, error.stack);
+    throw new HttpException(
+      'Failed to send OTP',
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
+  }
+}
 
   // New endpoint to resend OTP
   @Post('resend')
