@@ -5,6 +5,7 @@ import uuid
 from fastapi import HTTPException, UploadFile
 from app.utils.config_local import Config as config
 import json
+import magic
 
 # logging
 logging.basicConfig(level=logging.INFO)
@@ -27,14 +28,16 @@ async def upload_file(
     allowed_types = {
         "application/pdf",
         "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/octet-stream" #docx
     }
     if file.content_type not in allowed_types:
         raise HTTPException(
             status_code=400,
             detail="Invalid file type. Only PDF and DOCX allowed."
         )
-
+    
+    
     # 2. Validate or coerce document_category
     valid_categories = {"resume", "contract", "id_document", "timesheet", "other"}
     if document_category not in valid_categories:

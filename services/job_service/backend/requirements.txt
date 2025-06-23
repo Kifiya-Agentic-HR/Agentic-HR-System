@@ -1,4 +1,4 @@
-
+libmagic
 python-multipart
 pytesseract
 pdf2image

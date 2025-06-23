@@ -5,6 +5,7 @@ from PIL import Image
 import pytesseract
 import os
 
+
 import requests
 
 # Set up Tesseract and Poppler paths
@@ -29,6 +30,7 @@ def extract_text_from_file(file_url: str, file_type: str = None) -> str:
     if file_type is None:
         _, ext = os.path.splitext(file_url)
         file_type = ext.lower()
+    
     
     text = ""
     if file_type == ".pdf":
