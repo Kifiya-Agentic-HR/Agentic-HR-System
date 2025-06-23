@@ -15,6 +15,8 @@ export default function LogoutConfirmModal({ onCancel }: Props) {
     localStorage.removeItem("userRole");
     localStorage.removeItem("userEmail");
     Cookies.remove("accessToken");
+    Cookies.remove("userRole");
+
     
     setTimeout(() => {
       window.location.href = "/";

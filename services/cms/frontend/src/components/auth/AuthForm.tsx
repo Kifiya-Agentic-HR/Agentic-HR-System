@@ -76,6 +76,10 @@ export default function AuthForm() {
         secure: true,
         sameSite: "strict",
       }); // Set in cookies because server components can access only cookies
+      Cookies.set("userRole", decoded.role, {
+        secure: true,
+        sameSite: "strict",
+      }); // Store userRole as a cookie
 
       if (decoded.role === "admin") {
         router.push("/admin");

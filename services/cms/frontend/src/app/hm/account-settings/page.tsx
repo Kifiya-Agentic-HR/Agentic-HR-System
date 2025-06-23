@@ -42,6 +42,8 @@ export default function AccountSettingsForm() {
     localStorage.removeItem("userId");
     localStorage.removeItem("userRole");
     Cookies.remove("accessToken");
+    Cookies.remove("userRole");
+
 
     setTimeout(() => {
       window.location.href = "/";
