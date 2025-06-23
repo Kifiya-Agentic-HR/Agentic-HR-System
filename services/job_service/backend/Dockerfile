@@ -10,11 +10,13 @@ RUN apt-get update && apt-get install -y \
     tesseract-ocr \
     poppler-utils \
     libgl1 \
+    libmagic1 \
+    file \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies first
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Install NLTK data
 RUN python -m nltk.downloader punkt stopwords wordnet omw-1.4
