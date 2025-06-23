@@ -11,6 +11,8 @@ from app.database.models.application_model import ApplicationDocument
 from app.database.models.candidate_model import CandidateDocument
 from app.utils.extract_applicant_information import extract_applicant_information
 from app.utils.extract_job_requirement import extract_job_requirement
+import magic
+import re
 logger = logging.getLogger(__name__)
 
 def validate_job_input(
@@ -23,6 +25,38 @@ def validate_job_input(
             detail="At least one of 'job_id', 'job_data', or 'job_file' must be provided."
         )
     return {"job_id": job_id, "job_file": job_file}
+
+ 
+
+def contains_script_code(file_path: str) -> bool:
+    """
+    Checks if the file contains script code such as JavaScript, PHP, or other common scripting languages.
+    Returns True if suspicious code is found, otherwise False.
+    """
+    # Patterns to look for
+    script_patterns = [
+        re.compile(rb"<script[\s>]", re.IGNORECASE),   # HTML/JS
+        re.compile(rb"<\?php", re.IGNORECASE),         # PHP
+        re.compile(rb"<\?=", re.IGNORECASE),           # PHP short tag
+        re.compile(rb"<\? ", re.IGNORECASE),           # PHP short tag
+        re.compile(rb"<%=", re.IGNORECASE),            # ASP
+        re.compile(rb"<jsp:", re.IGNORECASE),          # JSP
+        re.compile(rb"eval\s*\(", re.IGNORECASE),      # JS eval
+        re.compile(rb"document\.write\s*\(", re.IGNORECASE), # JS document.write
+        re.compile(rb"window\.location", re.IGNORECASE),     # JS window.location
+        re.compile(rb"require\s*\(", re.IGNORECASE),   # Node.js require
+        re.compile(rb"import\s+", re.IGNORECASE),      # ES6 import
+    ]
+    try:
+        with open(file_path, "rb") as f:
+            content = f.read()
+            for pattern in script_patterns:
+                if pattern.search(content):
+                    return True
+    except Exception:
+        # If file can't be read, treat as suspicious
+        return True
+    return False
 
 router = APIRouter()
 
@@ -42,15 +76,26 @@ async def create_bulk_application(
     if job_id:
         job = JobDocument.get_job_by_id(job_id)
     elif job_file:
-        allowed_file_types = {"application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}
-        if job_file.content_type not in allowed_file_types:
+
+        allowed_file_types = {"application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", 
+                              "application/octet-stream", "application/msword","application/zip"}
+        # if job_file.content_type not in allowed_file_types:
             
-                response.status_code=status.HTTP_400_BAD_REQUEST
-                return {
-                    "sucess": False,
+        #         response.status_code=status.HTTP_400_BAD_REQUEST
+        #         return {
+        #             "sucess": False,
+        #             "error":"job file must be a PDF or DOCX file"
+        #         }
+        # additional checks using magic
+        file_content = await job_file.read()
+        mime = magic.from_buffer(file_content, mime=True)
+        if mime not in allowed_file_types:
+            response.status_code=status.HTTP_400_BAD_REQUEST
+            return {
+                    "success": False,
                     "error":"job file must be a PDF or DOCX file"
                 }
-        
+        job_file.file.seek(0)
         try:
             file_path = await upload_file(job_file)
             extracted_job_requirement = extract_job_requirement(file_path)
@@ -98,22 +143,32 @@ async def create_bulk_application(
             
             processed_count = 0
             errors = []
-            
+            allowed_file_types = {
+                                "application/pdf",
+                                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                "application/msword",
+                                "application/octet-stream",  #DOCX 
+                                 }
             for file_path in resume_files:
                 try:
                     if not os.path.exists(file_path):
                         raise Exception(f"File not found: {file_path}")
 
-                    # Extract information
-                    extracted_info = extract_applicant_information(file_path)
+                    if contains_script_code(file_path):
+                        raise Exception(f"File Contains script")
+                    
                     
                     # Determine MIME type
-                    if file_path.lower().endswith(".pdf"):
-                        content_type = "application/pdf"
-                    elif file_path.lower().endswith(".docx"):
-                        content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                    else:
-                        content_type = "text/plain"
+                    content_type = magic.from_file(file_path, mime=True)
+                    if content_type not in allowed_file_types:
+                        raise Exception(f"File type not allowed: {content_type}")
+
+                    # if file_path.lower().endswith(".pdf"):
+                    #     content_type = "application/pdf"
+                    # elif file_path.lower().endswith(".docx"):
+                    #     content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    # else:
+                    #     content_type = "text/plain"
 
                     with open(file_path, "rb") as f:
                         upload_file_obj = UploadFile(
@@ -123,7 +178,8 @@ async def create_bulk_application(
                         )
                         f.seek(0)  # Reset file pointer
                         cv_link = await upload_file(upload_file_obj)
-
+                    # Extract information
+                    extracted_info = extract_applicant_information(file_path)
                     # Create candidate
                     candidate_data = {
                         "email": extracted_info.get("email", "unknown@example.com"),

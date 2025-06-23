@@ -3,7 +3,9 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { UsersService } from './users/users.service'; 
 import { UserRole } from './users/schemas/user.schema';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
+// ...existing code...
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn', 'log', 'debug', 'verbose'],
@@ -11,12 +13,23 @@ async function bootstrap() {
   app.enableCors();
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }));
 
+  // Swagger setup
+  const config = new DocumentBuilder()
+    .setTitle('Agentic HR System API')
+    .setDescription('API documentation for Agentic HR System')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document); // Swagger UI at /api
+
   await app.init();
 
   // Attempt to bootstrap an admin user from ENV variables.
   await bootstrapAdminUser(app.get(UsersService));
   await app.listen(process.env.PORT || 3000);
 }
+// ...existing code...
 
 /**
  * Creates an admin user if one doesn't exist, using ADMIN_EMAIL, ADMIN_PASSWORD from .env
