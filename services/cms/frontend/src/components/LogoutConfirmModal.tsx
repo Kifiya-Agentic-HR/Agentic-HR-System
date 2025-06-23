@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
+import Cookies from "js-cookie";
 
 type Props = {
   onCancel: () => void;
@@ -13,7 +14,8 @@ export default function LogoutConfirmModal({ onCancel }: Props) {
     localStorage.removeItem("userId");
     localStorage.removeItem("userRole");
     localStorage.removeItem("userEmail");
-
+    Cookies.remove("accessToken");
+    
     setTimeout(() => {
       window.location.href = "/";
     }, 50);

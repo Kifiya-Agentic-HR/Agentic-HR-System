@@ -6,6 +6,7 @@ import * as z from "zod";
 import { toast } from "sonner";
 import { useState } from "react";
 import { updateOwnAccount } from "@/lib/api";
+import Cookies from "js-cookie";
 
 import {
   Form,
@@ -40,6 +41,7 @@ export default function AccountSettingsForm() {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("userId");
     localStorage.removeItem("userRole");
+    Cookies.remove("accessToken");
 
     setTimeout(() => {
       window.location.href = "/";
