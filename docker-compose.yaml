@@ -128,27 +128,27 @@ services:
       - app_network
     restart: unless-stopped
 
-  # screening_consumer:
-  #   build:
-  #     context: ./services/screen_service/
-  #     dockerfile: Dockerfile.consumer
-  #   container_name: ScreeningConsumer
-  #   env_file: .env
-  #   environment:
-  #     RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
-  #     NEXT_PUBLIC_API_BASE: "http://${HOST}:${CMS_BACKEND_PORT}"
-  #     MONGODB_URI: "mongodb://mongo:27017/hr_db"
-  #     GEMINI_API_KEY: "${GEMINI_API_KEY}"
-  #     PYTHONPATH: "/src"
-  #   volumes:
-  #     - shared_volume_new:/shared_volume
-  #   depends_on:
-  #     mongo:
-  #       condition: service_started
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   networks:
-  #     - app_network
+  screening_consumer:
+    build:
+      context: ./services/screen_service/
+      dockerfile: Dockerfile.consumer
+    container_name: ScreeningConsumer
+    env_file: .env
+    environment:
+      RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
+      NEXT_PUBLIC_API_BASE: "http://${HOST}:${CMS_BACKEND_PORT}"
+      MONGODB_URI: "mongodb://mongo:27017/hr_db"
+      GEMINI_API_KEY: "${GEMINI_API_KEY}"
+      PYTHONPATH: "/src"
+    volumes:
+      - shared_volume_new:/shared_volume
+    depends_on:
+      mongo:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - app_network
 
   mongo:
     image: mongo:latest

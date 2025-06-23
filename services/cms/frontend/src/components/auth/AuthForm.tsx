@@ -62,14 +62,19 @@ export default function AuthForm() {
       const decoded = decodeToken(result.token);
 
       if (!decoded || !decoded.role) {
-        console.error("Invalid or missing role in token. Redirecting to default dashboard.");
+        console.error(
+          "Invalid or missing role in token. Redirecting to default dashboard."
+        );
         router.push("/");
         return;
       }
-    
+
       localStorage.setItem("accessToken", result.token);
       localStorage.setItem("userRole", decoded.role);
-
+      Cookies.set("accessToken", result.token, {
+        secure: true,
+        sameSite: "strict",
+      }); // Set in cookies because server components can access only cookies
 
       if (decoded.role === "admin") {
         router.push("/admin");
