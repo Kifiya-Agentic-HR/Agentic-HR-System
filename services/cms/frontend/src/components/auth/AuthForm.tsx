@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useState} from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,11 +14,10 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { login } from "@/lib/api"; 
-import { useRouter }  from "next/navigation";
+import { login } from "@/lib/api";
+import { useRouter } from "next/navigation";
 import { jwtDecode, JwtPayload } from "jwt-decode";
 import Cookies from "js-cookie";
-
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -32,7 +31,6 @@ interface TokenPayload extends JwtPayload {
 export default function AuthForm() {
   const router = useRouter();
   const [loginError, setLoginError] = useState<string | null>(null);
-
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -95,21 +93,35 @@ export default function AuthForm() {
       setLoginError("Invalid email or password. Please try again.");
     }
   };
- 
 
   return (
     <div className="min-h-screen flex">
       <div className="bg-[#364957] w-1/2 flex flex-col items-center justify-center p-12 space-y-8">
-        <img src="/logo (2).svg" alt="Company Logo" className="w-64 h-auto" />
-        <h1 className="text-white text-3xl font-bold text-center">Recruitment Dashboard</h1>
-        <p className="text-white text-xl text-center">Empowering Smarter Hiring Decisions through AI-Driven Insights</p>
+        <img
+          src="/dashboard/logo (2).svg"
+          alt="Company Logo"
+          className="w-64 h-auto"
+        />
+        <h1 className="text-white text-3xl font-bold text-center">
+          Recruitment Dashboard
+        </h1>
+        <p className="text-white text-xl text-center">
+          Empowering Smarter Hiring Decisions through AI-Driven Insights
+        </p>
       </div>
       <div className="w-1/2 flex items-center justify-center p-12 bg-white">
         <div className="w-full max-w-md space-y-8">
-          <h2 className="text-2xl font-bold text-[#364957] text-center">Welcome Back</h2>
-          <p className="text-[#364957]/80 text-center">Please sign in to continue</p>
+          <h2 className="text-2xl font-bold text-[#364957] text-center">
+            Welcome Back
+          </h2>
+          <p className="text-[#364957]/80 text-center">
+            Please sign in to continue
+          </p>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-6">
+            <form
+              onSubmit={form.handleSubmit(handleLogin)}
+              className="space-y-6"
+            >
               <FormField
                 control={form.control}
                 name="email"
@@ -130,14 +142,25 @@ export default function AuthForm() {
                   <FormItem>
                     <Label>Password</Label>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <Input
+                        type="password"
+                        placeholder="••••••••"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              {loginError && <p className="text-red-600 text-sm text-center">{loginError}</p>}
-              <Button type="submit" className="w-full bg-[#FF8A00]/80 hover:bg-[#FF8A00]">Login</Button>
+              {loginError && (
+                <p className="text-red-600 text-sm text-center">{loginError}</p>
+              )}
+              <Button
+                type="submit"
+                className="w-full bg-[#FF8A00]/80 hover:bg-[#FF8A00]"
+              >
+                Login
+              </Button>
             </form>
           </Form>
         </div>

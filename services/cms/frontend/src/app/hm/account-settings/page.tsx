@@ -28,9 +28,12 @@ const formSchema = z.object({
   currentPassword: z.string().min(8, {
     message: "Password must be at least 8 characters.",
   }),
-  newPassword: z.string().min(8, {
-    message: "New password must be at least 8 characters.",
-  }).optional(),
+  newPassword: z
+    .string()
+    .min(8, {
+      message: "New password must be at least 8 characters.",
+    })
+    .optional(),
 });
 
 export default function AccountSettingsForm() {
@@ -44,9 +47,8 @@ export default function AccountSettingsForm() {
     Cookies.remove("accessToken");
     Cookies.remove("userRole");
 
-
     setTimeout(() => {
-      window.location.href = "/";
+      window.location.href = "/dashboard";
     }, 50);
   };
 
@@ -74,7 +76,8 @@ export default function AccountSettingsForm() {
         form.reset();
       } else {
         toast.error("Update failed", {
-          description: response.error || "There was an error saving your changes",
+          description:
+            response.error || "There was an error saving your changes",
         });
       }
     } catch (error) {
@@ -92,7 +95,9 @@ export default function AccountSettingsForm() {
       <div className="w-full max-w-2xl mx-auto px-4">
         <div className="bg-white rounded-xl shadow-2xl p-8">
           <div className="flex justify-between items-center mb-8 border-b-2 border-[#FF8A00]/30 pb-4">
-            <h2 className="text-3xl font-bold text-[#364957]">Account Settings</h2>
+            <h2 className="text-3xl font-bold text-[#364957]">
+              Account Settings
+            </h2>
             <Button
               onClick={() => setShowLogoutConfirm(true)}
               className="bg-[#364957] hover:bg-[#2b3b46] text-white text-sm font-medium px-4 py-2"
@@ -118,7 +123,9 @@ export default function AccountSettingsForm() {
     <div className="w-full max-w-2xl mx-auto px-4">
       <div className="bg-white rounded-xl shadow-2xl p-8 transition-all duration-300 hover:shadow-3xl hover:-translate-y-1">
         <div className="flex justify-between items-center mb-8 border-b-2 border-[#FF8A00]/30 pb-4">
-          <h2 className="text-3xl font-bold text-[#364957]">Account Settings</h2>
+          <h2 className="text-3xl font-bold text-[#364957]">
+            Account Settings
+          </h2>
           <Button
             onClick={() => setShowLogoutConfirm(true)}
             className="bg-[#364957] text-white text-sm font-medium px-4 py-2"
@@ -202,11 +209,13 @@ export default function AccountSettingsForm() {
         </Form>
       </div>
 
-           {showLogoutConfirm && (
+      {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm space-y-4">
             <h3 className="text-xl font-bold text-[#364957]">Confirm Logout</h3>
-            <p className="text-[#364957]/80">Are you sure you want to log out?</p>
+            <p className="text-[#364957]/80">
+              Are you sure you want to log out?
+            </p>
             <div className="flex justify-end space-x-3 pt-2">
               <Button
                 variant="ghost"

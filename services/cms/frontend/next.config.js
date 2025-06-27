@@ -3,6 +3,17 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  basePath: "/dashboard",
+  async redirects() {
+    return [
+      {
+        source: "/",
+        destination: "/dashboard",
+        permanent: false,
+        basePath: false,
+      },
+    ];
+  },
   async headers() {
     return [
       {

@@ -21,11 +21,22 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 // Validation Schema
 const formSchema = z.object({
-  firstName: z.string().min(2, { message: "First name must be at least 2 characters." }).optional(),
-  lastName: z.string().min(2, { message: "Last name must be at least 2 characters." }).optional(),
+  firstName: z
+    .string()
+    .min(2, { message: "First name must be at least 2 characters." })
+    .optional(),
+  lastName: z
+    .string()
+    .min(2, { message: "Last name must be at least 2 characters." })
+    .optional(),
   email: z.string().email({ message: "Please enter a valid email address." }),
-  currentPassword: z.string().min(8, { message: "Password must be at least 8 characters." }),
-  newPassword: z.string().min(8, { message: "New password must be at least 8 characters." }).optional(),
+  currentPassword: z
+    .string()
+    .min(8, { message: "Password must be at least 8 characters." }),
+  newPassword: z
+    .string()
+    .min(8, { message: "New password must be at least 8 characters." })
+    .optional(),
 });
 
 export default function AccountSettingsForm() {
@@ -39,9 +50,8 @@ export default function AccountSettingsForm() {
     Cookies.remove("accessToken");
     Cookies.remove("userRole");
 
-
     setTimeout(() => {
-      window.location.href = "/";
+      window.location.href = "/dashboard";
     }, 50);
   };
 
@@ -69,7 +79,8 @@ export default function AccountSettingsForm() {
         form.reset();
       } else {
         toast.error("Update failed", {
-          description: response.error || "There was an error saving your changes",
+          description:
+            response.error || "There was an error saving your changes",
         });
       }
     } catch (error) {
@@ -86,7 +97,9 @@ export default function AccountSettingsForm() {
       <div className="w-full max-w-2xl mx-auto px-4">
         <div className="bg-white rounded-xl shadow-2xl p-8">
           <div className="flex justify-between items-center mb-8 border-b-2 border-[#FF8A00]/30 pb-4">
-            <h2 className="text-3xl font-bold text-[#364957]">Account Settings</h2>
+            <h2 className="text-3xl font-bold text-[#364957]">
+              Account Settings
+            </h2>
             <Button
               onClick={() => setShowLogoutConfirm(true)}
               className="bg-[#364957] text-white text-sm font-medium px-4 py-2"
@@ -112,7 +125,9 @@ export default function AccountSettingsForm() {
     <div className="w-full max-w-2xl mx-auto px-4">
       <div className="bg-white rounded-xl shadow-2xl p-8 transition-all duration-300 hover:shadow-3xl hover:-translate-y-1">
         <div className="flex justify-between items-center mb-8 border-b-2 border-[#FF8A00]/30 pb-4">
-          <h2 className="text-3xl font-bold text-[#364957]">Account Settings</h2>
+          <h2 className="text-3xl font-bold text-[#364957]">
+            Account Settings
+          </h2>
           <Button
             onClick={() => setShowLogoutConfirm(true)}
             className="bg-[#364957] text-white text-sm font-medium px-4 py-2"
@@ -128,7 +143,9 @@ export default function AccountSettingsForm() {
               name="firstName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-[#364957] text-lg font-semibold">First Name</FormLabel>
+                  <FormLabel className="text-[#364957] text-lg font-semibold">
+                    First Name
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="Enter your first name" {...field} />
                   </FormControl>
@@ -142,7 +159,9 @@ export default function AccountSettingsForm() {
               name="lastName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-[#364957] text-lg font-semibold">Last Name</FormLabel>
+                  <FormLabel className="text-[#364957] text-lg font-semibold">
+                    Last Name
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="Enter your last name" {...field} />
                   </FormControl>
@@ -156,9 +175,15 @@ export default function AccountSettingsForm() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-[#364957] text-lg font-semibold">Email</FormLabel>
+                  <FormLabel className="text-[#364957] text-lg font-semibold">
+                    Email
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter your email" type="email" {...field} />
+                    <Input
+                      placeholder="Enter your email"
+                      type="email"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -170,9 +195,15 @@ export default function AccountSettingsForm() {
               name="currentPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-[#364957] text-lg font-semibold">Current Password</FormLabel>
+                  <FormLabel className="text-[#364957] text-lg font-semibold">
+                    Current Password
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter current password" type="password" {...field} />
+                    <Input
+                      placeholder="Enter current password"
+                      type="password"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -184,9 +215,15 @@ export default function AccountSettingsForm() {
               name="newPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-[#364957] text-lg font-semibold">New Password</FormLabel>
+                  <FormLabel className="text-[#364957] text-lg font-semibold">
+                    New Password
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter new password (optional)" type="password" {...field} />
+                    <Input
+                      placeholder="Enter new password (optional)"
+                      type="password"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -208,7 +245,9 @@ export default function AccountSettingsForm() {
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm space-y-4">
             <h3 className="text-xl font-bold text-[#364957]">Confirm Logout</h3>
-            <p className="text-[#364957]/80">Are you sure you want to log out?</p>
+            <p className="text-[#364957]/80">
+              Are you sure you want to log out?
+            </p>
             <div className="flex justify-end space-x-3 pt-2">
               <Button
                 variant="ghost"
