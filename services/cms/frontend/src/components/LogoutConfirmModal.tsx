@@ -17,9 +17,8 @@ export default function LogoutConfirmModal({ onCancel }: Props) {
     Cookies.remove("accessToken");
     Cookies.remove("userRole");
 
-    
     setTimeout(() => {
-      window.location.href = "/";
+      window.location.href = "/dashboard";
     }, 50);
   };
 
