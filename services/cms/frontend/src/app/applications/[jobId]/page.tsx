@@ -2,7 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Application, RecommendationResponse, User, Recommendation } from "@/components/jobs/types";
+import {
+  Application,
+  RecommendationResponse,
+  User,
+  Recommendation,
+} from "@/components/jobs/types";
 import {
   getGeminiRecommendations,
   getJobApplications,
@@ -13,10 +18,10 @@ import {
   getShortlistByJob,
   createRecommendation,
   getRecommendationByJob,
-  getMe
+  getMe,
 } from "@/lib/api";
 import { toast } from "sonner";
-import { FileWarning } from 'lucide-react';  
+import { FileWarning } from "lucide-react";
 
 import Link from "next/link";
 import { FiChevronLeft, FiUser, FiList, FiRefreshCw } from "react-icons/fi";
@@ -52,9 +57,9 @@ export default function ApplicationList() {
   const [scoreSortOrder, setScoreSortOrder] = useState<"none" | "asc" | "desc">(
     "none"
   );
-  const [recommendations, setRecommendations] = useState<Recommendation[] | null>(
-    null
-  );
+  const [recommendations, setRecommendations] = useState<
+    Recommendation[] | null
+  >(null);
   const [isRecommending, setIsRecommending] = useState(false);
   const [recommendationError, setRecommendationError] = useState<string | null>(
     null
@@ -64,8 +69,11 @@ export default function ApplicationList() {
   const [selectedReviewer, setSelectedReviewer] = useState<string>("");
   const [currentReviewer, setCurrentReviewer] = useState<User | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
-  const [recommendedApplicants, setRecommendedApplicants] = useState<RecommendationResponse[]>([]);
-  const [isFetchingRecommendations, setIsFetchingRecommendations] = useState(false);
+  const [recommendedApplicants, setRecommendedApplicants] = useState<
+    RecommendationResponse[]
+  >([]);
+  const [isFetchingRecommendations, setIsFetchingRecommendations] =
+    useState(false);
   const [showRecommendations, setShowRecommendations] = useState(false);
 
   const fromHM = searchParams.get("fromhm");
@@ -145,89 +153,97 @@ export default function ApplicationList() {
       setProcessingAppId(null);
     }
   };
-  
+
   const [showEmptyState, setShowEmptyState] = useState(false);
 
-const checkRecommendationStatus = async () => {
-  try {
-    setShowEmptyState(false); // Reset empty state on new check
-    const response = await getRecommendationByJob(jobId);
-    
-    if (response.success) {
-      const status = response.recommendations?.status;
-
-      if (status === "processed") {
-        const hasRecommendations = response.recommendations.recommend_applications?.length > 0;
-        setShowEmptyState(!hasRecommendations);
-        setShowRecommendations(hasRecommendations);
-        setRecommendedApplicants(response.recommendations.recommend_applications || []);
-        setIsFetchingRecommendations(false);
-      } else if (status === "not_processed") {
-        console.log("Initiating recommendation creation");
-        const createResp = await createRecommendation(jobId);
-        if (createResp.success) {
-          setIsFetchingRecommendations(true);
-          startRecommendationPolling();
-        } else {
-          // Handle specific "no recommendations" error
-          if (createResp.error?.includes("no recommended applications")) {
-            setShowEmptyState(true);
-            setShowRecommendations(false);
-          } else {
-            toast.error("Error creating recommendation", {
-              description: createResp.error || "Unknown error",
-            });
-          }
-          setIsFetchingRecommendations(false);
-        }
-      } else if (status === "processing") {
-        startRecommendationPolling();
-      }
-    } else {
-      throw new Error(response.error || "Error checking recommendation status");
-    }
-  } catch (error) {
-    setShowEmptyState(true);
-    setIsFetchingRecommendations(false);
-    toast.error("Error checking recommendation status", {
-      description: error instanceof Error ? error.message : "Unknown error",
-    });
-  }
-};
-
-const startRecommendationPolling = () => {
-  const interval = setInterval(async () => {
+  const checkRecommendationStatus = async () => {
     try {
+      setShowEmptyState(false); // Reset empty state on new check
       const response = await getRecommendationByJob(jobId);
+
       if (response.success) {
         const status = response.recommendations?.status;
+
         if (status === "processed") {
-          clearInterval(interval);
-          const hasRecommendations = response.recommendations.recommend_applications?.length > 0;
+          const hasRecommendations =
+            response.recommendations.recommend_applications?.length > 0;
           setShowEmptyState(!hasRecommendations);
           setShowRecommendations(hasRecommendations);
-          setRecommendedApplicants(response.recommendations.recommend_applications || []);
+          setRecommendedApplicants(
+            response.recommendations.recommend_applications || []
+          );
           setIsFetchingRecommendations(false);
-        } else if (status === "failed") {
-          clearInterval(interval);
-          setShowEmptyState(true);
-          setIsFetchingRecommendations(false);
-          toast.error("Recommendation process failed");
+        } else if (status === "not_processed") {
+          console.log("Initiating recommendation creation");
+          const createResp = await createRecommendation(jobId);
+          if (createResp.success) {
+            setIsFetchingRecommendations(true);
+            startRecommendationPolling();
+          } else {
+            // Handle specific "no recommendations" error
+            if (createResp.error?.includes("no recommended applications")) {
+              setShowEmptyState(true);
+              setShowRecommendations(false);
+            } else {
+              toast.error("Error creating recommendation", {
+                description: createResp.error || "Unknown error",
+              });
+            }
+            setIsFetchingRecommendations(false);
+          }
+        } else if (status === "processing") {
+          startRecommendationPolling();
         }
+      } else {
+        throw new Error(
+          response.error || "Error checking recommendation status"
+        );
       }
     } catch (error) {
-      clearInterval(interval);
       setShowEmptyState(true);
       setIsFetchingRecommendations(false);
-      toast.error("Polling error", {
+      toast.error("Error checking recommendation status", {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     }
-  }, 10000);
-  return () => clearInterval(interval);
-};
+  };
 
-    useEffect(() => {
+  const startRecommendationPolling = () => {
+    const interval = setInterval(async () => {
+      try {
+        const response = await getRecommendationByJob(jobId);
+        if (response.success) {
+          const status = response.recommendations?.status;
+          if (status === "processed") {
+            clearInterval(interval);
+            const hasRecommendations =
+              response.recommendations.recommend_applications?.length > 0;
+            setShowEmptyState(!hasRecommendations);
+            setShowRecommendations(hasRecommendations);
+            setRecommendedApplicants(
+              response.recommendations.recommend_applications || []
+            );
+            setIsFetchingRecommendations(false);
+          } else if (status === "failed") {
+            clearInterval(interval);
+            setShowEmptyState(true);
+            setIsFetchingRecommendations(false);
+            toast.error("Recommendation process failed");
+          }
+        }
+      } catch (error) {
+        clearInterval(interval);
+        setShowEmptyState(true);
+        setIsFetchingRecommendations(false);
+        toast.error("Polling error", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    }, 10000);
+    return () => clearInterval(interval);
+  };
+
+  useEffect(() => {
     const loadApplications = async () => {
       try {
         const resp = await getJobApplications(jobId);
@@ -296,7 +312,7 @@ const startRecommendationPolling = () => {
     <div className="flex">
       <div className="w-64 bg-white border-r border-gray-200 p-6 min-h-screen">
         <div className="mb-6">
-          <img src="/logo.svg" alt="Logo" className="h-12" />
+          <img src="/dashboard/logo.svg" alt="Logo" className="h-12" />
         </div>
         <nav className="space-y-4">
           <Link
@@ -369,68 +385,72 @@ const startRecommendationPolling = () => {
             </div>
           )}
 
-{showRecommendations ? (
-  <div className="mb-8">
-    <h2 className="text-xl font-semibold mb-4">Recommended Applicants</h2>
-    <RecommendationTable recommendations={recommendedApplicants} jobId={jobId} />
-    <button
-      onClick={() => setShowRecommendations(false)}
-      className="mt-4 text-[#FF6A00] hover:underline"
-    >
-      Show all applicants
-    </button>
-  </div>
-) : (
-  <ApplicationsTable
-    applications={filteredAndSortedApps}
-    fromHM={!!fromHM}
-    handleRecommend={handleRecommend}
-    processingAppId={processingAppId}
-    setSelectedApp={setSelectedApp}
-    setShowShortlistPopup={setShowShortlistPopup}
-    setPopupType={setPopupType}
-    dateSortOrder={dateSortOrder}
-    scoreSortOrder={scoreSortOrder}
-    setDateSortOrder={setDateSortOrder}
-    setScoreSortOrder={setScoreSortOrder}
-  />
-)}
-{showEmptyState && (
-  <div className="empty-state">
-    <div className="empty-state-content">
-      <FileWarning className="empty-state-icon" />
-      <h3 className="empty-state-title">No Recommended Applicants</h3>
-      <p className="empty-state-description">
-        There are no recommended applicants for this position at this time.
-      </p>
-    </div>
-  </div>
-)}
+          {showRecommendations ? (
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold mb-4">
+                Recommended Applicants
+              </h2>
+              <RecommendationTable
+                recommendations={recommendedApplicants}
+                jobId={jobId}
+              />
+              <button
+                onClick={() => setShowRecommendations(false)}
+                className="mt-4 text-[#FF6A00] hover:underline"
+              >
+                Show all applicants
+              </button>
+            </div>
+          ) : (
+            <ApplicationsTable
+              applications={filteredAndSortedApps}
+              fromHM={!!fromHM}
+              handleRecommend={handleRecommend}
+              processingAppId={processingAppId}
+              setSelectedApp={setSelectedApp}
+              setShowShortlistPopup={setShowShortlistPopup}
+              setPopupType={setPopupType}
+              dateSortOrder={dateSortOrder}
+              scoreSortOrder={scoreSortOrder}
+              setDateSortOrder={setDateSortOrder}
+              setScoreSortOrder={setScoreSortOrder}
+            />
+          )}
+          {showEmptyState && (
+            <div className="empty-state">
+              <div className="empty-state-content">
+                <FileWarning className="empty-state-icon" />
+                <h3 className="empty-state-title">No Recommended Applicants</h3>
+                <p className="empty-state-description">
+                  There are no recommended applicants for this position at this
+                  time.
+                </p>
+              </div>
+            </div>
+          )}
 
+          {(recommendations || recommendationError) && (
+            <RecommendationModal
+              recommendations={recommendations}
+              recommendationError={recommendationError}
+              onClose={() => {
+                setRecommendations(null);
+                setRecommendationError(null);
+              }}
+            />
+          )}
 
-{(recommendations || recommendationError) && (
-  <RecommendationModal
-    recommendations={recommendations}
-    recommendationError={recommendationError}
-    onClose={() => {
-      setRecommendations(null);
-      setRecommendationError(null);
-    }}
-  />
-)}
-
-{selectedApp && !showShortlistPopup && (
-  <StatusPopup
-    application={selectedApp}
-    type={popupType}
-    onClose={() => setSelectedApp(null)}
-    refreshApplications={async () => {
-      const resp = await getJobApplications(jobId);
-      if (resp.success) setApplications(resp.applications);
-    }}
-  />
-)}
-
+          {selectedApp && !showShortlistPopup && (
+            <StatusPopup
+              application={selectedApp}
+              type={popupType}
+              onClose={() => setSelectedApp(null)}
+              refreshApplications={async () => {
+                const resp = await getJobApplications(jobId);
+                if (resp.success) setApplications(resp.applications);
+              }}
+            />
+          )}
 
           {showShortlistPopup && selectedApp && (
             <ShortlistPopup
