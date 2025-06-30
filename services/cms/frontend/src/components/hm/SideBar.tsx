@@ -28,7 +28,7 @@ export function HMSidebar() {
     <div className="hidden lg:block fixed left-0 top-0 h-screen w-64 border-r bg-white">
       <ScrollArea className="h-full p-4">
         <div className="mb-6 ml-4">
-          <img src="/dashboard/logo.svg" alt="Logo" className="h-12" />
+          <img src="/dashboard/logo.png" alt="Logo" className="h-12" />
         </div>
         <div className="space-y-1">
           {navItems.map((item) => (

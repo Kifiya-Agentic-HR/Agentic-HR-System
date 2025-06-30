@@ -31,17 +31,17 @@ export default function Home() {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="text-center mb-8"
+        className="text-center mb-12" // Increased margin for more spacing
       >
         <img
-          src="https://kifiya.com/wp-content/uploads/2022/12/Logo.svg"
+          src="http://3.216.34.218:8080/dashboard/logo.svg"
           alt="Kifiya Logo"
-          className="h-20 mb-8 mx-auto"
+          className="h-36 mb-12 mx-auto" // Increased height and margin
         />
-        <h1 className="text-4xl font-bold mb-2">
+        <h1 className="text-6xl font-bold mb-4"> {/* Increased text size and margin */}
           Kifiya AI-Interview Platform
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-2xl text-muted-foreground"> {/* Increased paragraph size */}
           Experience a next-generation interview powered by artificial
           intelligence.
         </p>
