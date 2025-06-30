@@ -98,6 +98,7 @@ const VerifyEmailText = ({
 
   return (
     <div className="relative mt-2">
+      
       <span 
         onClick={!isVerified ? handleSendOtp : undefined} 
         className={`cursor-pointer text-sm font-medium ${
@@ -311,10 +312,15 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
               transition={{ duration: 0.3 }}
             >
               <div className="mb-8">
-                <h2 className="text-2xl font-bold mb-2" style={{ color: PRIMARY_COLOR }}>
+                <h2
+                  className="text-2xl font-bold mb-2"
+                  style={{ color: PRIMARY_COLOR }}
+                >
                   Apply for the Position
                 </h2>
-                <p className="text-[#364957]/80">Complete the form below to submit your application</p>
+                <p className="text-[#364957]/80">
+                  Complete the form below to submit your application
+                </p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -328,7 +334,12 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                       <Input
                         required
                         value={formData.full_name}
-                        onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            full_name: e.target.value,
+                          })
+                        }
                         className="focus:ring-2 focus:ring-[#FF8A00]/50 border-[#364957]/30"
                       />
                     </div>
@@ -338,7 +349,7 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                         <Mail className="w-4 h-4 text-[#364957]" />
                         Email Address
                       </Label>
-                      
+
                       {isValidEmail(formData.email) && (
                         <VerifyEmailText
                           email={formData.email}
@@ -356,12 +367,16 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                           setTouchedFields({ ...touchedFields, email: true });
                         }}
                         className={`focus:ring-2 focus:ring-[#FF8A00]/50 border-[#364957]/30 ${
-                          touchedFields.email && !isValidEmail(formData.email) ? 'border-red-500' : ''
+                          touchedFields.email && !isValidEmail(formData.email)
+                            ? "border-red-500"
+                            : ""
                         }`}
                       />
-                      
+
                       {touchedFields.email && !isValidEmail(formData.email) && (
-                        <p className="text-xs text-red-500">Please enter a valid email address</p>
+                        <p className="text-xs text-red-500">
+                          Please enter a valid email address
+                        </p>
                       )}
                     </div>
 
@@ -393,38 +408,52 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                             type="radio"
                             name="gender"
                             value="Female"
-                            checked={formData.gender === 'Female'}
-                            onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                            checked={formData.gender === "Female"}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                gender: e.target.value,
+                              })
+                            }
                             className="hidden peer"
                           />
                           <div className="w-full p-3 text-center border border-[#364957]/30 rounded-md peer-checked:border-[#FF8A00] peer-checked:bg-[#FF8A00]/10 transition-all cursor-pointer">
                             <div className="flex items-center justify-center gap-2">
                               <Venus className="w-5 h-5 text-[#364957] peer-checked:text-[#FF8A00]" />
-                              <span className="text-sm text-[#364957]">Female</span>
+                              <span className="text-sm text-[#364957]">
+                                Female
+                              </span>
                             </div>
                           </div>
                         </label>
-                        
+
                         <label className="flex-1">
                           <input
                             type="radio"
                             name="gender"
                             value="Male"
-                            checked={formData.gender === 'Male'}
-                            onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                            checked={formData.gender === "Male"}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                gender: e.target.value,
+                              })
+                            }
                             className="hidden peer"
                           />
                           <div className="w-full p-3 text-center border border-[#364957]/30 rounded-md peer-checked:border-[#FF8A00] peer-checked:bg-[#FF8A00]/10 transition-all cursor-pointer">
                             <div className="flex items-center justify-center gap-2">
                               <Mars className="w-5 h-5 text-[#364957] peer-checked:text-[#FF8A00]" />
-                              <span className="text-sm text-[#364957]">Male</span>
+                              <span className="text-sm text-[#364957]">
+                                Male
+                              </span>
                             </div>
                           </div>
                         </label>
                       </div>
                     </div>
 
-{/*                     <div>
+                    {/*                     <div>
                       <Label className="flex items-center gap-2 text-sm font-medium mb-2">
                         <Accessibility className="w-4 h-4 text-[#364957]" />
                         Disability Status
@@ -450,10 +479,17 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                       <select
                         className="w-full border border-[#364957]/30 rounded-md px-3 py-2.5 bg-white text-[#364957]/90 focus:ring-2 focus:ring-[#FF8A00]/50"
                         value={formData.experience_years}
-                        onChange={(e) => setFormData({ ...formData, experience_years: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            experience_years: e.target.value,
+                          })
+                        }
                         required
                       >
-                        <option value="" disabled>Select experience</option>
+                        <option value="" disabled>
+                          Select experience
+                        </option>
                         <option value="0-1">0-1 years</option>
                         <option value="2-3">2-3 years</option>
                         <option value="4-5">4-5 years</option>
@@ -471,26 +507,47 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                   <div
                     {...getRootProps()}
                     className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
-                      isDragActive ? 'border-[#FF8A00] bg-[#FF8A00]/10' : 'border-[#364957]/30'
+                      isDragActive
+                        ? "border-[#FF8A00] bg-[#FF8A00]/10"
+                        : "border-[#364957]/30"
                     }`}
                   >
                     <input {...getInputProps()} required />
                     <div className="flex flex-col items-center gap-3">
-                      <UploadCloud className={`w-8 h-8 ${isDragActive ? 'text-[#FF8A00]' : 'text-[#364957]/50'}`} />
-                      <p className={`text-sm ${isDragActive ? 'text-[#FF8A00]' : 'text-[#364957]/70'}`}>
+                      <UploadCloud
+                        className={`w-8 h-8 ${
+                          isDragActive ? "text-[#FF8A00]" : "text-[#364957]/50"
+                        }`}
+                      />
+                      <p
+                        className={`text-sm ${
+                          isDragActive ? "text-[#FF8A00]" : "text-[#364957]/70"
+                        }`}
+                      >
                         {formData.resume ? (
                           <span className="font-medium text-[#364957]">
                             {formData.resume.name}
                           </span>
                         ) : (
                           <>
-                            Drag & drop or <span className="text-[#FF8A00]">browse files</span>
+                            Drag & drop or{" "}
+                            <span className="text-[#FF8A00]">browse files</span>
                           </>
                         )}
                       </p>
-                      <p className="text-xs text-[#364957]/50">PDF or DOCX (Max 5MB)</p>
+                      <p className="text-xs text-[#364957]/50">
+                        PDF or DOCX (Max 5MB)
+                      </p>
                     </div>
                   </div>
+                  {!isEmailVerified && (
+                    <div className="mt-2 text-xs text-[#FF8A00] font-large">
+                      <span>
+                        {" "}
+                        Verify your email to proceed with your application.{" "}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {error && (
@@ -512,14 +569,18 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                     type="submit"
                     className="w-full h-12 transition-all font-medium rounded-lg"
                     style={{
-                      backgroundColor: isFormValid() ? SECONDARY_COLOR : DISABLED_COLOR,
-                      color: isFormValid() ? 'white' : '#64748B',
+                      backgroundColor: isFormValid()
+                        ? SECONDARY_COLOR
+                        : DISABLED_COLOR,
+                      color: isFormValid() ? "white" : "#64748B",
                     }}
                     disabled={!isFormValid() || loading}
                   >
                     {loading ? (
                       <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : 'Submit Application'}
+                    ) : (
+                      "Submit Application"
+                    )}
                   </Button>
                 </div>
               </form>
@@ -533,10 +594,16 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
               transition={{ duration: 0.3 }}
               className="flex flex-col items-center justify-center p-8 text-center"
             >
-              <CheckCircle className="w-16 h-16 text-green-500 mb-4" strokeWidth={1.5} />
-              <h3 className="text-2xl font-bold text-[#364957] mb-2">Application Submitted!</h3>
+              <CheckCircle
+                className="w-16 h-16 text-green-500 mb-4"
+                strokeWidth={1.5}
+              />
+              <h3 className="text-2xl font-bold text-[#364957] mb-2">
+                Application Submitted!
+              </h3>
               <p className="text-[#364957]/80 mb-6">
-                Thank you for applying. We'll review your application and get back to you soon.
+                Thank you for applying. We'll review your application and get
+                back to you soon.
               </p>
               <div className="w-full max-w-xs">
                 <ProgressBar
