@@ -71,11 +71,11 @@ export default function AuthForm() {
       localStorage.setItem("accessToken", result.token);
       localStorage.setItem("userRole", decoded.role);
       Cookies.set("accessToken", result.token, {
-        secure: true,
+        // secure: true, due to http
         sameSite: "strict",
       }); // Set in cookies because server components can access only cookies
       Cookies.set("userRole", decoded.role, {
-        secure: true,
+        // secure: true, due to http
         sameSite: "strict",
       }); // Store userRole as a cookie
 
