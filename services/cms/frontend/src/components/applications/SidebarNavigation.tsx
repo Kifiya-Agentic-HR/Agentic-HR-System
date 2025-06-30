@@ -11,7 +11,7 @@ export default function SidebarNavigation({
   return (
     <div className="w-64 bg-white border-r border-gray-200 p-6 min-h-screen">
       <div className="mb-6">
-        <img src="/dashboard/logo.svg" alt="Logo" className="h-12" />
+        <img src="/dashboard/logo.png" alt="Logo" className="h-12" />
       </div>
       <nav className="space-y-4">
         <Link
