@@ -4,3 +4,4 @@ mongo/
 __pycache__/
 .next/
 data/
+.env

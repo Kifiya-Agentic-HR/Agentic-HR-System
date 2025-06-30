@@ -7,7 +7,6 @@ import { getMe } from "@/lib/api";
 import LogoutConfirmModal from "@/components/LogoutConfirmModal";
 import ProfileDropdown from "@/components/ProfileDropdown";
 
-
 function JobsPage() {
   const [email, setEmail] = useState<string>("");
   const [name, setName] = useState<string>("");
@@ -20,18 +19,25 @@ function JobsPage() {
       const result = await getMe();
       if (result?.success !== false && result.email) {
         setEmail(result.email);
-        setName(result.name)
+        setName(result.name);
       }
     }
 
     fetchEmail();
   }, []);
 
-  const firstLetter = name ? name.charAt(0).toUpperCase() : email ? email.charAt(0).toUpperCase() : "?";
+  const firstLetter = name
+    ? name.charAt(0).toUpperCase()
+    : email
+    ? email.charAt(0).toUpperCase()
+    : "?";
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setShowProfileDropdown(false);
       }
     }
@@ -51,7 +57,9 @@ function JobsPage() {
             onClick={() => setShowProfileDropdown((prev) => !prev)}
             className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center"
           >
-            <span className="text-lg font-semibold text-[#364957]">{firstLetter}</span>
+            <span className="text-lg font-semibold text-[#364957]">
+              {firstLetter}
+            </span>
           </button>
 
           {showProfileDropdown && (
@@ -64,7 +72,7 @@ function JobsPage() {
               }}
               onSettingsClick={() => {
                 setShowProfileDropdown(false);
-                window.location.href = "/hm/account-settings";
+                window.location.href = "/dashboard/hm/account-settings";
               }}
             />
           )}
