@@ -72,7 +72,7 @@ async def schedule_interview(
         
         interview_result = await mongo_db.interviews.insert_one(interview_data)
         interview_id = str(interview_result.inserted_id)
-        INTERVIEW_URL = "https://hiring.kifiya.et" 
+        INTERVIEW_URL = "https://hiring.kifiya.com" 
         # Send confirmation email
         try:
             interview_link = f"{INTERVIEW_URL}/interview/{interview_id}"
