@@ -33,7 +33,7 @@ services:
     build:
       context: ./services/cms/frontend
       args:
-        NEXT_PUBLIC_API_BASE_URL: "${SECURE_ENDPOINT}"
+        NEXT_PUBLIC_API_BASE_URL: "http://${HOST}:${CMS_BACKEND_PORT}"
         NEXT_PUBLIC_GEMINI_API_KEY: "${GEMINI_API_KEY}"
     container_name: CMSFrontend
     ports:
@@ -42,7 +42,7 @@ services:
       - cms_backend
     env_file: .env
     environment:
-      NEXT_PUBLIC_API_BASE: "${SECURE_ENDPOINT}"
+      NEXT_PUBLIC_API_BASE: "http://${HOST}:${CMS_BACKEND_PORT}"
       NEXT_PUBLIC_GEMINI_API_KEY: "${GEMINI_API_KEY}"
     networks:
       - app_network
@@ -76,8 +76,8 @@ services:
     build:
       context: ./services/interview_ai/frontend
       args:
-        NEXT_PUBLIC_API_BASE_URL: "${SECURE_ENDPOINT}/api/v1"
-        NEXT_PUBLIC_INTERVIEW_BACKEND: "${SECURE_ENDPOINT}"
+        NEXT_PUBLIC_API_BASE_URL: "http://${HOST}:${CMS_BACKEND_PORT}/api/v1"
+        NEXT_PUBLIC_INTERVIEW_BACKEND: "http://${HOST}:${CMS_BACKEND_PORT}"
     container_name: InterviewFrontend
     ports:
       - "${INTERVIEW_FRONTEND_PORT}:3000"
@@ -85,8 +85,8 @@ services:
       - interview_backend
     env_file: .env
     environment:
-      NEXT_PUBLIC_API_BASE_URL: "${SECURE_ENDPOINT}/api/v1"
-      NEXT_PUBLIC_INTERVIEW_BACKEND: "${SECURE_ENDPOINT}"
+      NEXT_PUBLIC_API_BASE_URL: "http://${HOST}:${CMS_BACKEND_PORT}/api/v1"
+      NEXT_PUBLIC_INTERVIEW_BACKEND: "http://${HOST}:${CMS_BACKEND_PORT}"
     networks:
       - app_network
 
@@ -117,38 +117,38 @@ services:
     build:
       context: ./services/job_service/frontend
       args:
-        NEXT_PUBLIC_BASE_API_URL: "${SECURE_ENDPOINT}"
+        NEXT_PUBLIC_BASE_API_URL: "http://${HOST}:${CMS_BACKEND_PORT}"
     container_name: job_service_frontend
     ports:
       - "${JOB_PORTAL_PORT}:3000"
     env_file: .env
     environment:
-      BASE_API_URL: "${SECURE_ENDPOINT}"
+      BASE_API_URL: "http://${HOST}:${CMS_BACKEND_PORT}"
     networks:
       - app_network
     restart: unless-stopped
 
-  # screening_consumer:
-  #   build:
-  #     context: ./services/screen_service/
-  #     dockerfile: Dockerfile.consumer
-  #   container_name: ScreeningConsumer
-  #   env_file: .env
-  #   environment:
-  #     RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
-  #     NEXT_PUBLIC_API_BASE: "${SECURE_ENDPOINT}"
-  #     MONGODB_URI: "mongodb://mongo:27017/hr_db"
-  #     GEMINI_API_KEY: "${GEMINI_API_KEY}"
-  #     PYTHONPATH: "/src"
-  #   volumes:
-  #     - shared_volume_new:/shared_volume
-  #   depends_on:
-  #     mongo:
-  #       condition: service_started
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   networks:
-  #     - app_network
+  screening_consumer:
+    build:
+      context: ./services/screen_service/
+      dockerfile: Dockerfile.consumer
+    container_name: ScreeningConsumer
+    env_file: .env
+    environment:
+      RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
+      NEXT_PUBLIC_API_BASE: "http://${HOST}:${CMS_BACKEND_PORT}"
+      MONGODB_URI: "mongodb://mongo:27017/hr_db"
+      GEMINI_API_KEY: "${GEMINI_API_KEY}"
+      PYTHONPATH: "/src"
+    volumes:
+      - shared_volume_new:/shared_volume
+    depends_on:
+      mongo:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - app_network
 
   mongo:
     image: mongo:latest
