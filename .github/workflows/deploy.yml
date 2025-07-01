@@ -54,6 +54,7 @@ jobs:
           UPLOAD_URL="${{ secrets.UPLOAD_URL }}"
           UPLOAD_USER="${{ secrets.UPLOAD_USER }}"
           UPLOAD_PASSWORD="${{ secrets.UPLOAD_PASSWORD }}"
+          SECURE_ENDPOINT="${{ secrets.SECURE_ENDPOINT }}"
 
           EOF
 
