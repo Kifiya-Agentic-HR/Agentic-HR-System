@@ -34,7 +34,7 @@ export default function Home() {
         className="text-center mb-12" // Increased margin for more spacing
       >
         <img
-          src="http://3.216.34.218:8080/dashboard/logo.svg"
+          src="https://hiring.kifiya.com/dashboard/logo.svg"
           alt="Kifiya Logo"
           className="h-36 mb-12 mx-auto" // Increased height and margin
         />
