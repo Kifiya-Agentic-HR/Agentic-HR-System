@@ -5,3 +5,4 @@ __pycache__/
 .next/
 data/
 .env
+docker-compose.yaml
