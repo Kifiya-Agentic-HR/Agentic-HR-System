@@ -4,6 +4,9 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 from config_local import Config
 from src.service.screening_service import balance_braces
+import logging
+
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -57,5 +60,6 @@ def analyze_job_skills(job_requirement_text):
 
     try:
         return json.loads(json_str)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e:
+        logger.warning(e.msg)
         return {}  # Return an empty dict if JSON parsing fails

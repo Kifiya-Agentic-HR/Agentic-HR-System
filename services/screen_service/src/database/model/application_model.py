@@ -30,5 +30,5 @@ class ApplicationDocument(BaseDocument):
             logger.info(f"no application found{application} {application_id}")
             return application
         except errors.PyMongoError as e:
-        
+            logger.exception(f"Error fetching application by id: {e} {application_id}")
             raise Exception(f"Error fetching application by id: {e} {application_id}")

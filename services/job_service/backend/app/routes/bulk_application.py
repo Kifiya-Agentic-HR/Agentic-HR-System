@@ -154,8 +154,9 @@ async def create_bulk_application(
                     if not os.path.exists(file_path):
                         raise Exception(f"File not found: {file_path}")
 
-                    if contains_script_code(file_path):
-                        raise Exception(f"File Contains script")
+                    # if contains_script_code(file_path):
+                        # raise Exception(f"File Contains script")
+                    # remove due to false positives
                     
                     
                     # Determine MIME type

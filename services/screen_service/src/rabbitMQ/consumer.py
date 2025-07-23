@@ -1,5 +1,7 @@
-import time
-start = time.time()
+from services.screen_service.src.logger import setup_logging
+setup_logging()
+
+
 import asyncio
 import json
 import logging
@@ -10,15 +12,10 @@ from src.database.model.screen_result_model import ScreeningResultDocument
 from src.database.model.recommendation_model import RecommendationDocument
 
 import sys
-m = time.time() - start
-print(f"Time taken to import: {m}")
 from src.service.screening_service import scoreResume
-print(f"Time taken to import scoreResume: {time.time() - (m+start)}")
+
 
 # Configure logging
-handler = logging.StreamHandler(sys.stdout)
-handler.setLevel(logging.INFO)
-logging.basicConfig(level=logging.INFO, handlers=[handler])
 logger = logging.getLogger(__name__)
 
 # ThreadPool for running blocking (synchronous) operations asynchronously
@@ -57,9 +54,7 @@ async def process_message(message: aio_pika.IncomingMessage):
                     "application_id": application_id,
                 }
                 await loop.run_in_executor(
-                executor, RecommendationDocument.create_recommendation, result
-
-            )
+                executor, RecommendationDocument.create_recommendation, result)
                 logger.info(f"Consumer: Successfully processed application from recommendation with application_id {application_id}")
             else:
                 result = {
@@ -100,7 +95,6 @@ async def consume_messages():
 
 if __name__ == "__main__":
     try:
-        print(f"Consumer script started, time taken: {time.time() - start}")
         logger.info("CONSUMER RUNNING")
         asyncio.run(consume_messages())
     except KeyboardInterrupt:
