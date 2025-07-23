@@ -44,7 +44,7 @@ def render_notification(notification: NotificationUnion) -> str:
         
         # Wrap the output in a consistent container.
         return f"<div class='notification'>{rendered_html}</div>"
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to render notification.")
         # Return a consistent fallback error message.
         return None

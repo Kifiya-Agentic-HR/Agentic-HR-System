@@ -1,8 +1,10 @@
 import os
+import logging
 from dotenv import load_dotenv
 
 load_dotenv()
 
+logger = logging.getLogger(__name__)
 class Settings:
     PROJECT_NAME: str = "NotificationService"
     # Server
@@ -18,6 +20,7 @@ class Settings:
         required_vars = [self.SMTP_HOST, self.SMTP_PORT, self.SMTP_USER, self.SMTP_PASS, self.SENDER_EMAIL]
         if not all(required_vars):
             missing_vars = [var for var, val in zip(required_vars, ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "SENDER_EMAIL"]) if not val or val == ""]
+            logger.error(f"SMTP configuration is missing. Please check your environment variables.\nMissing: {missing_vars}")
             raise ValueError(f"SMTP configuration is missing. Please check your environment variables.\nMissing: {missing_vars}")
-
+            
 settings = Settings()
