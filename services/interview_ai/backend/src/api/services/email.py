@@ -5,7 +5,7 @@ from src.api.models.enums import EmailType
 import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+
 
 settings = get_settings()
 
@@ -43,4 +43,5 @@ def send_email_notification(type: EmailType, to: str, subject: str, **kwargs) ->
         response.raise_for_status()
         return {"status": "success", "data": response.json()}
     except requests.exceptions.RequestException as e:
+        logger.error(f"error sending email: {e}")
         return {"status": "error", "message": str(e)}

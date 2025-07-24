@@ -1,3 +1,7 @@
+from src.logger import setup_logging
+setup_logging()
+
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.api.routes.interview import router as interview_router

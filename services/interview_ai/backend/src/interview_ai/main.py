@@ -3,7 +3,7 @@ from src.interview_ai.crews import EvaluatorCrew, InterviewQACrew, InterviewFlow
 import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+
 
 class UnifiedInterface:
     def __init__(self):

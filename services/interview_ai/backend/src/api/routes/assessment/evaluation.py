@@ -7,6 +7,9 @@ from redis import Redis
 import uuid
 import time
 from openai import OpenAI
+import logging 
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/technical-assessment", tags=["technical_assessment"])
 
@@ -50,17 +53,21 @@ async def evaluate_with_llm(request: EvaluationRequest) -> LLMEvaluation:
         snapshots=request.snapshots
     )
     
-    response = client.chat.completions.create(
-        model="gpt-4",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.2,
-        max_tokens=500
-    )
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.2,
+            max_tokens=500
+        )
+    except Exception as e:
+        logger.critical(f"OpenAI response failed {e}")
     
     try:
         evaluation = json.loads(response.choices[0].message.content)
         return LLMEvaluation(**evaluation)
     except Exception as e:
+        logger.error(f"LLM evaluation failed: {(e)}")
         raise HTTPException(500, f"LLM evaluation failed: {str(e)}")
 
 @router.post("/schedule")

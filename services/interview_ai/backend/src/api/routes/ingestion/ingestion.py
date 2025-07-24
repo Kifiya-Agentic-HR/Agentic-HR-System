@@ -5,6 +5,10 @@ from typing import Dict, Optional
 import uuid
 from src.api.services.file_processor import process_file, chunk_text
 from src.api.core.weaviate import get_weaviate_client
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 router = APIRouter(prefix="/ingest", tags=["Ingestion"])
 
@@ -60,6 +64,7 @@ async def ingest_document(
         }
         
     except Exception as e:
+        logger.error(f"Document processing failed: {(e)}")
         raise HTTPException(
             status_code=500,
             detail=f"Document processing failed: {str(e)}"
