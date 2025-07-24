@@ -1,1 +1,0 @@
-{"level": "ERROR", "message": "SMTP configuration is missing. Please check your environment variables.\nMissing: []", "timestamp": "2025-07-23T18:51:05.824421+00:00", "logger": "app.config", "module": "config", "function": "__init__", "line": 23, "thread_name": "MainThread"}
