@@ -29,9 +29,9 @@
     },
     "file_json": {
       "class": "logging.handlers.RotatingFileHandler",
-      "level": "WARNING",
+      "level": "ERROR",
       "formatter": "json",
-      "filename": "logs/job_service.log.jsonl",
+      "filename": "/job_service/logs/job_service.log.jsonl",
       "maxBytes": 1000000,
       "backupCount": 5
     },

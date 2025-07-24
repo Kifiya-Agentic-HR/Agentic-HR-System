@@ -2,7 +2,9 @@ import smtplib
 import ssl
 from email.message import EmailMessage
 from app.config import settings
-from app.logger import logger
+import logging
+
+logger = logging.getLogger(__name__)
 
 def send_email_notification(to: str, subject: str, body: str = "", html: str = ""):
     """

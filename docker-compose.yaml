@@ -71,6 +71,8 @@ services:
       - app_network
     volumes:
       - shared_volume_new:/shared_volume
+      - ./logs/interview:/interview-ai/logs/
+
 
   interview_frontend:
     build:
@@ -104,6 +106,7 @@ services:
       UPLOAD_URL: "${UPLOAD_URL}"
     volumes:
       - shared_volume_new:/shared_volume
+      - ./logs/job_service:/job_service/logs
     restart: unless-stopped
     depends_on:
       mongo:
@@ -142,6 +145,7 @@ services:
       PYTHONPATH: "/src"
     volumes:
       - shared_volume_new:/shared_volume
+      - .logs/screen_service:/screen_service/logs
     depends_on:
       mongo:
         condition: service_started
@@ -184,6 +188,8 @@ services:
     build: ./services/notification
     ports:
       - "7788:8000"
+    volumes:
+      - ./logs/notification:/notification/logs
     env_file: .env
     environment:
       PORT: 8000

@@ -1,0 +1,2 @@
+{"level": "ERROR", "message": "<Logger app.main (DEBUG)>", "timestamp": "2025-07-24T13:22:11.397640+00:00", "logger": "app.main", "module": "main", "function": "<module>", "line": 7, "thread_name": "MainThread"}
+{"level": "ERROR", "message": "<Logger app.main (DEBUG)>", "timestamp": "2025-07-24T13:24:36.365942+00:00", "logger": "app.main", "module": "main", "function": "<module>", "line": 7, "thread_name": "MainThread"}

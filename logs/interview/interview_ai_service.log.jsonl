@@ -1,0 +1,1 @@
+{"level": "ERROR", "message": "Test Error", "timestamp": "2025-07-24T13:16:20.955458+00:00", "logger": "src.api.main", "module": "main", "function": "<module>", "line": 7, "thread_name": "MainThread"}

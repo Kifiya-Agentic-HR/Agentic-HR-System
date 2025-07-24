@@ -1,2 +1,0 @@
-{"level": "ERROR", "message": "Gemini_key not set", "timestamp": "2025-07-24T07:35:31.181849+00:00", "logger": "app.utils.config_local", "module": "config_local", "function": "Config", "line": 17, "thread_name": "MainThread"}
-{"level": "ERROR", "message": "Configuration error: Upload URL is not set", "timestamp": "2025-07-24T07:35:31.182187+00:00", "logger": "app.utils.config_local", "module": "config_local", "function": "check_config", "line": 29, "thread_name": "MainThread"}

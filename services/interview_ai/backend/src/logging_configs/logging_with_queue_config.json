@@ -29,9 +29,9 @@
     },
     "file_json": {
       "class": "logging.handlers.RotatingFileHandler",
-      "level": "WARNING",
+      "level": "ERROR",
       "formatter": "json",
-      "filename": "logs/interview_ai_service.log.jsonl",
+      "filename": "/interview-ai/logs/interview_ai_service.log.jsonl",
       "maxBytes": 10000000,
       "backupCount": 5
     },

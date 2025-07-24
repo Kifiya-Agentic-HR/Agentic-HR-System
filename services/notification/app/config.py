@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 class Settings:
     PROJECT_NAME: str = "NotificationService"
     # Server
+     
     HOST: str = os.getenv("HOST", "0.0.0.0")
     PORT: int = int(os.getenv("PORT", 8000))
     SMTP_HOST: str = os.getenv("SMTP_HOST")
@@ -15,7 +16,7 @@ class Settings:
     SMTP_USER: str = os.getenv("SMTP_USERNAME")
     SMTP_PASS: str = os.getenv("SMTP_PASSWORD")
     SENDER_EMAIL: str = os.getenv("SMTP_FROM")
-
+    
     def __init__(self):
         required_vars = [self.SMTP_HOST, self.SMTP_PORT, self.SMTP_USER, self.SMTP_PASS, self.SENDER_EMAIL]
         if not all(required_vars):

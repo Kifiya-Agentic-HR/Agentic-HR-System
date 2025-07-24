@@ -10,7 +10,6 @@ from src.api.db.dependencies import setup_dependencies
 
 def create_app():
     app = FastAPI(title="Interview API", version="1.0.0")
-    
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
