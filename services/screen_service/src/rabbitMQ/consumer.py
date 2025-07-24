@@ -1,4 +1,4 @@
-from services.screen_service.src.logger import setup_logging
+from src.logger import setup_logging
 setup_logging()
 
 
