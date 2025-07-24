@@ -4,7 +4,9 @@ import PyPDF2
 from PIL import Image
 import pytesseract
 import os
+import logging 
 
+logger = logging.getLogger(__name__)
 
 import requests
 
@@ -24,6 +26,7 @@ def extract_text_from_file(file_url: str, file_type: str = None) -> str:
     # Fetch file content from the URL
     response = requests.get(file_url)
     if response.status_code != 200:
+        logger.error(f"Failed to fetch file: {response.status_code}")
         raise Exception(f"Failed to fetch file: {response.status_code}")
     
     # Determine file type if not explicitly provided

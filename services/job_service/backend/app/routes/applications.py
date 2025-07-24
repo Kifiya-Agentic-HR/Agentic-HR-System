@@ -42,6 +42,7 @@ def send_email_notification(to: str, subject: str, type="application_received", 
         response.raise_for_status()
         return {"status": "success", "data": response.json()}
     except requests.exceptions.RequestException as e:
+        logger.error(f"couldn't send email to {to} because {str(e)}")
         return {"status": "error", "message": str(e)}
 
 load_dotenv()
@@ -95,8 +96,8 @@ Provide **one or two specific, actionable suggestions** the candidate can follow
 """
 
     
-    rejection_reason = "Based on your screening performance, your current skill set does not fully meet our requirements."
-    suggestion = "We suggest you further develop your technical skills and reapply in the future."
+    general_rejection_reason = "Based on your screening performance, your current skill set does not fully meet our requirements."
+    general_suggestion = "We suggest you further develop your technical skills and reapply in the future."
     
     try:
         # Generate rejection reason
@@ -110,7 +111,7 @@ Provide **one or two specific, actionable suggestions** the candidate can follow
         rejection_reason = rejection_reason.text.strip()
     
         if not rejection_reason:
-            raise ValueError("Gemini returned an empty response.")
+            rejection_reason = general_rejection_reason
     
         # Generate suggestion
         suggestion = model.generate_content(
@@ -123,15 +124,13 @@ Provide **one or two specific, actionable suggestions** the candidate can follow
         suggestion = suggestion.text.strip()
     
         if not suggestion:
-            raise ValueError("Gemini returned an empty response.")
-    
+            suggestion = general_suggestion
         return rejection_reason, suggestion
     except Exception as e:
         logger.error(f"Failed to process GEMINI: {e.__str__()}")
-        return rejection_reason, suggestion
+        return general_rejection_reason, general_suggestion
     
 
-logger = logging.getLogger(__name__)
 router = APIRouter()
 @router.post("/", response_model=dict, status_code=status.HTTP_201_CREATED)
 async def create_application(
@@ -209,6 +208,7 @@ async def create_application(
         try:
             JobDocument.get_job_by_id(job_id)
         except Exception as e:
+            logger.warning(f"Job with {job_id} is not found")
             response.status_code = status.HTTP_404_NOT_FOUND
             return {
                 "success": False,
@@ -245,6 +245,7 @@ async def create_application(
         # Store in database
         new_application = ApplicationDocument.create_application(application_data)
         if not new_application:
+            logger.error(f"Application creation failed for {application_data}")
             raise HTTPException(status_code=400, detail="Application creation failed")
         
         # notify the user
@@ -282,7 +283,7 @@ async def get_applications():
         applications = ApplicationDocument.get_applications()
         return list(applications)
     except Exception as e:
-        logger.error(f"Error fetching applications: {str(e)}")
+        logger.warning(f"Error fetching applications: {str(e)}")
 
 @router.get("/{application_id}", response_model=dict)
 async def get_application(response: Response,application_id: str):
@@ -308,6 +309,7 @@ async def get_application(response: Response,application_id: str):
         }
         return {"success": True, "application": application_response}
     except Exception as e:
+        logger.error(f"Error retrieving application: {e}")
         raise HTTPException(status_code=500, detail=f"Error retrieving application: {e}")
 
 @router.patch("/{application_id}/reject", response_model=dict)
@@ -348,10 +350,11 @@ async def reject_application(application_id: str):
                 title=title
             )
             return {"success": True, "message": f"Application {application_id} rejected successfully."}
-        
+        logger.error(f"Application {application_id} not found.")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Application {application_id} not found.")
     except Exception as e:
+        logger.error(f"Error rejecting application: {e}")
         raise HTTPException(status_code=500, detail=f"Error rejecting application: {e}")
 
 
@@ -383,8 +386,10 @@ async def accept_application(application_id: str):
         if result:
             return {"success": True, "message": f"Application {application_id} accepted successfully."}
         # In case no application was updated (optional error handling)
+        logger.error(f"Application {application_id} not found.")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Application {application_id} not found.")
     except Exception as e:
+        logger.error(f"Error accepting application: {e}")
         raise HTTPException(status_code=500, detail=f"Error accepting application: {e}")
 
 @router.put("/{application_id}", response_model=dict)

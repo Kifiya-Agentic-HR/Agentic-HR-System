@@ -8,7 +8,6 @@ import json
 import magic
 
 # logging
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Constants
@@ -62,6 +61,7 @@ async def upload_file(
             )  # :contentReference[oaicite:1]{index=1}
 
     except httpx.HTTPError as e:
+        logger.critical(f"Error connecting to upload service: {str(e)}")
         raise HTTPException(
             status_code=502,
             detail=f"Error connecting to upload service: {str(e)}"
@@ -69,6 +69,7 @@ async def upload_file(
 
     # 6. Handle non-200 responses
     if response.status_code != 200:
+        logger.critical(f"Upload failed: {response.text}")
         raise HTTPException(
             status_code=response.status_code,
             detail=f"Upload failed: {response.text}"
@@ -78,6 +79,7 @@ async def upload_file(
     data = response.json()
     file_url = data.get("file_url")
     if not file_url:
+        logger.error(f"Unexpected response format: missing {file_url}")
         raise HTTPException(
             status_code=500,
             detail="Unexpected response format: missing 'file_url'"

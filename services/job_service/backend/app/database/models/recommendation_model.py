@@ -38,6 +38,7 @@ class RecommendationDocument(BaseDocument):
             result = sorted(result, key=lambda x: x["score"], reverse=True)
             return result
         except errors.PyMongoError as e:
+            logger.error(f"Error fetching recommend applications by job_id: {e}")
             raise Exception(f"Error fetching recommend applications by job_id: {e}")
     @classmethod
     def create_recommendation(cls, recomendation_data: RecommendationCreate):
@@ -55,6 +56,7 @@ class RecommendationDocument(BaseDocument):
             result = cls.get_collection().insert_one(recomendation_data)
             return cls.get_collection().find_one({"_id": ObjectId(result.inserted_id)})
         except errors.PyMongoError as e:
+            logger.error(f"Error inserting recommendation: {e}")
             raise Exception(f"Error inserting recommendation: {e}")
 
 

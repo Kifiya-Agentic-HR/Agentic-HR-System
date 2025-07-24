@@ -27,6 +27,7 @@ class JobDocument(BaseDocument):
             result = cls.get_collection().insert_one(job_data)
             return cls.get_collection().find_one({"_id": ObjectId(result.inserted_id)})
         except errors.PyMongoError as e:
+            logger.error(f"Error inserting job: {e}")
             raise Exception(f"Error inserting job: {e}")
 
     @classmethod
@@ -37,6 +38,7 @@ class JobDocument(BaseDocument):
                 job["_id"] = str(job["_id"])
             return job
         except errors.PyMongoError as e:
+            logger.error(f"Error fetching job by id: {e}")
             raise Exception(f"Error fetching job by id: {e}")
 
     @classmethod
@@ -47,6 +49,7 @@ class JobDocument(BaseDocument):
                 job["_id"] = str(job["_id"])
             return jobs
         except errors.PyMongoError as e:
+            logger.error(f"Error fetching all jobs: {e}")
             raise Exception(f"Error fetching all jobs: {e}")
 
     @classmethod
@@ -61,4 +64,5 @@ class JobDocument(BaseDocument):
                 updated_job["_id"] = str(updated_job["_id"])
             return updated_job
         except errors.PyMongoError as e:
+            logger.error(f"Error updating job: {e}")
             raise Exception(f"Error updating job: {e}")

@@ -41,6 +41,7 @@ class CandidateDocument(BaseDocument):
                 return new_candidate["_id"]
             
         except errors.PyMongoError as e:
+            logger.error(f"Error creating/updating candidate: {e} {candidate_data}")
             raise Exception(f"Error creating/updating candidate: {e} {candidate_data}")
     @classmethod
     def get_candidate_by_id(cls, candidate_id):
@@ -52,4 +53,5 @@ class CandidateDocument(BaseDocument):
             
         except errors.PyMongoError as e:
         
+            logger.error(f"Error fetching candidate by id: {e} {candidate_id}")
             raise Exception(f"Error fetching candidate by id: {e} {candidate_id}")
