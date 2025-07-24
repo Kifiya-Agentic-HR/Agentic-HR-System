@@ -1,3 +1,5 @@
+from logger import setup_logging
+setup_logging()
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware  
 from app.routes.question import router as question_router
