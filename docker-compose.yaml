@@ -131,28 +131,28 @@ services:
       - app_network
     restart: unless-stopped
 
-  screening_consumer:
-    build:
-      context: ./services/screen_service/
-      dockerfile: Dockerfile.consumer
-    container_name: ScreeningConsumer
-    env_file: .env
-    environment:
-      RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
-      NEXT_PUBLIC_API_BASE: "${SECURE_ENDPOINT}"
-      MONGODB_URI: "mongodb://mongo:27017/hr_db"
-      GEMINI_API_KEY: "${GEMINI_API_KEY}"
-      PYTHONPATH: "/src"
-    volumes:
-      - shared_volume_new:/shared_volume
-      - .logs/screen_service:/screen_service/logs
-    depends_on:
-      mongo:
-        condition: service_started
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - app_network
+  # screening_consumer:
+  #   build:
+  #     context: ./services/screen_service/
+  #     dockerfile: Dockerfile.consumer
+  #   container_name: ScreeningConsumer
+  #   env_file: .env
+  #   environment:
+  #     RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
+  #     NEXT_PUBLIC_API_BASE: "${SECURE_ENDPOINT}"
+  #     MONGODB_URI: "mongodb://mongo:27017/hr_db"
+  #     GEMINI_API_KEY: "${GEMINI_API_KEY}"
+  #     PYTHONPATH: "/src"
+  #   volumes:
+  #     - shared_volume_new:/shared_volume
+  #     - ./logs/screen_service:/screen_service/logs
+  #   depends_on:
+  #     mongo:
+  #       condition: service_started
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   networks:
+  #     - app_network
 
   mongo:
     image: mongo:latest
@@ -220,6 +220,47 @@ services:
       retries: 5
       start_period: 10s
 
+  # --- ELK Stack Services ---
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    networks:
+      - app_network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.1
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    networks:
+      - app_network
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.11.1
+    container_name: filebeat
+    user: root
+    depends_on:
+      - elasticsearch
+      - kibana
+    volumes:
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./logs:/usr/share/filebeat/logs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - app_network
+
 networks:
   app_network:
     driver: bridge
@@ -228,3 +269,4 @@ volumes:
   shared_volume_new:
   rabbitmq_data_new:
   redis-data_new:
+  esdata:
