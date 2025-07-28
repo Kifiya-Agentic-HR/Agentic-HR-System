@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { UsersService } from './users/users.service'; 
 import { UserRole } from './users/schemas/user.schema';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 // ...existing code...
 async function bootstrap() {
@@ -17,6 +18,8 @@ async function bootstrap() {
     res.setHeader('Content-Security-Policy', "frame-ancestors 'none'");
     next();
   });
+
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   app.enableCors();
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }));
