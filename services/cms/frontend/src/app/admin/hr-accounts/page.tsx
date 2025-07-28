@@ -51,24 +51,26 @@ export default function CreateHrAccountForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      await createHRAccount({
+      const result = await createHRAccount({
         firstName: values.firstName,
         lastName: values.lastName,
         email: values.email,
         password: values.password,
         role: "hr",
       });
-
+  
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+  
       toast.success("Account created successfully", {
         description: `HR ${values.firstName} ${values.lastName} has been registered`,
-        
       });
-      setSuccessMessage(`Account for ${values.firstName} ${values.lastName} has been created successfully!`);
       form.reset();
-      router.push("/admin/user-management"); 
+      router.push("/admin/user-management");
     } catch (error: any) {
       toast.error("Creation failed", {
-        description: error || "There was an error creating the account",
+        description: error.message || "There was an error creating the account",
       });
     }
   }
@@ -89,7 +91,11 @@ export default function CreateHrAccountForm() {
           </h2>
         </div>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form 
+          onSubmit={(e) => {
+            e.preventDefault(); 
+            form.handleSubmit(onSubmit)(e); 
+          }} className="space-y-6">
             {/* First Name Field */}
             <FormField
               control={form.control}
