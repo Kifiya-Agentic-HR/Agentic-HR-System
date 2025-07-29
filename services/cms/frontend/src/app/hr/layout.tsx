@@ -14,7 +14,7 @@ export default function RootLayout({
     <div className={`${inter.className} flex`}>
       <HRSidebar />
       <div className="flex-1 ml-64 w-full p-8">{children}</div>
-    <Toaster />
+      <Toaster  toastOptions={{className:"text-black"}}/>
     </div>
   );
 }
