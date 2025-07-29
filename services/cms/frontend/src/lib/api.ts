@@ -399,7 +399,7 @@ export const createHRAccount = async (userData: any) => {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      return { success: false, error: errorData.error || `HTTP error! Status: ${response.status}` };
+      return { success: false, error: errorData.message || `HTTP error! Status: ${response.status}` };
     }
 
     return { success: true, data: await response.json() };
