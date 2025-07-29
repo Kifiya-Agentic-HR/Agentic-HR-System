@@ -210,4 +210,16 @@ export class JobsService {
       }
     }
   }
+async requeue(body: any) {
+  try {
+    const response = await firstValueFrom(
+      this.httpService.post(`${this.baseUrl}/re/requeue`, body),
+    );
+    return response.data;
+  } catch (error) {
+    this.logger.error(`Error in requeue()`, error.stack);
+    this.logger.error(error?.response?.data || error?.message);
+    return { success: false, error: 'Error requeueing application' };
+  }
+}
 }
