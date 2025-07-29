@@ -40,11 +40,32 @@ class JobDocument(BaseDocument):
         except errors.PyMongoError as e:
             logger.error(f"Error fetching job by id: {e}")
             raise Exception(f"Error fetching job by id: {e}")
+    
+    @classmethod
+    def get_open_job_by_id(cls, job_id):
+        try:
+            job = cls.get_collection().find_one({"_id": ObjectId(job_id), "job_status": "open"})
+            if job:
+                job["_id"] = str(job["_id"])
+            return job
+        except errors.PyMongoError as e:
+            logger.error(f"Error fetching job by id: {e}")
+            raise Exception(f"Error fetching job by id: {e}")
 
     @classmethod
     def get_all_jobs(cls):
         try:
             jobs = list(cls.get_collection().find())
+            for job in jobs:
+                job["_id"] = str(job["_id"])
+            return jobs
+        except errors.PyMongoError as e:
+            logger.error(f"Error fetching all jobs: {e}")
+            raise Exception(f"Error fetching all jobs: {e}")
+    @classmethod
+    def get_all_open_jobs(cls):
+        try:
+            jobs = list(cls.get_collection().find({"job_status": "open"}))
             for job in jobs:
                 job["_id"] = str(job["_id"])
             return jobs

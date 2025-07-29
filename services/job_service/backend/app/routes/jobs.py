@@ -19,6 +19,51 @@ async def get_jobs():
         logger.error(f"Error retrieving jobs: {e}")
         raise HTTPException(status_code=500, detail=f"Error retrieving jobs: {e}")
 
+@router.get("/open", response_model=dict)
+async def get_open_jobs():
+    try:
+        jobs = JobDocument.get_all_open_jobs()
+        return {"success": True, "jobs": jobs}
+    except Exception as e:
+        logger.error(f"Error retrieving jobs: {e}")
+        raise HTTPException(status_code=500, detail=f"Error retrieving jobs: {e}")
+
+
+
+@router.get("/{job_id}", response_model=dict)
+async def get_job(response: Response,job_id: str):
+    try:
+        job = JobDocument.get_job_by_id(job_id)
+        if not job:
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {
+                "sucess": False,
+                "error": f"job application with id {job_id} not found"
+            }
+        return {"success": True, "job": job}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving job: {e}")
+
+@router.get("/open/{job_id}", response_model=dict)
+async def get_open_job(response: Response,job_id: str):
+    try:
+        job = JobDocument.get_open_job_by_id(job_id)
+        if not job:
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {
+                "sucess": False,
+                "error": f"job application with id {job_id} not found"
+            }
+        return {"success": True, "job": job}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving job: {e}")
+
+
+
+
+
+
+
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=dict)
 async def create_job(job: JobCreate, hr_id: str):
     try:
@@ -63,19 +108,6 @@ async def create_job_file(
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
 
 
-@router.get("/{job_id}", response_model=dict)
-async def get_job(response: Response,job_id: str):
-    try:
-        job = JobDocument.get_job_by_id(job_id)
-        if not job:
-            response.status_code = status.HTTP_404_NOT_FOUND
-            return {
-                "sucess": False,
-                "error": f"job application with id {job_id} not found"
-            }
-        return {"success": True, "job": job}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error retrieving job: {e}")
 
 # @router.put("/{job_id}", response_model=dict)
 # async def update_job(response:Response ,job_id: str, job_update: JobUpdate):
