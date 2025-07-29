@@ -85,7 +85,7 @@ export class JobsController {
   }
 
   @Post("requeue")
-  @Roles(UserRole.HR)
+  @Public()
   async requeue(@Body() body: any){
     return this.jobsService.requeue(body)
   }
