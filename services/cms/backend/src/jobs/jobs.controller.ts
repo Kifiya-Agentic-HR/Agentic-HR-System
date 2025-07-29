@@ -1,3 +1,4 @@
+// job contoller
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, HttpCode, Query ,UploadedFile,UseInterceptors} from '@nestjs/common';
 
 import { JobsService } from './jobs.service';
@@ -85,7 +86,7 @@ export class JobsController {
   }
 
   @Post("requeue")
-  @Roles(UserRole.HR)
+  @Public()
   async requeue(@Body() body: any){
     return this.jobsService.requeue(body)
   }

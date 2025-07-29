@@ -1,3 +1,5 @@
+#Screenresult
+
 import logging
 from app.database.database import database
 from datetime import datetime
@@ -57,7 +59,15 @@ class ScreeningResultDocument(BaseDocument):
         )
         return updated_document
     
-    
+    @classmethod
+    def delete_by_application_id(cls, application_id: str):
+        """Deletes a screening result by its application_id."""
+        try:
+            result = cls.get_collection().delete_one({"application_id": application_id})
+            return result.deleted_count > 0
+        except errors.PyMongoError as e:
+            logger.error(f"Error deleting screening result for application {application_id}: {e}")
+            raise
     
     @classmethod
     def edit_score(cls, application_id: str, update_data: dict):

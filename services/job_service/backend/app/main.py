@@ -1,3 +1,4 @@
+#main.py
 from app.logger import setup_logging
 setup_logging()
 
@@ -7,7 +8,7 @@ from app.routes.applications import router as application_router
 from app.routes.bulk_application import router as bulk_router
 from app.routes.short_list import router as short_list_router
 from app.routes.recommendations import router as recommendation_router
-from app.routes.recommendations import router as requeue_router
+from app.routes.requeue import router as requeue_router
 from fastapi.middleware.cors import CORSMiddleware  
 
 

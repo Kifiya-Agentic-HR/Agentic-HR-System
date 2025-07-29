@@ -1,3 +1,5 @@
+//applicationTable
+
 "use client";
 
 import { Application } from "@/components/jobs/types";
@@ -11,9 +13,12 @@ import {
   FiCheckCircle,
   FiDownload,
   FiX,
+  FiRefreshCw,
 } from "react-icons/fi";
 import { useState } from "react";
 import StatusBadge from "./StatusBadge";
+import { toast } from "sonner";
+import { reQueue } from "@/lib/api";
 
 interface ApplicationsTableProps {
   applications: Application[];
@@ -56,7 +61,7 @@ export default function ApplicationsTable({
 
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-     {showCvPopup && (
+      {showCvPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-6 relative max-w-4xl w-full h-[80vh] flex flex-col">
             <div className="flex justify-between items-center mb-4">
@@ -68,7 +73,7 @@ export default function ApplicationsTable({
                 <FiX size={24} />
               </button>
             </div>
-            
+
             {isPdfLoading && (
               <div className="flex-1 flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -183,18 +188,53 @@ export default function ApplicationsTable({
                     {app.shortlisted ? "Yes" : "Pending"}
                   </button>
                 </td>
+
                 <td className="px-6 py-4">
-                  <button
-                    onClick={() => {
-                      setSelectedApp(app);
-                      setPopupType("screening");
-                    }}
-                    className="flex items-center px-4 py-2 rounded-xl bg-[#FF8A00]/10"
-                  >
-                    <FiStar className="mr-2" />
-                    {app.screening?.score || "Add Score"}
-                  </button>
+                  {!app.screening ? (
+                    <span className="text-gray-500">On Queue</span>
+                  ) : app.screening.status === "failed" ? (
+                    <button
+                      onClick={async () => {
+                        try {
+                          const response = await reQueue({
+                            applicationId: app._id,
+                            screening: app.screening,
+                          });
+
+                          if (response.success) {
+                            toast.success("Requeued successfully!");
+                          } else {
+                            toast.error(
+                              `Failed to requeue: ${
+                                response.error || "Unknown error"
+                              }`
+                            );
+                          }
+                        } catch (error) {
+                          toast.error("An error occurred while requeuing.");
+                        }
+                      }}
+                      className="flex items-center px-4 py-2 rounded-xl bg-[#F44336]/10 text-[#F44336] hover:bg-[#F44336]/20"
+                    >
+                      <FiRefreshCw className="mr-2" />
+                      Reload
+                    </button>
+                  ) : app.screening.status === "completed" ? (
+                    <button
+                      onClick={() => {
+                        setSelectedApp(app);
+                        setPopupType("screening");
+                      }}
+                      className="flex items-center px-4 py-2 rounded-xl bg-[#FF8A00]/10"
+                    >
+                      <FiStar className="mr-2" />
+                      {app.screening?.score || "Add Score"}
+                    </button>
+                  ) : (
+                    <span className="text-gray-500">Processing...</span>
+                  )}
                 </td>
+
                 <td className="px-6 py-4">
                   <button
                     onClick={() => {
