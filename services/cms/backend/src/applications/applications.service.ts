@@ -1,4 +1,4 @@
-import { Injectable, Logger, HttpException, HttpStatus} from '@nestjs/common';
+import { Injectable, Logger, HttpException, HttpStatus, NotFoundException, BadRequestException, UnauthorizedException, InternalServerErrorException } from '@nestjs/common';
 import { HttpService} from '@nestjs/axios';
 import { firstValueFrom} from 'rxjs';
 import * as FormData from 'form-data';
@@ -28,11 +28,16 @@ export class ApplicationsService {
       const response = await firstValueFrom(
         this.httpService.get(`${this.baseUrl}/applications`),
       );
-      // this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
       return response.data; 
     } catch (error) {
       this.logger.error(`Error fetching applications: ${error.message}`, error.stack);
-      return { success: false, error: 'Error fetching applications' };
+      if (error.response?.status === 401) {
+        throw new UnauthorizedException('You are not authorized to view applications.');
+      }
+      if (error.response?.status === 404) {
+        throw new NotFoundException('Applications not found.');
+      }
+      throw new InternalServerErrorException('Error fetching applications');
     }
   }
 
@@ -42,26 +47,31 @@ export class ApplicationsService {
       const response = await firstValueFrom(
         this.httpService.get(`${this.baseUrl}/applications/${application_id}`),
       );
-      // this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
       return response.data;
     } catch (error) {
       this.logger.error(`Error fetching application ${application_id}: ${error.message}`, error.stack);
-      return { success: false, error: `Error fetching application ${application_id}` };
+      if (error.response?.status === 401) {
+        throw new UnauthorizedException('You are not authorized to view this application.');
+      }
+      if (error.response?.status === 404) {
+        throw new NotFoundException('Application not found.');
+      }
+      if (error.response?.status === 400) {
+        throw new BadRequestException('Invalid application ID.');
+      }
+      throw new InternalServerErrorException(`Error fetching application ${application_id}`);
     }
   }
 
   async create(appData: any, cvFile: Express.Multer.File) {
     const form = new FormData();
-    
     form.append('cv', cvFile.buffer, {
       filename: cvFile.originalname,
       contentType: cvFile.mimetype
     });
-  
     Object.entries(appData).forEach(([key, value]) => {
       form.append(key, value.toString());
     });
-  
     try {
       const response = await firstValueFrom(
         this.httpService.post(`${this.baseUrl}/applications`, form, {
@@ -71,20 +81,20 @@ export class ApplicationsService {
           }
         })
       );
-  
       return response.data;
     } catch (error) {
       const errorData = error.response?.data || {
         error: 'Application failed',
         details: 'No response from server'
       };
-      
       this.logger.error(`Application Error: ${JSON.stringify(errorData)}`);
-      
-      return {
-        success: false,
-        ...errorData
-      };
+      if (error.response?.status === 400) {
+        throw new BadRequestException(errorData.error || 'Invalid application data.');
+      }
+      if (error.response?.status === 401) {
+        throw new UnauthorizedException('You are not authorized to create an application.');
+      }
+      throw new InternalServerErrorException(errorData.error || 'Failed to create application.');
     }
   }
 
@@ -94,14 +104,19 @@ export class ApplicationsService {
       const response = await firstValueFrom(
         this.httpService.patch(`${this.baseUrl}/applications/${application_id}/reject`)
       );
-      // this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
       return response.data; 
     } catch (error) {
       this.logger.error(`Error rejecting application ${application_id}: ${error.message}`, error.stack);
-      return {
-        success: false,
-        error: error?.response?.data?.error || 'Error rejecting application',
-      };
+      if (error.response?.status === 404) {
+        throw new NotFoundException('Application not found.');
+      }
+      if (error.response?.status === 400) {
+        throw new BadRequestException('Invalid application ID.');
+      }
+      if (error.response?.status === 401) {
+        throw new UnauthorizedException('You are not authorized to reject this application.');
+      }
+      throw new InternalServerErrorException('Error rejecting application');
     }
   }
 
@@ -111,14 +126,19 @@ export class ApplicationsService {
       const response = await firstValueFrom(
         this.httpService.patch(`${this.baseUrl}/applications/${application_id}/accept`)
       );
-      // this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
       return response.data; 
     } catch (error) {
       this.logger.error(`Error accepting application ${application_id}: ${error.message}`, error.stack);
-      return {
-        success: false,
-        error: error?.response?.data?.error || 'Error accepting application',
-      };
+      if (error.response?.status === 404) {
+        throw new NotFoundException('Application not found.');
+      }
+      if (error.response?.status === 400) {
+        throw new BadRequestException('Invalid application ID.');
+      }
+      if (error.response?.status === 401) {
+        throw new UnauthorizedException('You are not authorized to accept this application.');
+      }
+      throw new InternalServerErrorException('Error accepting application');
     }
   }
 
@@ -128,14 +148,19 @@ export class ApplicationsService {
       const response = await firstValueFrom(
         this.httpService.put(`${this.baseUrl}/applications/edit_score/${application_id}`, updateData)
       );
-      // this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
       return response.data; 
     } catch (error) {
       this.logger.error(`Error editing application ${application_id}: ${error.message}`, error.stack);
-      return {
-        success: false,
-        error: error?.response?.data?.error || 'Error editing application',
-      };
+      if (error.response?.status === 404) {
+        throw new NotFoundException('Application not found.');
+      }
+      if (error.response?.status === 400) {
+        throw new BadRequestException('Invalid application ID or score data.');
+      }
+      if (error.response?.status === 401) {
+        throw new UnauthorizedException('You are not authorized to edit this application.');
+      }
+      throw new InternalServerErrorException('Error editing application');
     }
   }
 
@@ -145,26 +170,27 @@ export class ApplicationsService {
       const response = await firstValueFrom(
         this.httpService.put(`${this.baseUrl}/applications/${application_id}`, updateData)
       );
-      // this.logger.debug(`Received data: ${JSON.stringify(response.data)}`);
       return response.data; 
     } catch (error) {
       this.logger.error(`Error updating application ${application_id}: ${error.message}`, error.stack);
-      return {
-        
-        success: false,
-        error: error?.response?.data?.error || 'Error updating application',
-      };
+      if (error.response?.status === 404) {
+        throw new NotFoundException('Application not found.');
+      }
+      if (error.response?.status === 400) {
+        throw new BadRequestException('Invalid application ID or update data.');
+      }
+      if (error.response?.status === 401) {
+        throw new UnauthorizedException('You are not authorized to update this application.');
+      }
+      throw new InternalServerErrorException('Error updating application');
     }
   }
 
   async invite(payload: ApplicationInvitePayload): Promise<any> {
-    // Use a default subject if none provided.
-
     let job = await this.jobService.findOne(payload.apply_link);
     let title = job?.job ? job.job.title : "the job";
     const subject =  `We would like to invite you to apply to ${title} at Kifiya Financial Technologies`;
 
-    
     const requestPayload = {
       to: payload.to,
       title: title,
@@ -173,7 +199,6 @@ export class ApplicationsService {
       name: payload.name,
       apply_link: `${this.jobUrl}/jobs/${payload.apply_link}/apply`,
     };
-
 
     this.logger.log(`Sending application invite to ${payload.to} via ${this.notificationUrl}notify/email`);
 
@@ -185,10 +210,15 @@ export class ApplicationsService {
       return response.data;
     } catch (error) {
       this.logger.error(`Error sending invitation: ${error.message}`, error.stack);
-      throw new HttpException(
+      if (error.response?.status === 400) {
+        throw new BadRequestException('Invalid invitation data.');
+      }
+      if (error.response?.status === 401) {
+        throw new UnauthorizedException('You are not authorized to send invitations.');
+      }
+      throw new InternalServerErrorException(
         'Failed to send application invitation via notification service. ' +
           (error.response?.data?.detail || error.message),
-        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
