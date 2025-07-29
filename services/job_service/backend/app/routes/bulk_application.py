@@ -104,7 +104,7 @@ async def create_bulk_application(
             job_id = str(job["_id"])
             job = JobDocument.get_job_by_id(job_id)
         except Exception as e:
-            logging.error(f"Error creating application: {str(e)}")
+            logger.critical(f"Error creating application: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
     else:
         response.status_code=status.HTTP_400_BAD_REQUEST
@@ -154,8 +154,9 @@ async def create_bulk_application(
                     if not os.path.exists(file_path):
                         raise Exception(f"File not found: {file_path}")
 
-                    if contains_script_code(file_path):
-                        raise Exception(f"File Contains script")
+                    # if contains_script_code(file_path):
+                        # raise Exception(f"File Contains script")
+                    # remove due to false positives
                     
                     
                     # Determine MIME type
@@ -226,7 +227,7 @@ async def create_bulk_application(
                     processed_count += 1
 
                 except Exception as e:
-                    logger.error(f"Failed to process {file_path}: {str(e)}", exc_info=True)
+                    logger.critical(f"Failed to process {file_path}: {str(e)}", exc_info=True)
                     errors.append(f"{os.path.basename(file_path)}: {str(e)}")
                     continue
             
@@ -265,6 +266,7 @@ async def get_job_applications(response: Response,job_id: str):
 
         return {"success": True, "applications": bulk_applications}
     except HTTPException:
-        raise
+        logger.error(HTTPException)
     except Exception as e:
+        logger.error(f"Error retrieving applications: {e}")
         raise HTTPException(status_code=500, detail=f"Error retrieving applications: {e}")

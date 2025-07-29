@@ -30,5 +30,6 @@ class RecommendationDocument(BaseDocument):
             result = cls.get_collection().insert_one(recomendation_data)
             return cls.get_collection().find_one({"_id": ObjectId(result.inserted_id)})
         except errors.PyMongoError as e:
+            logger.exception(f"Error fetching application by id: {e}")
             raise Exception(f"Error inserting recommendation: {e}")
 

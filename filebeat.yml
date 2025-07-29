@@ -1,0 +1,18 @@
+filebeat.inputs:
+- type: filestream
+  id: agentic-hr-logs
+  enabled: true
+  paths:
+    - /usr/share/filebeat/logs/*/*.log.jsonl
+  parsers:
+    - ndjson:
+        target: ""
+        add_error_key: true
+
+processors:
+- add_docker_metadata: ~
+
+output.elasticsearch:
+  hosts: ["http://elasticsearch:9200"]
+
+logging.level: info

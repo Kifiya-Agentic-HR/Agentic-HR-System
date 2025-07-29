@@ -24,6 +24,6 @@ async def publish_application(message):
             )
         logging.info(f"Message sent successfully for app_id: {message.get('application_id')}")
     except Exception as e:
-        logging.error(f"Failed to send message: {e}")
+        logging.critical(f"Failed to send message: {e}")
         raise  # Re-raise to trigger retry
 

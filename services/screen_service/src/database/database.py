@@ -1,5 +1,8 @@
 from pymongo import MongoClient
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 class Database:
     def __init__(self):
@@ -17,4 +20,9 @@ class Database:
         return self.db[name]
 
 # Create a single instance of the database to be used across the application
-database = Database()
+try:
+    database = Database()
+    
+except Exception:
+    logger.exception(Exception)
+    raise Exception

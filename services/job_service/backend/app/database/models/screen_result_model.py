@@ -56,4 +56,5 @@ class ScreeningResultDocument(BaseDocument):
             return updated_result
 
         except errors.PyMongoError as e:
+            logger.error(f"Error updating screening result: {e}")
             raise Exception(f"Error updating screening result: {e}")

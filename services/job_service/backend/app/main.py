@@ -1,3 +1,6 @@
+from app.logger import setup_logging
+setup_logging()
+
 from fastapi import FastAPI
 from app.routes.jobs import router as job_router
 from app.routes.applications import router as application_router

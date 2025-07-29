@@ -54,6 +54,7 @@ class ApplicationDocument(BaseDocument):
                 new_application["job_id"] = str(new_application["job_id"])
             return new_application["_id"]
         except errors.PyMongoError as e:
+            logger.error(f"Error creating application: {e}")
             raise Exception(f"Error creating application: {e}")
 
     @classmethod
@@ -68,6 +69,7 @@ class ApplicationDocument(BaseDocument):
             return application
         except errors.PyMongoError as e:
         
+            logger.error(f"Error fetching application by id: {e} {application_id}")
             raise Exception(f"Error fetching application by id: {e} {application_id}")
     @classmethod
     def get_application_by_candidate_job(cls, candidate_id , job_id):
@@ -78,7 +80,6 @@ class ApplicationDocument(BaseDocument):
                 application["job_id"] = str(application["job_id"])
             return application
         except errors.PyMongoError as e:
-        
             logger.error(f"Error fetching application by candidate_id")
     @classmethod
     def get_applications(cls):
@@ -92,6 +93,7 @@ class ApplicationDocument(BaseDocument):
             return applications
         except errors.PyMongoError as e:
         
+            logger.error(f"Error fetching applications: {e}")
             raise Exception(f"Error fetching applications: {e}")
 
     @classmethod
@@ -117,6 +119,7 @@ class ApplicationDocument(BaseDocument):
 
             return applications
         except Exception as e:
+            logger.error(f"Error retrieving applications for job {job_id}: {e}")
             raise Exception(f"Error retrieving applications for job {job_id}: {e}")
     
     @classmethod
@@ -128,6 +131,7 @@ class ApplicationDocument(BaseDocument):
             )
             return True
         except errors.PyMongoError as e:
+            logger.error(f"Error rejecting application: {e}")
             raise Exception(f"Error rejecting application: {e}")
     
     @classmethod
@@ -139,6 +143,7 @@ class ApplicationDocument(BaseDocument):
             )
             return True
         except errors.PyMongoError as e:
+            logger.error(f"Error accepting application: {e}")
             raise Exception(f"Error accepting application: {e}")
     @classmethod
     def update_shortlist(cls, application_id, update_data, user="default_user"):
@@ -172,4 +177,5 @@ class ApplicationDocument(BaseDocument):
                 updated_application["_id"] = str(updated_application["_id"])
             return updated_application
         except errors.PyMongoError as e:
+            logger.error(f"Error updating shortlist: {e}")
             raise Exception(f"Error updating shortlist: {e}")

@@ -1,5 +1,6 @@
 
-FROM python:3.9-slim
+FROM python:3.12-slim
+
 
 WORKDIR /app
 
@@ -27,6 +28,7 @@ COPY . .
 
 # Create shared volume directory
 RUN mkdir -p /shared_volume
+
 
 # Set environment variables
 ENV TESSERACT_CMD=/usr/bin/tesseract

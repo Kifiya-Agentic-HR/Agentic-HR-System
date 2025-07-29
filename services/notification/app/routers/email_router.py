@@ -55,11 +55,13 @@ def notify_email(
                 html=html_body
             )
         else:
+            logger.error("Failed to render notification.")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to render notification."
             )
     except Exception as e:
+        logger.exception(e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)

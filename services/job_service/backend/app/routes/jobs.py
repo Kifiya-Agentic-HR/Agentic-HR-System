@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, HTTPException, status, Response, UploadFile,File, Form
 from app.schemas.job_schema import JobCreate, JobUpdate
 from app.database.models.job_model import JobDocument
@@ -6,6 +7,7 @@ from datetime import datetime
 from app.utils.extract_job_requirement import extract_job_requirement
 from app.utils.cloud_storage import upload_file
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 @router.get("/", response_model=dict)
@@ -14,6 +16,7 @@ async def get_jobs():
         jobs = JobDocument.get_all_jobs()
         return {"success": True, "jobs": jobs}
     except Exception as e:
+        logger.error(f"Error retrieving jobs: {e}")
         raise HTTPException(status_code=500, detail=f"Error retrieving jobs: {e}")
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=dict)
@@ -21,7 +24,7 @@ async def create_job(job: JobCreate, hr_id: str):
     try:
         job_data = job.dict()
         if not job_data.get("post_date"):
-            job_data["post_date"] = datetime.utcnow()
+            job_data["post_date"] = datetime.now()
         new_job = JobDocument.create_job(job_data, hr_id)
         if new_job is None:
             raise Exception("Job creation failed")
@@ -56,6 +59,7 @@ async def create_job_file(
             "job_id": job_id
         }
     except Exception as e:
+        logger.critical(e)
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
 
 
@@ -150,6 +154,8 @@ async def get_job_applications(response: Response,job_id: str):
         applications = ApplicationDocument.get_applications_by_job(job_id)
         return {"success": True, "applications": applications}
     except HTTPException:
-        raise
-    except Exception as e:
+        logger.error(HTTPException)
         raise HTTPException(status_code=500, detail=f"Error retrieving applications: {e}")
+    except Exception as e:
+        logger.error(e)
+        raise e

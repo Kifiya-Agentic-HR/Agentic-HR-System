@@ -25,5 +25,5 @@ class CandidateDocument(BaseDocument):
                 
             
         except errors.PyMongoError as e:
-        
+            logger.exception(f"Error fetching candidate by id: {e} {candidate_id}")
             raise Exception(f"Error fetching candidate by id: {e} {candidate_id}")

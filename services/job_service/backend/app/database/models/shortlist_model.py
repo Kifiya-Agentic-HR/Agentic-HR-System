@@ -44,6 +44,7 @@ class ShortListDocument(BaseDocument):
                 return data
 
         except errors.PyMongoError as e:
+            logger.error(f"Error creating/updating shortlist request: {e}")
             raise Exception(f"Error creating/updating shortlist request: {e}")
 
     @classmethod
@@ -58,6 +59,7 @@ class ShortListDocument(BaseDocument):
                     results.append(result)
             return results
         except errors.PyMongoError as e:    
+            logger.error(f"Error fetching shortlist request: {e}")
             raise Exception(f"Error fetching shortlist request: {e}")
     @classmethod
     def delete_request(cls, short_list_id):
@@ -69,6 +71,7 @@ class ShortListDocument(BaseDocument):
             cls.get_collection().delete_one({"_id": ObjectId(short_list_id)})
             return True
         except errors.PyMongoError as e:
+            logger.error(f"Error deleting shortlist request: {e}")
             raise Exception(f"Error deleting shortlist request: {e}")
    
     @classmethod
@@ -79,4 +82,5 @@ class ShortListDocument(BaseDocument):
                 result["_id"] = str(result["_id"])
             return result
         except errors.PyMongoError as e:
+            logger.error(f"Error fetching shortlist request: {e}")
             raise Exception(f"Error fetching shortlist request: {e}")

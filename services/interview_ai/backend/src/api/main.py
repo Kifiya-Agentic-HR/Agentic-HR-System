@@ -1,3 +1,7 @@
+from src.logger import setup_logging
+setup_logging()
+
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.api.routes.interview import router as interview_router
@@ -6,7 +10,6 @@ from src.api.db.dependencies import setup_dependencies
 
 def create_app():
     app = FastAPI(title="Interview API", version="1.0.0")
-    
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
