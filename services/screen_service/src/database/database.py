@@ -3,6 +3,9 @@ import os
 import logging
 
 logger = logging.getLogger(__name__)
+# for local dev with venv
+# local = "mongodb://localhost:27027/hr_db"
+
 
 class Database:
     def __init__(self):

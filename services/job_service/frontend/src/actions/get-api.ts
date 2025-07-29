@@ -81,7 +81,7 @@ export async function findJobs({
 
 export async function getJobs(): Promise<Job[]> {
   try {
-    const response = await fetch(`${API_BASE}/jobs/`);
+    const response = await fetch(`${API_BASE}/jobs/open`);
     if (!response.ok) {
       throw new Error(`Error fetching jobs: ${response.statusText}`);
     }
@@ -98,7 +98,7 @@ export async function getJobs(): Promise<Job[]> {
 // single job fetch 
 export const getJob = async (jobId: string): Promise<Job | null> => {
   try {
-    const url = `${API_BASE}/jobs/${jobId}`;
+    const url = `${API_BASE}/jobs/open/${jobId}`;
     console.log(`Sending request to: ${url}`);
 
     const response = await fetch(url);

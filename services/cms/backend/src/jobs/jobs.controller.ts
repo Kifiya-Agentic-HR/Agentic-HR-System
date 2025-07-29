@@ -17,15 +17,27 @@ export class JobsController {
   }
 
  
-  @Get("")
+  @Get('open')
   @Public()
+  async findOpenAll() {
+    return this.jobsService.findOpenAll();
+  }
+
+ 
+  @Get('open/:id')
+  @Public()
+  async findOpenOne(@Param('id') id: string) {
+    return this.jobsService.findOpenOne(id);
+  }
+
+  
+  @Get("")
   async findAll() {
     return this.jobsService.findAll();
   }
 
  
   @Get(':id')
-  @Public()
   async findOne(@Param('id') id: string) {
     return this.jobsService.findOne(id);
   }
@@ -70,5 +82,11 @@ export class JobsController {
   async remove(@Param('id') id: string) {
     return this.jobsService.remove(id);
 
+  }
+
+  @Post("requeue")
+  @Roles(UserRole.HR)
+  async requeue(@Body() body: any){
+    return this.jobsService.requeue(body)
   }
 }
