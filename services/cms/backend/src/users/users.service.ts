@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserRole } from './schemas/user.schema';
@@ -14,56 +14,90 @@ export class UsersService {
    * Create an ADMIN user (used by the bootstrap logic or special routes).
    */
   async createAdminUser(dto: CreateUserDto): Promise<User> {
-    // Force the role to 'admin'
     dto.role = UserRole.ADMIN;
-
-    const hashed = await bcrypt.hash(dto.password, 10);
-    const user = new this.userModel({ ...dto, password: hashed });
-    return user.save();
+    try {
+      const hashed = await bcrypt.hash(dto.password, 10);
+      const user = new this.userModel({ ...dto, password: hashed });
+      return await user.save();
+    } catch (error) {
+      if (error.code === 11000 && error.keyPattern?.email) {
+        throw new BadRequestException('A user with this email already exists.');
+      }
+      throw new InternalServerErrorException('Failed to create admin user.');
+    }
   }
 
   /**
    * Create an HR user. Only the admin can call this (controller enforces).
    */
   async createHRUser(dto: CreateUserDto): Promise<User> {
-    // Force the role to 'hr'
     dto.role = UserRole.HR;
-
-    const hashed = await bcrypt.hash(dto.password, 10);
-    const user = new this.userModel({ ...dto, password: hashed });
-    return user.save();
+    try {
+      const hashed = await bcrypt.hash(dto.password, 10);
+      const user = new this.userModel({ ...dto, password: hashed });
+      return await user.save();
+    } catch (error) {
+      if (error.code === 11000 && error.keyPattern?.email) {
+        throw new BadRequestException('A user with this email already exists.');
+      }
+      throw new InternalServerErrorException('Failed to create HR user.');
+    }
   }
 
   async createHMUser(dto: CreateUserDto): Promise<User> {
-    // Force the role to 'hm'
     dto.role = UserRole.HM;
-
-    const hashed = await bcrypt.hash(dto.password, 10);
-    const user = new this.userModel({ ...dto, password: hashed });
-    return user.save();
+    try {
+      const hashed = await bcrypt.hash(dto.password, 10);
+      const user = new this.userModel({ ...dto, password: hashed });
+      return await user.save();
+    } catch (error) {
+      if (error.code === 11000 && error.keyPattern?.email) {
+        throw new BadRequestException('A user with this email already exists.');
+      }
+      throw new InternalServerErrorException('Failed to create HM user.');
+    }
   }
 
   /**
    * Find user by email.
    */
   async findByEmail(email: string): Promise<User> {
-    return this.userModel.findOne({ email }).exec();
+    try {
+      const user = await this.userModel.findOne({ email }).exec();
+      if (!user) throw new NotFoundException('User not found');
+      return user;
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException('Failed to find user by email.');
+    }
   }
 
   /**
    * Return all users (admin usage).
    */
   async findAll(): Promise<User[]> {
-    return this.userModel.find().exec();
+    try {
+      return await this.userModel.find().exec();
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to fetch users.');
+    }
   }
 
   /**
    * Return a single user by _id (admin or self).
    */
   async findOne(userId: string): Promise<User> {
-    const user = await this.userModel.findById(userId).exec();
-    if (!user) throw new NotFoundException('User not found');
-    return user;
+    try {
+      const user = await this.userModel.findById(userId).exec();
+      if (!user) throw new NotFoundException('User not found');
+      return user;
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      if (error.name === 'CastError') {
+        throw new BadRequestException('Invalid user ID format.');
+      }
+      throw new InternalServerErrorException('Failed to fetch user.');
+    }
   }
 
   /**
@@ -71,14 +105,25 @@ export class UsersService {
    * e.g. admin might reset someone's password or rename user, etc.
    */
   async updateUserByAdmin(userId: string, dto: UpdateUserDto): Promise<User> {
-    if (dto.password) {
-      dto.password = await bcrypt.hash(dto.password, 10);
+    try {
+      if (dto.password) {
+        dto.password = await bcrypt.hash(dto.password, 10);
+      }
+      const user = await this.userModel
+        .findByIdAndUpdate(userId, dto, { new: true })
+        .exec();
+      if (!user) throw new NotFoundException('User not found');
+      return user;
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      if (error.code === 11000 && error.keyPattern?.email) {
+        throw new BadRequestException('A user with this email already exists.');
+      }
+      if (error.name === 'CastError') {
+        throw new BadRequestException('Invalid user ID format.');
+      }
+      throw new InternalServerErrorException('Failed to update user.');
     }
-    const user = await this.userModel
-      .findByIdAndUpdate(userId, dto, { new: true })
-      .exec();
-    if (!user) throw new NotFoundException('User not found');
-    return user;
   }
 
   /**
@@ -86,18 +131,29 @@ export class UsersService {
    * Only allow firstName, lastName, password changes.
    */
   async updateOwnAccount(userId: string, dto: UpdateUserDto): Promise<User> {
-    const updateData: Partial<User> = {};
-    if (dto.firstName) updateData.firstName = dto.firstName;
-    if (dto.lastName) updateData.lastName = dto.lastName;
-    if (dto.password) {
-      updateData.password = await bcrypt.hash(dto.password, 10);
-    }
+    try {
+      const updateData: Partial<User> = {};
+      if (dto.firstName) updateData.firstName = dto.firstName;
+      if (dto.lastName) updateData.lastName = dto.lastName;
+      if (dto.password) {
+        updateData.password = await bcrypt.hash(dto.password, 10);
+      }
 
-    const user = await this.userModel
-      .findByIdAndUpdate(userId, updateData, { new: true })
-      .exec();
-    if (!user) throw new NotFoundException('User not found');
-    return user;
+      const user = await this.userModel
+        .findByIdAndUpdate(userId, updateData, { new: true })
+        .exec();
+      if (!user) throw new NotFoundException('User not found');
+      return user;
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      if (error.code === 11000 && error.keyPattern?.email) {
+        throw new BadRequestException('A user with this email already exists.');
+      }
+      if (error.name === 'CastError') {
+        throw new BadRequestException('Invalid user ID format.');
+      }
+      throw new InternalServerErrorException('Failed to update account.');
+    }
   }
 
   /**
@@ -105,15 +161,23 @@ export class UsersService {
    * The admin can remove HR and HM accounts, but cannot remove the admin itself.
    */
   async deleteUserByAdmin(userId: string): Promise<{ deleted: boolean }> {
-    const user = await this.userModel.findById(userId).exec();
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    if (user.role === UserRole.ADMIN) {
-      throw new UnauthorizedException('Cannot delete the admin account');
-    }
+    try {
+      const user = await this.userModel.findById(userId).exec();
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      if (user.role === UserRole.ADMIN) {
+        throw new UnauthorizedException('Cannot delete the admin account');
+      }
 
-    const result = await this.userModel.findByIdAndDelete(userId).exec();
-    return { deleted: !!result };
+      const result = await this.userModel.findByIdAndDelete(userId).exec();
+      return { deleted: !!result };
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof UnauthorizedException) throw error;
+      if (error.name === 'CastError') {
+        throw new BadRequestException('Invalid user ID format.');
+      }
+      throw new InternalServerErrorException('Failed to delete')
+    }
   }
 }
