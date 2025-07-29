@@ -80,6 +80,12 @@ export default function JobPostingForm() {
   });
 
   const handleFileUpload = async (file: File) => {
+
+    if (file.type !== "application/pdf") {
+      toast.error("Only PDF files are allowed.");
+      return;
+    }
+  
     setFileUploading(true);
     try {
       const response = await uploadJobFile(file);
@@ -470,7 +476,7 @@ export default function JobPostingForm() {
                   {fileUploading ? "Uploading..." : "Upload Job Description"}
                 </label>
                 <p className="mt-4 text-[#364957]/50">
-                  Supported formats: PDF, DOCX
+                  PDF
                 </p>
               </div>
             )}

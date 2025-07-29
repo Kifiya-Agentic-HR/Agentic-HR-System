@@ -54,26 +54,29 @@ export default function CreateHmAccountForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     try {
-      await createHMAccount({
+      const response = await createHMAccount({
         ...values,
         role: "hm",
       });
-
-      toast.success("Account created successfully", {
-        description: `HM ${values.firstName} ${values.lastName} has been registered`,
-      });
-      setSuccessMessage(`Account for ${values.firstName} ${values.lastName} has been created successfully!`);
-      form.reset();
-      router.push("/admin/user-management"); 
+  
+      if (response.success) {
+        toast.success("Account created successfully", {
+          description: `HM ${values.firstName} ${values.lastName} has been registered`,
+        });
+        setSuccessMessage(`Account for ${values.firstName} ${values.lastName} has been created successfully!`);
+        form.reset();
+        router.push("/admin/user-management");
+      } else {
+        throw new Error(response.message || "Failed to create account");
+      }
     } catch (error: any) {
       toast.error("Creation failed", {
-        description: error || "There was an error creating the account",
+        description: error.message || "There was an error creating the account",
       });
     } finally {
       setLoading(false);
     }
   }
-
 
   return (
     <div className="w-full max-w-2xl mx-auto px-4">
