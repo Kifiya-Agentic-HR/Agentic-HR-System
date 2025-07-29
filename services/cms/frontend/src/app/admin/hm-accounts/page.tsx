@@ -67,8 +67,9 @@ export default function CreateHmAccountForm() {
         form.reset();
         router.push("/admin/user-management");
       } else {
-        throw new Error(response.message || "Failed to create account");
-      }
+        const errorMessage = response.error || "Failed to create account";
+        throw new Error(errorMessage);
+        }
     } catch (error: any) {
       toast.error("Creation failed", {
         description: error.message || "There was an error creating the account",

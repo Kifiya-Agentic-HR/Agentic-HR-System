@@ -225,6 +225,13 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
         }
         return;
       }
+
+      const file = acceptedFiles[0];
+      if (file.size > 5 * 1024 * 1024) {
+        setError('File size exceeds 5MB. Please upload a smaller file.');
+        return;
+      }
+  
   
       // If valid, update the form data
       setFormData({ ...formData, resume: acceptedFiles[0] });
@@ -550,11 +557,6 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                       </p>
                     </div>
                   </div>
-                  {error && (
-  <div className="p-4 bg-red-50 rounded-lg border border-red-200">
-    <p className="text-sm text-red-600">{error}</p>
-  </div>
-)}
                   {!isEmailVerified && (
                     <div className="mt-2 text-xs text-[#FF8A00] font-large">
                       <span>
