@@ -399,7 +399,7 @@ export const createHRAccount = async (userData: any) => {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      return { success: false, error: errorData.error || `HTTP error! Status: ${response.status}` };
+      return { success: false, error: errorData.message || `HTTP error! Status: ${response.status}` };
     }
 
     return { success: true, data: await response.json() };
@@ -425,7 +425,7 @@ export const createHMAccount = async (userData: any) => {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      return { success: false, error: errorData.error || `HTTP error! Status: ${response.status}` };
+      return { success: false, error: errorData.message || `HTTP error! Status: ${response.status}` };
     }
 
     return { success: true, data: await response.json() };
@@ -854,3 +854,25 @@ export async function inviteRecommendation(payload: ApplicationInvitePayload) {
 
   return response.json();
 }
+
+//for requeue
+export const reQueue = async (payload: { applicationId: string; screening: any }): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const response = await fetch(`${API_BASE}/jobs/requeue`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload), 
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      return { success: false, error: errorData.message || "Failed to requeue" };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message || "Network error occurred" };
+  }
+};

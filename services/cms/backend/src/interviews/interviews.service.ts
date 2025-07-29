@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 
@@ -23,7 +23,13 @@ export class InterviewService {
       return response.data;
     } catch (error) {
       this.logger.error(`Error scheduling interview: ${error.message}`, error.stack);
-      return { success: false, error: 'Error scheduling interview' };
+      if (error.response?.status === 401) {
+        throw new UnauthorizedException('You are not authorized to schedule this interview.');
+      }
+      if (error.response?.status === 400) {
+        throw new BadRequestException('Invalid application ID or request data.');
+      }
+      throw new InternalServerErrorException('Unable to schedule interview at this time. Please try again later.');
     }
   }
 
@@ -38,7 +44,13 @@ export class InterviewService {
       return response.data;
     } catch (error) {
       this.logger.error(`Error creating session: ${error.message}`, error.stack);
-      return { success: false, error: 'Error creating session' };
+      if (error.response?.status === 401) {
+        throw new UnauthorizedException('You are not authorized to create a session for this interview.');
+      }
+      if (error.response?.status === 400) {
+        throw new BadRequestException('Invalid interview ID or request data.');
+      }
+      throw new InternalServerErrorException('Unable to create interview session at this time. Please try again later.');
     }
   }
 
@@ -53,7 +65,13 @@ export class InterviewService {
       return response.data;
     } catch (error) {
       this.logger.error(`Error processing chat: ${error.message}`, error.stack);
-      return { success: false, error: 'Error processing chat message' };
+      if (error.response?.status === 401) {
+        throw new UnauthorizedException('You are not authorized to send a chat message for this session.');
+      }
+      if (error.response?.status === 400) {
+        throw new BadRequestException('Invalid session ID or user answer.');
+      }
+      throw new InternalServerErrorException('Unable to process chat message at this time. Please try again later.');
     }
   }
 
@@ -68,7 +86,13 @@ export class InterviewService {
       return response.data;
     } catch (error) {
       this.logger.error(`Error flagging interview: ${error.message}`, error.stack);
-      return { success: false, error: 'Error flagging interview' };
+      if (error.response?.status === 401) {
+        throw new UnauthorizedException('You are not authorized to flag this interview.');
+      }
+      if (error.response?.status === 400) {
+        throw new BadRequestException('Invalid interview ID or violations data.');
+      }
+      throw new InternalServerErrorException('Unable to flag interview at this time. Please try again later.');
     }
   }
 
@@ -82,7 +106,16 @@ export class InterviewService {
       return response.data;
     } catch (error) {
       this.logger.error(`Error fetching interview: ${error.message}`, error.stack);
-      return { success: false, error: 'Error fetching interview' };
+      if (error.response?.status === 401) {
+        throw new UnauthorizedException('You are not authorized to view this interview.');
+      }
+      if (error.response?.status === 404) {
+        throw new NotFoundException('Interview not found.');
+      }
+      if (error.response?.status === 400) {
+        throw new BadRequestException('Invalid interview ID.');
+      }
+      throw new InternalServerErrorException('Unable to fetch interview at this time. Please try again later.');
     }
   }
 }

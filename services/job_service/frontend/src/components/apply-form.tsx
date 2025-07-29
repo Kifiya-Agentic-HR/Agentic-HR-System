@@ -212,16 +212,33 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
-      'application/pdf': ['.pdf'],
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+      'application/pdf': ['.pdf'], // Only accept PDF files
     },
     maxFiles: 1,
-    onDrop: (acceptedFiles) => {
+    onDrop: (acceptedFiles, rejectedFiles) => {
+      if (rejectedFiles.length > 0) {
+        const rejectedFile = rejectedFiles[0];
+        if (rejectedFile.file.size > 5 * 1024 * 1024) {
+          setError('File size exceeds 5MB. Please upload a smaller file.');
+        } else {
+          setError('Invalid file type. Only PDF files are allowed.');
+        }
+        return;
+      }
+
+      const file = acceptedFiles[0];
+      if (file.size > 5 * 1024 * 1024) {
+        setError('File size exceeds 5MB. Please upload a smaller file.');
+        return;
+      }
+  
+  
+      // If valid, update the form data
       setFormData({ ...formData, resume: acceptedFiles[0] });
       setUploadProgress(100);
+      setError(''); 
     },
   });
-
   const isValidEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
 
   const isFormValid = () => {
@@ -536,7 +553,7 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                         )}
                       </p>
                       <p className="text-xs text-[#364957]/50">
-                        PDF or DOCX (Max 5MB)
+                        PDF (Max 5MB)
                       </p>
                     </div>
                   </div>

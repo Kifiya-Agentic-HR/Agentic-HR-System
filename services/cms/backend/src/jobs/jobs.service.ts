@@ -13,6 +13,7 @@ export class JobsService {
   }
 
   
+  
   async findAll() {
     try {
       const response = await firstValueFrom(
@@ -50,6 +51,8 @@ export class JobsService {
       return { success: false, error: 'Error fetching jobs' };
     }
   }
+
+
 
   async findOpenOne(id: string) {
     try {
@@ -172,6 +175,8 @@ export class JobsService {
     return { success: false, error: `Error fetching short list requests for hiring manager ${hiringManagerId}` };
   }
 }
+
+
 
 //  Requeue failed cv
 
