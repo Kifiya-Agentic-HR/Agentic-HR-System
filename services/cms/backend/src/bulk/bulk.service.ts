@@ -1,11 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, UnauthorizedException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { AxiosError } from 'axios';
 import * as FormData from 'form-data';
 import { Express } from 'express';
-
-
 
 @Injectable()
 export class BulkService {
@@ -23,7 +21,7 @@ export class BulkService {
     createdBy?: string,
   ) {
     this.logger.log(`Creating bulk application. jobInputs: ${JSON.stringify(jobInputs)}`);
-  
+
     try {
       const formData = new FormData();
 
@@ -37,18 +35,18 @@ export class BulkService {
           contentType: jobFile.mimetype,
         });
       }
-  
+
       formData.append('zipfolder', zipfolder.buffer, {
         filename: zipfolder.originalname,
         contentType: zipfolder.mimetype,
       });
-  
+
       let url = `${this.baseUrl}/bulk/`;
 
       if (jobFile && createdBy) {
         formData.append('hr_id', createdBy);
       }
-  
+
       const headers = formData.getHeaders();
       const response = await firstValueFrom(
         this.httpService.post(url, formData, { headers }),
@@ -58,19 +56,25 @@ export class BulkService {
     } catch (error) {
       const axiosError = error as AxiosError;
       if (axiosError.response) {
-        // Extract error details from the backend's response
+        const status = axiosError.response.status;
         const errorData = axiosError.response.data as any;
         this.logger.error(`Backend error: ${JSON.stringify(errorData)}`);
-        return { 
-          success: false, 
-          error: errorData.detail || errorData.error || 'Error creating bulk application' 
-        };
+        if (status === 400) {
+          throw new BadRequestException(errorData.detail || errorData.error || 'Invalid bulk application data.');
+        }
+        if (status === 401) {
+          throw new UnauthorizedException('You are not authorized to create bulk applications.');
+        }
+        if (status === 404) {
+          throw new NotFoundException('Bulk application resource not found.');
+        }
+        throw new InternalServerErrorException(errorData.detail || errorData.error || 'Error creating bulk application');
       } else if (axiosError.request) {
         this.logger.error(`No response received: ${axiosError.request}`);
-        return { success: false, error: 'No response from the server' };
+        throw new InternalServerErrorException('No response from the server');
       } else {
         this.logger.error(`Request error: ${axiosError.message}`);
-        return { success: false, error: axiosError.message };
+        throw new InternalServerErrorException(axiosError.message);
       }
     }
   }
@@ -85,7 +89,16 @@ export class BulkService {
       return response.data;
     } catch (error) {
       this.logger.error(`Error fetching bulk applications: ${error.message}`, error.stack);
-      return { success: false, error: 'Error fetching bulk applications' };
+      if (error.response?.status === 400) {
+        throw new BadRequestException('Invalid job ID.');
+      }
+      if (error.response?.status === 401) {
+        throw new UnauthorizedException('You are not authorized to view bulk applications.');
+      }
+      if (error.response?.status === 404) {
+        throw new NotFoundException('Bulk applications not found for this job.');
+      }
+      throw new InternalServerErrorException('Error fetching bulk applications');
     }
   }
 }
