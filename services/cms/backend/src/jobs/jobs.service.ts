@@ -12,6 +12,7 @@ export class JobsService {
     this.baseUrl = process.env.JOB_SERVICE_URL || 'http://job_service_backend:9000';
   }
 
+  
   async findAll() {
     try {
       const response = await firstValueFrom(
@@ -52,7 +53,31 @@ export class JobsService {
       throw new InternalServerErrorException(`Error fetching job ${id}`);
     }
   }
+  async findOpenAll() {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(`${this.baseUrl}/jobs/open/`),
+      );
+      return response.data;
+    } catch (error) {
+      this.logger.error(`Error fetching jobs`, error.stack); 
+      this.logger.error(error?.response?.data || error?.message);
+      return { success: false, error: 'Error fetching jobs' };
+    }
+  }
 
+  async findOpenOne(id: string) {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(`${this.baseUrl}/jobs/open/${id}`),
+      );
+      return response.data;
+    } catch (error) {
+      this.logger.error(`Error in findOne(${id})`, error.stack);
+      this.logger.error(error?.response?.data || error?.message);
+      return { success: false, error: `Error fetching job ${id}` };
+    }
+  }
   async getRequests(hiringManagerId: string) {
     try {
       const response = await firstValueFrom(
@@ -193,14 +218,15 @@ export class JobsService {
     }
   }
 
-  async shortList(hiringManagerId: string) {
-    try {
-      const response = await firstValueFrom(
-        this.httpService.get(`${this.baseUrl}/jobs/short_list/${hiringManagerId}`),
-      );
-      return response.data;
-    } catch (error) {
-      this.logger.error(`Error in shortList(${hiringManagerId})`, error.stack);
+ // GET short list requests
+ async shortList(hiringManagerId: string) {
+  try {
+    const response = await firstValueFrom(
+      this.httpService.get(`${this.baseUrl}/jobs/short_list/${hiringManagerId}`),
+    );
+    return response.data;
+  } catch (error) {
+    this.logger.error(`Error in shortList(${hiringManagerId})`, error.stack);
       this.logger.error(error?.response?.data || error?.message);
       if (error.response?.status === 401) {
         throw new UnauthorizedException('You are not authorized to view short list.');
@@ -208,6 +234,20 @@ export class JobsService {
       if (error.response?.status === 404) {
         throw new NotFoundException('Short list not found.');
       }
-    }
   }
+}
+ //  Requeue failed cv
+
+async requeue(body: any) {
+  try {
+    const response = await firstValueFrom(
+      this.httpService.post(`${this.baseUrl}/re/requeue`, body),
+    );
+    return response.data;
+  } catch (error) {
+    this.logger.error(`Error in requeue()`, error.stack);
+    this.logger.error(error?.response?.data || error?.message);
+    return { success: false, error: 'Error requeueing application' };
+  }
+}
 }

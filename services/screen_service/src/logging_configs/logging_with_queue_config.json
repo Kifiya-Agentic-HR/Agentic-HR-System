@@ -31,7 +31,7 @@
       "class": "logging.handlers.RotatingFileHandler",
       "level": "ERROR",
       "formatter": "json",
-      "filename": "/screen_service/logs/screen_service.log.jsonl",
+      "filename": "screen_service/logs/screen_service.log.jsonl",
       "maxBytes": 1000000,
       "backupCount": 5
     },

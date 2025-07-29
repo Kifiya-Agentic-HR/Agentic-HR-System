@@ -4,7 +4,7 @@ from tenacity import retry, wait_fixed, stop_after_attempt
 import json
 import logging
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 @retry(wait=wait_fixed(2), stop=stop_after_attempt(5))
 async def publish_application(message):
@@ -12,7 +12,7 @@ async def publish_application(message):
     try:
         connection = await aio_pika.connect_robust(Config.RABBITMQ_URL)
         async with connection:
-            channel = await connection.channel()
+            channel = await connection.channel(publisher_confirms=True)
             await channel.declare_queue(Config.QUEUE_NAME, durable=True)
             
             await channel.default_exchange.publish(
@@ -22,8 +22,8 @@ async def publish_application(message):
                 ),
                 routing_key=Config.QUEUE_NAME
             )
-        logging.info(f"Message sent successfully for app_id: {message.get('application_id')}")
+        logger.info(f"Message sent successfully for app_id: {message.get('application_id')}")
     except Exception as e:
-        logging.critical(f"Failed to send message: {e}")
+        logger.critical(f"Published failed to send message: {str(e)}")
         raise  # Re-raise to trigger retry
 

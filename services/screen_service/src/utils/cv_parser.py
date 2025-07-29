@@ -1,8 +1,9 @@
 # Load environment variables
 from config_local import Config
 import google.generativeai as genai
-
+import logging
 from dotenv import load_dotenv
+logger = logging.getLogger(__name__)
 
 
 load_dotenv()
@@ -78,4 +79,5 @@ the unstructured_cv is {unstructured_cv}
 
         return response_text
     except Exception as e:
-        return {"resume_keywords": [], "job_keywords": []}
+        logger.error(str(e))
+        

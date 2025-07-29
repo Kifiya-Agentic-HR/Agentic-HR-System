@@ -21,6 +21,7 @@ pillow
 pdfminer.six 
 python-docx 
 requests
+pika
 # AI and Processing
 google-generativeai
 openai
