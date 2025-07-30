@@ -553,7 +553,7 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
                         )}
                       </p>
                       <p className="text-xs text-[#364957]/50">
-                        PDF (Max 5MB)
+                        PDF (Max 5MB, Max 3 pages)
                       </p>
                     </div>
                   </div>

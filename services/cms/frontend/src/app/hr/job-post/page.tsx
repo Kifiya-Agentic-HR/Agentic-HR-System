@@ -244,9 +244,9 @@ export default function JobPostingForm() {
                         Job Summary
                       </FormLabel>
                       <FormControl>
-                        <Input
+                        <textarea
                           placeholder="Enter a brief job summary"
-                          className="border-2 border-[#364957]/20 focus:border-[#FF8A00] text-lg"
+                          className="border-2 border-[#364957]/20 focus:border-[#FF8A00] text-lg resize-none"
                           {...field}
                         />
                       </FormControl>
@@ -408,9 +408,9 @@ export default function JobPostingForm() {
                         Key Responsibilities
                       </FormLabel>
                       <FormControl>
-                      <Input
+                      <textarea
                           placeholder="Describe the job responsibilities..."
-                          className="border-2 border-[#364957]/20 text-lg"
+                          className="border-2 border-[#364957]/20 text-lg resize-none"
                           {...field}
                         />
                         {/* <RichTextEditor
