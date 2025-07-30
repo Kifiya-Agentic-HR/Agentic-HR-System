@@ -193,7 +193,7 @@ async def create_application(
             with fitz.open(stream=pdf_bytes, filetype="pdf") as pdf_doc:
                 num_pages = len(pdf_doc)
             
-            if num_pages > 10:
+            if num_pages > 3:
                 response.status_code = status.HTTP_400_BAD_REQUEST
                 logger.error(f"CV page count exceeded: {num_pages} pages.")
                 return {
