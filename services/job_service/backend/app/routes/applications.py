@@ -198,7 +198,7 @@ async def create_application(
                 logger.error(f"CV page count exceeded: {num_pages} pages.")
                 return {
                     "success": False,
-                    "error": "CV cannot exceed 10 pages."
+                    "error": "CV cannot exceed 3 pages."
                 }
         except Exception as e:
             response.status_code = status.HTTP_400_BAD_REQUEST
