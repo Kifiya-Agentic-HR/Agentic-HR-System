@@ -57,6 +57,7 @@ export default function BulkJobPostingForm() {
   const [jobFile, setJobFile] = useState<File | null>(null);
   const [zipFile, setZipFile] = useState<File | null>(null);
   const [applicants, setApplicants] = useState<any[]>([]);
+  const [failedResumes, setFailedResumes] = useState<string[]>([]);
   const router = useRouter();
   const form = useForm<FormSchemaType>({
     resolver: zodResolver(formSchema),
@@ -90,19 +91,22 @@ export default function BulkJobPostingForm() {
     fetchJobs();
   }, []);
 
+  const handleRemoveFailedResume = (index: number) => {
+    setFailedResumes((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleBulkUpload = async (values: FormSchemaType) => {
     if (!zipFile) {
       toast.error("Please upload a ZIP file with resumes");
       return;
     }
-
+  
     const formData = new FormData();
     formData.append("zipfolder", zipFile);
-
+  
     try {
       setIsProcessing(true);
-
-      // Handle different job input types
+  
       switch (selectedOption) {
         case "existing":
           if (!selectedJobId) {
@@ -111,14 +115,13 @@ export default function BulkJobPostingForm() {
           }
           formData.append("job_id", selectedJobId);
           break;
-
+  
         case "form":
-          // Create skills object from state
           const skillsObject = values.skills.reduce((acc, curr) => ({
             ...acc,
-            [curr.skill]: { required_level: curr.level }
+            [curr.skill]: { required_level: curr.level },
           }), {});
-
+  
           formData.append("job_data", JSON.stringify({
             title: values.title,
             description: {
@@ -126,12 +129,12 @@ export default function BulkJobPostingForm() {
               type: values.type,
               commitment: values.commitment,
               responsibilities: values.responsibilities,
-              location: values.location
+              location: values.location,
             },
-            skills: skillsObject
+            skills: skillsObject,
           }));
           break;
-
+  
         case "file":
           if (!jobFile) {
             toast.error("Please upload a job description file");
@@ -140,10 +143,11 @@ export default function BulkJobPostingForm() {
           formData.append("job_file", jobFile);
           break;
       }
-
+  
       const result = await bulkUpload(formData);
       if (result.success) {
         setApplicants(result.applicants);
+        setFailedResumes(result.failed_resumes || []); // Update failed resumes
         toast.success(`Processed ${result.processed_count} resumes`);
         toast.success("Failed Resumes: " + (result.failed_resumes?.length || 0));
       } else {
@@ -157,6 +161,7 @@ export default function BulkJobPostingForm() {
   };
 
   return (
+    <>
     <motion.div className="w-full max-w-4xl mx-auto px-4" style={{ backgroundColor: '#fff' }}>
       <div className="rounded-xl shadow-2xl p-8 bg-white">
         <h2 className="text-3xl font-bold text-[#364957] mb-8">
@@ -296,5 +301,28 @@ export default function BulkJobPostingForm() {
         )}
       </div>
     </motion.div>
+
+{failedResumes.length > 0 && (
+  <div className="mt-8 w-full max-w-4xl mx-auto px-4">
+    <h3 className="text-xl font-bold mb-4">Failed Resumes ({failedResumes.length})</h3>
+    <div className="space-y-2">
+      {failedResumes.map((resume, index) => (
+        <div
+          key={index}
+          className="flex items-center justify-between p-4 bg-red-50 border border-red-200 rounded-lg"
+        >
+          <p className="text-sm text-red-600">{resume}</p>
+          <button
+            onClick={() => handleRemoveFailedResume(index)}
+            className="text-red-600 hover:text-red-800"
+          >
+            ✕
+          </button>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+</>
   );
 }
