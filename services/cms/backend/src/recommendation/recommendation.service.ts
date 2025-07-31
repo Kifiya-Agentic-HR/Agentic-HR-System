@@ -1,11 +1,13 @@
 import { Injectable, Logger, BadRequestException, NotFoundException, UnauthorizedException, InternalServerErrorException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
+import { WinstonLoggerService } from '../common/winston-logger.service';
+// ...
 
 @Injectable()
 export class RecommendationService {
   private readonly baseUrl: string;
-  private readonly logger = new Logger(RecommendationService.name);
+  private readonly logger = new WinstonLoggerService();
 
   constructor(private readonly httpService: HttpService) {
     this.baseUrl = process.env.JOB_SERVICE_URL || 'http://job_service_backend:9000';

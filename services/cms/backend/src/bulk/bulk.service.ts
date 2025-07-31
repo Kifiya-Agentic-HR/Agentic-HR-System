@@ -4,11 +4,13 @@ import { firstValueFrom } from 'rxjs';
 import { AxiosError } from 'axios';
 import * as FormData from 'form-data';
 import { Express } from 'express';
+import { WinstonLoggerService } from '../common/winston-logger.service';
+// ...
 
 @Injectable()
 export class BulkService {
   private readonly baseUrl: string;
-  private readonly logger = new Logger(BulkService.name);
+  private readonly logger = new WinstonLoggerService();
 
   constructor(private readonly httpService: HttpService) {
     this.baseUrl = process.env.BULK_SERVICE_URL || 'http://job_service_backend:9000';

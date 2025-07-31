@@ -4,12 +4,14 @@ import { firstValueFrom} from 'rxjs';
 import * as FormData from 'form-data';
 import { ApplicationInvitePayload } from '../applications/interfaces/application-invite-payload.interface';
 import { JobsService } from '../jobs/jobs.service';
+import { WinstonLoggerService } from '../common/winston-logger.service';
+// ...
 
 @Injectable()
 export class ApplicationsService {
+  private readonly logger = new WinstonLoggerService();
   private readonly baseUrl: string;
   private readonly notificationUrl: string;
-  private readonly logger = new Logger(ApplicationsService.name);
   private readonly jobUrl: string;
 
   constructor(

@@ -1,11 +1,13 @@
 import { Injectable, Logger, UnauthorizedException, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
+import { WinstonLoggerService } from '../common/winston-logger.service';
+// ...
 
 @Injectable()
 export class InterviewService {
   private readonly baseUrl: string;
-  private readonly logger = new Logger(InterviewService.name);
+  private readonly logger = new WinstonLoggerService();
 
   constructor(private readonly httpService: HttpService) {
     // Make sure your environment variable INTERVIEW_BACKEND_URL is correctly set

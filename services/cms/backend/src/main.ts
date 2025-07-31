@@ -5,11 +5,11 @@ import { UsersService } from './users/users.service';
 import { UserRole } from './users/schemas/user.schema';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { WinstonLoggerService } from './common/winston-logger.service';
 
-// ...existing code...
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    logger: ['error', 'warn', 'log', 'debug', 'verbose'],
+    logger: new WinstonLoggerService(),
   });
 
   // Add anti-iframe headers globally
@@ -40,7 +40,6 @@ async function bootstrap() {
   await bootstrapAdminUser(app.get(UsersService));
   await app.listen(process.env.PORT || 3000);
 }
-// ...existing code...
 
 /**
  * Creates an admin user if one doesn't exist, using ADMIN_EMAIL, ADMIN_PASSWORD from .env
