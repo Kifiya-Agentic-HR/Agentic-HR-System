@@ -55,6 +55,7 @@ export class BulkService {
       );
       this.logger.debug(`Bulk application response: ${JSON.stringify(response.data)}`);
       return response.data;
+
     } catch (error) {
       const axiosError = error as AxiosError;
       if (axiosError.response) {

@@ -18,7 +18,7 @@ services:
       REDIS_HOST: "redis"
       REDIS_PORT: "6379"
       REDIS_URI: "redis://redis:6379"
-      NOTIFICATION_PORT: "8000" 
+      NOTIFICATION_PORT: "8000"
       NOTIFICATION_SERVICE_URL: "http://notification:${NOTIFICATION_PORT}/api/v1/"
       FRONTEND_BASE_URL: "http://${HOST}:${CMS_FRONTEND_PORT}"
       CAREERS_PAGE: "http://${HOST}:${JOB_PORTAL_PORT}"
@@ -28,7 +28,7 @@ services:
       ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
     networks:
       - app_network
-    
+
   cms_frontend:
     build:
       context: ./services/cms/frontend
@@ -72,7 +72,6 @@ services:
     volumes:
       - shared_volume_new:/shared_volume
       - ./logs/interview:/interview-ai/logs/
-
 
   interview_frontend:
     build:
@@ -131,28 +130,28 @@ services:
       - app_network
     restart: unless-stopped
 
-  screening_consumer:
-    build:
-      context: ./services/screen_service/
-      dockerfile: Dockerfile.consumer
-    container_name: ScreeningConsumer
-    env_file: .env
-    environment:
-      RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
-      NEXT_PUBLIC_API_BASE: "${SECURE_ENDPOINT}"
-      MONGODB_URI: "mongodb://mongo:27017/hr_db"
-      GEMINI_API_KEY: "${GEMINI_API_KEY}"
-      PYTHONPATH: "/src"
-    volumes:
-      - shared_volume_new:/shared_volume
-      - ./logs/screen_service:/screen_service/logs
-    depends_on:
-      mongo:
-        condition: service_started
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - app_network
+  # screening_consumer:
+  #   build:
+  #     context: ./services/screen_service/
+  #     dockerfile: Dockerfile.consumer
+  #   container_name: ScreeningConsumer
+  #   env_file: .env
+  #   environment:
+  #     RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
+  #     NEXT_PUBLIC_API_BASE: "${SECURE_ENDPOINT}"
+  #     MONGODB_URI: "mongodb://mongo:27017/hr_db"
+  #     GEMINI_API_KEY: "${GEMINI_API_KEY}"
+  #     PYTHONPATH: "/src"
+  #   volumes:
+  #     - shared_volume_new:/shared_volume
+  #     - ./logs/screen_service:/screen_service/logs
+  #   depends_on:
+  #     mongo:
+  #       condition: service_started
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   networks:
+  #     - app_network
 
   mongo:
     image: mongo:latest
@@ -214,7 +213,7 @@ services:
     networks:
       - app_network
     healthcheck:
-      test: ["CMD", "rabbitmqctl", "status"]
+      test: [ "CMD", "rabbitmqctl", "status" ]
       interval: 10s
       timeout: 10s
       retries: 5
