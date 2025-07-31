@@ -274,15 +274,15 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
-    if (!isFormValid()) {
-      setError('Please fill out all required fields and verify your email.');
-      return;
-    }
-
     setLoading(true);
     setUploadProgress(30);
-
+  
+    if (!isFormValid()) {
+      setError('Please fill out all required fields and verify your email.');
+      setLoading(false);
+      return;
+    }
+  
     try {
       const progressInterval = setInterval(() => {
         setUploadProgress((prev) => {
@@ -293,29 +293,28 @@ export default function ApplyForm({ jobId }: ApplyFormProps) {
           return prev + 10;
         });
       }, 200);
-
+  
       await submitApplication(formData, jobId);
-
+  
       clearInterval(progressInterval);
       setUploadProgress(100);
       setIsSubmitted(true);
-      
+  
       confetti({
         particleCount: 150,
         spread: 100,
         origin: { y: 0.6 },
         colors: [PRIMARY_COLOR, SECONDARY_COLOR],
-        scalar: 1.2
+        scalar: 1.2,
       });
-
     } catch (err) {
+      console.error('Error caught in handleSubmit:', err);
       setError(err instanceof Error ? err.message : 'Application failed');
     } finally {
       setLoading(false);
       setUploadProgress(0);
     }
   };
-
   return (
     <>
       <Card className="p-8 h-fit sticky top-20 border border-[#364957]/20 shadow-2xl">
