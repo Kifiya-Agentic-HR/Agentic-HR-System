@@ -258,7 +258,8 @@ async def create_bulk_application(
         response.status_code = status.HTTP_400_BAD_REQUEST
         return {
             "success": False,
-            "error": "error occured during processing"
+            "error": "error occured during processing",
+            "message": str(e)
         }
 
 
