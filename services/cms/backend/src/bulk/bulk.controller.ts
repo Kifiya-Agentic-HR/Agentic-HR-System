@@ -10,12 +10,12 @@ import { UserRole } from '../users/schemas/user.schema';
 @Controller('bulk')
 @UseGuards(AuthGuard, RolesGuard)
 export class BulkController {
-  constructor(private readonly bulkService: BulkService) {}
+  constructor(private readonly bulkService: BulkService) { }
 
   private extractUserId(req: any): string | null {
     return req?.user?.sub || null;
   }
-  
+
   @Post()
   @Roles(UserRole.HR)
   @UseInterceptors(
@@ -32,13 +32,13 @@ export class BulkController {
     const hr_id = this.extractUserId(req);
     const zipfolder = files?.zipfolder?.[0];
     const jobFile = files?.job_file?.[0];
-  
+
     console.log("HR ID: ", hr_id);
     // Validate required files
     if (!zipfolder) {
       throw new BadRequestException('Zip folder is required');
     }
-  
+
     // Validate job input source
     if (!jobInputs.job_id && !jobFile) {
       throw new BadRequestException(
@@ -47,7 +47,7 @@ export class BulkController {
     }
 
     console.log("Job Inputs: ", jobInputs);
-  
+
     return this.bulkService.createBulkApplication(
       jobInputs,
       zipfolder,
