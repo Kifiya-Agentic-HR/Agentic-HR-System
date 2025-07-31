@@ -55,3 +55,15 @@ class CandidateDocument(BaseDocument):
         
             logger.error(f"Error fetching candidate by id: {e} {candidate_id}")
             raise Exception(f"Error fetching candidate by id: {e} {candidate_id}")
+    
+    @classmethod
+    def delete_by_id(cls, candidate_id):
+        """Deletes a candidate by their ID."""
+        try:
+            result = cls.get_collection().delete_one({"_id": ObjectId(candidate_id)})
+            if result.deleted_count == 0:
+                logger.warning(f"Attempted to delete candidate {candidate_id}, but it was not found.")
+            return result.deleted_count > 0
+        except errors.PyMongoError as e:
+            logger.error(f"Error deleting candidate {candidate_id}: {e}")
+            raise Exception(f"Error deleting candidate {candidate_id}: {e}")

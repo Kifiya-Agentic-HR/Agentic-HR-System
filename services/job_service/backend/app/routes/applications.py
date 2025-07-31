@@ -292,18 +292,46 @@ async def create_application(
             )
         except Exception as e:
             logger.error(f"Error sending email notification: {str(e)}")
+            try:
+                ApplicationDocument.delete_by_id(new_application)
+                CandidateDocument.delete_by_id(candidate_id)
+                logger.info(f"Successfully rolled back application {new_application} and candidate {candidate_id}.")
+            except Exception as rollback_e:
+                # If rollback fails, this is a critical state that needs manual intervention.
+                logger.critical(f"CRITICAL: Failed to rollback application {new_application}. Manual cleanup required. Error: {rollback_e}")
+            
+            response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+            return {
+                "success": False,
+                "error": f"Failed to send email {str(e)}"
+
+            }
 
         job = JobDocument.get_job_by_id(job_id)
 
-        await publish_application({
-            "job_description": str(job["description"]),
-            "job_skills": str(job["skills"]),
-            "application_id": new_application,
-            "resume_path": file_path,
-            "from": "web",
-            "job_id": job_id,
-        })
-        
+        try: 
+            await publish_application({
+                "job_description": str(job["description"]),
+                "job_skills": str(job["skills"]),
+                "application_id": new_application,
+                "resume_path": file_path,
+                "from": "web",
+                "job_id": job_id,
+            })
+        except Exception as e:
+            try:
+                ApplicationDocument.delete_by_id(new_application)
+                CandidateDocument.delete_by_id(candidate_id)
+                logger.info(f"Successfully rolled back application {new_application} and candidate {candidate_id}.")
+            except Exception as rollback_e:
+                # If rollback fails, this is a critical state that needs manual intervention.
+                logger.critical(f"CRITICAL: Failed to rollback application {new_application}. Manual cleanup required. Error: {rollback_e}")
+
+            response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+            return {
+                "success": False,
+                "error": "Your application could not be processed at this time. Please try again later."
+            }
         return {"success": True, "application": new_application}
     except Exception as e:
         logging.error(f"Error creating application: {str(e)}")

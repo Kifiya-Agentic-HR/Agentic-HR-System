@@ -81,6 +81,19 @@ class ApplicationDocument(BaseDocument):
             return application
         except errors.PyMongoError as e:
             logger.error(f"Error fetching application by candidate_id")
+    
+    @classmethod
+    def delete_by_id(cls, application_id):
+        """Deletes an application by its ID."""
+        try:
+            result = cls.get_collection().delete_one({"_id": ObjectId(application_id)})
+            if result.deleted_count == 0:
+                logger.warning(f"Attempted to delete application {application_id}, but it was not found.")
+            return result.deleted_count > 0
+        except errors.PyMongoError as e:
+            logger.error(f"Error deleting application {application_id}: {e}")
+            raise Exception(f"Error deleting application {application_id}: {e}")
+    
     @classmethod
     def get_applications(cls):
         try:
