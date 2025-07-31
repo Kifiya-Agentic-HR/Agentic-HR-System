@@ -4,6 +4,7 @@ from fastapi import APIRouter, File, Form, HTTPException, Response, UploadFile, 
 import logging
 import os
 import requests
+import fitz
 from app.utils.publisher import publish_application
 from app.utils.cloud_storage import upload_file
 from dotenv import load_dotenv
@@ -14,6 +15,7 @@ from app.database.models.candidate_model import CandidateDocument
 from app.database.models.interview_model import InterviewsDocument
 from app.database.models.screen_result_model import ScreeningResultDocument
 from app.schemas.shortlist_schema import ShortlistUpdate, EditScore
+
 
 logger = logging.getLogger(__name__)
 
@@ -181,11 +183,42 @@ async def create_application(
                 "sucess": False,
                 "error":"CV must be a PDF or DOCX file"
             }
+    if cv.content_type == "application/pdf":
+        try:
+            # Read file content into memory to be processed by PyMuPDF
+            pdf_bytes = await cv.read()
+            # Reset file pointer to the beginning so it can be read again for upload
+            await cv.seek(0)
 
-    # Validate CV file size
+            with fitz.open(stream=pdf_bytes, filetype="pdf") as pdf_doc:
+                num_pages = len(pdf_doc)
+            
+            if num_pages > 3:
+                response.status_code = status.HTTP_400_BAD_REQUEST
+                logger.error(f"CV page count exceeded: {num_pages} pages.")
+                return {
+                    "success": False,
+                    "error": "CV cannot exceed 3 pages."
+                }
+        except Exception as e:
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            logger.error(f"Invalid or corrupted PDF file: {e}")
+            return {
+                "success": False,
+                "error": "The provided PDF file is invalid or corrupted."
+            }
+
+     # Validate CV file size
     max_file_size = 5 * 1024 * 1024  # 5 MB
-    if cv.file._file.tell() > max_file_size:
+    
+    # Seek to the end of the file to get its size and then back to the beginning
+    cv.file.seek(0, 2)
+    file_size = cv.file.tell()
+    cv.file.seek(0)
+
+    if file_size > max_file_size:
         response.status_code=status.HTTP_400_BAD_REQUEST
+        logger.error("File limit excedded")
         return {
             "success": False,
             "error": "CV file size exceeds 5 MB"
@@ -248,6 +281,32 @@ async def create_application(
             logger.error(f"Application creation failed for {application_data}")
             raise HTTPException(status_code=400, detail="Application creation failed")
         
+
+        job = JobDocument.get_job_by_id(job_id)
+
+        try: 
+            await publish_application({
+                "job_description": str(job["description"]),
+                "job_skills": str(job["skills"]),
+                "application_id": new_application,
+                "resume_path": file_path,
+                "from": "web",
+                "job_id": job_id,
+            })
+        except Exception as e:
+            try:
+                ApplicationDocument.delete_by_id(new_application)
+                CandidateDocument.delete_by_id(candidate_id)
+                logger.info(f"Successfully rolled back application {new_application} and candidate {candidate_id}.")
+            except Exception as rollback_e:
+                # If rollback fails, this is a critical state that needs manual intervention.
+                logger.critical(f"CRITICAL: Failed to rollback application {new_application}. Manual cleanup required. Error: {rollback_e}")
+
+            response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+            return {
+                "success": False,
+                "error": "Your application could not be processed at this time. Please try again later."
+            }
         # notify the user
         try:
             send_email_notification(
@@ -259,18 +318,7 @@ async def create_application(
             )
         except Exception as e:
             logger.error(f"Error sending email notification: {str(e)}")
-
-        job = JobDocument.get_job_by_id(job_id)
-
-        await publish_application({
-            "job_description": str(job["description"]),
-            "job_skills": str(job["skills"]),
-            "application_id": new_application,
-            "resume_path": file_path,
-            "from": "web",
-            "job_id": job_id,
-        })
-        
+            
         return {"success": True, "application": new_application}
     except Exception as e:
         logging.error(f"Error creating application: {str(e)}")

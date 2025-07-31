@@ -244,9 +244,9 @@ export default function JobPostingForm() {
                         Job Summary
                       </FormLabel>
                       <FormControl>
-                        <Input
+                        <textarea
                           placeholder="Enter a brief job summary"
-                          className="border-2 border-[#364957]/20 focus:border-[#FF8A00] text-lg"
+                          className="flex w-full min-h-[100px] shadow-xs rounded-md border-2 border-[#d9dbdc] bg-transparent px-3 py-2  transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50 selection:bg-primary selection:text-primary-foreground aria-invalid:border-destructive aria-invalid:ring-destructive/20 resize-none"
                           {...field}
                         />
                       </FormControl>
@@ -408,9 +408,9 @@ export default function JobPostingForm() {
                         Key Responsibilities
                       </FormLabel>
                       <FormControl>
-                      <Input
+                      <textarea
                           placeholder="Describe the job responsibilities..."
-                          className="border-2 border-[#364957]/20 text-lg"
+                          className="flex w-full min-h-[100px] shadow-xs rounded-md border-2 border-[#d9dbdc] bg-transparent px-3 py-2  transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50 selection:bg-primary selection:text-primary-foreground aria-invalid:border-destructive aria-invalid:ring-destructive/20 resize-none"
                           {...field}
                         />
                         {/* <RichTextEditor

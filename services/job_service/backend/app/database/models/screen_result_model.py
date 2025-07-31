@@ -1,3 +1,5 @@
+#Screenresult
+
 import logging
 from app.database.database import database
 from datetime import datetime
@@ -31,6 +33,42 @@ class ScreeningResultDocument(BaseDocument):
             result["_id"] = str(result["_id"])
             result["application_id"] = str(result["application_id"])
         return result
+    
+    @classmethod
+    def update_or_create_result(cls, application_id, result_data):
+        """
+        Updates a screening result if it exists, otherwise creates a new one.
+        """
+        result_data["updated_at"] = datetime.utcnow()
+        
+        # The filter to find the document
+        query = {"application_id": application_id}
+        
+        # The update to apply
+        update = {
+            "$set": result_data,
+            "$setOnInsert": {"created_at": datetime.utcnow()}
+        }
+        
+        # Perform the upsert operation
+        updated_document = cls.get_collection().find_one_and_update(
+            query,
+            update,
+            upsert=True,
+            return_document=ReturnDocument.AFTER
+        )
+        return updated_document
+    
+    @classmethod
+    def delete_by_application_id(cls, application_id: str):
+        """Deletes a screening result by its application_id."""
+        try:
+            result = cls.get_collection().delete_one({"application_id": application_id})
+            return result.deleted_count > 0
+        except errors.PyMongoError as e:
+            logger.error(f"Error deleting screening result for application {application_id}: {e}")
+            raise
+    
     @classmethod
     def edit_score(cls, application_id: str, update_data: dict):
         try:

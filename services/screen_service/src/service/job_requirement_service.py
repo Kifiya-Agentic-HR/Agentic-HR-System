@@ -1,7 +1,9 @@
 from config_local import Config
 from dotenv import load_dotenv
 import google.generativeai as genai
+import logging
 
+logger = logging.getLogger(__name__)
 load_dotenv()
 
 gemini_api_key = Config.GEMINI_KEY
@@ -55,11 +57,16 @@ def analyze_job_requirements(job_text):
    job_text:
    {job_text}
    """
-   response = model.generate_content(
-        prompt, 
-   )
+   
+   try:
+      response = model.generate_content(
+         prompt, 
+      )
 
-    
+      
 
-   return response.text
+      return response.text
 
+   except Exception as e:
+      logger.error(str(e))
+      return 
