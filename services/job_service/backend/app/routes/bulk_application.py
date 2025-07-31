@@ -119,6 +119,7 @@ async def create_bulk_application(
     if not zipfolder.filename.lower().endswith(".zip"):
         raise HTTPException(status_code=400, detail="Uploaded file must be a ZIP file.")
     try:
+        failed_resumes = []
         with tempfile.TemporaryDirectory() as tmpdirname:
             zip_path = os.path.join(tmpdirname, zipfolder.filename)
             with open(zip_path, "wb") as f:
@@ -136,7 +137,9 @@ async def create_bulk_application(
                 for file in files:
                     if file.lower().endswith((".pdf", ".docx", ".txt")):
                         file_path = os.path.join(root, file)
-                        resume_files.append(file_path)
+                        # resume_files.append(file_path)
+                        resume_files.append({"filename": file,"path": file_path})
+                        
                         
             if not resume_files:
                 raise HTTPException(status_code=400, detail="No resume files found in the ZIP folder.")
@@ -149,10 +152,11 @@ async def create_bulk_application(
                                 "application/msword",
                                 "application/octet-stream",  #DOCX 
                                  }
-            for file_path in resume_files:
+            
+            for resume in resume_files:
                 try:
-                    if not os.path.exists(file_path):
-                        raise Exception(f"File not found: {file_path}")
+                    if not os.path.exists(resume["path"]):
+                        raise Exception(f"File not found: {resume['path']} for {resume['filename']}")
 
                     # if contains_script_code(file_path):
                         # raise Exception(f"File Contains script")
@@ -160,7 +164,7 @@ async def create_bulk_application(
                     
                     
                     # Determine MIME type
-                    content_type = magic.from_file(file_path, mime=True)
+                    content_type = magic.from_file(resume["path"], mime=True)
                     if content_type not in allowed_file_types:
                         raise Exception(f"File type not allowed: {content_type}")
 
@@ -170,17 +174,25 @@ async def create_bulk_application(
                     #     content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                     # else:
                     #     content_type = "text/plain"
-
-                    with open(file_path, "rb") as f:
-                        upload_file_obj = UploadFile(
-                            filename=os.path.basename(file_path),
+                    
+                    with open(resume["path"], "rb") as f:
+                        try:
+                           upload_file_obj = UploadFile(
+                            filename=os.path.basename(resume["path"]),
                             file=f,
                             headers={"content-type": content_type}  
                         )
-                        f.seek(0)  # Reset file pointer
-                        cv_link = await upload_file(upload_file_obj)
+                           f.seek(0)  # Reset file pointer
+                        
+                           cv_link = await upload_file(upload_file_obj)
+                        except Exception as e:
+                            failed_resumes.append(resume["filename"])
+                            logger.critical(f"Failed to upload file {resume['filename']}: {str(e)}")
+                            continue
+
+
                     # Extract information
-                    extracted_info = extract_applicant_information(file_path)
+                    extracted_info = extract_applicant_information(resume["path"])
                     # Create candidate
                     candidate_data = {
                         "email": extracted_info.get("email", "unknown@example.com"),
@@ -227,24 +239,29 @@ async def create_bulk_application(
                     processed_count += 1
 
                 except Exception as e:
-                    logger.critical(f"Failed to process {file_path}: {str(e)}", exc_info=True)
-                    errors.append(f"{os.path.basename(file_path)}: {str(e)}")
+                    logger.critical(f"Failed to process {resume['filename']}: {str(e)}", exc_info=True)
+                    errors.append(f"{os.path.basename(resume['path'])}: {str(e)}")
                     continue
             
             return {
                 "success": True if processed_count > 0 else False,
                 "processed_count": processed_count,
+                "resume_count": len(resume_files),
                 "error_count": len(errors),
                 "errors": errors,
+                "failed_resumes": failed_resumes,
                 "message": f"Processed {processed_count} resumes" + 
                         f" with {len(errors)} errors" if errors else ""
-            }
+                        }
+        
     except Exception as e:
-        response.status_code=status.HTTP_400_BAD_REQUEST
+        response.status_code = status.HTTP_400_BAD_REQUEST
         return {
-                    "sucess": False,
-                    "error":"error occured during processing"
-                }
+            "success": False,
+            "error": "error occured during processing",
+            "message": str(e)
+        }
+
 
 #Get all bulk applications for a specific job
 @router.get("/{job_id}/applications", response_model=dict)
