@@ -281,31 +281,6 @@ async def create_application(
             logger.error(f"Application creation failed for {application_data}")
             raise HTTPException(status_code=400, detail="Application creation failed")
         
-        # notify the user
-        try:
-            send_email_notification(
-                email,
-                "Thank you for applying!",
-                type="application_received",
-                name=full_name,
-                title=JobDocument.get_job_by_id(job_id)['title']
-            )
-        except Exception as e:
-            logger.error(f"Error sending email notification: {str(e)}")
-            try:
-                ApplicationDocument.delete_by_id(new_application)
-                CandidateDocument.delete_by_id(candidate_id)
-                logger.info(f"Successfully rolled back application {new_application} and candidate {candidate_id}.")
-            except Exception as rollback_e:
-                # If rollback fails, this is a critical state that needs manual intervention.
-                logger.critical(f"CRITICAL: Failed to rollback application {new_application}. Manual cleanup required. Error: {rollback_e}")
-            
-            response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
-            return {
-                "success": False,
-                "error": f"Failed to send email {str(e)}"
-
-            }
 
         job = JobDocument.get_job_by_id(job_id)
 
@@ -332,6 +307,18 @@ async def create_application(
                 "success": False,
                 "error": "Your application could not be processed at this time. Please try again later."
             }
+        # notify the user
+        try:
+            send_email_notification(
+                email,
+                "Thank you for applying!",
+                type="application_received",
+                name=full_name,
+                title=JobDocument.get_job_by_id(job_id)['title']
+            )
+        except Exception as e:
+            logger.error(f"Error sending email notification: {str(e)}")
+            
         return {"success": True, "application": new_application}
     except Exception as e:
         logging.error(f"Error creating application: {str(e)}")
