@@ -148,7 +148,10 @@ export const submitApplication = async (formData: ApplicationFormData, jobId: st
   });
 
   const data = await response.json();
-  if (!response.ok) throw new Error(data.error || 'Application failed');
+  if (!response.ok) {
+    const errorMessage = data.message || 'Application failed';
+    throw new Error(errorMessage);
+  }
   return data;
 };
 
