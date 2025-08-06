@@ -4,10 +4,30 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { FiUsers, FiUserPlus } from "react-icons/fi";
+import { FiUsers, FiUserPlus, FiFilter, FiSearch } from "react-icons/fi";
 import { fetchAllUsers, deleteUser } from "@/lib/api";
 import { toast } from "sonner";
 import { Dialog } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input";
+
 
 export type User = {
   id: string;
@@ -21,10 +41,15 @@ export type User = {
 export default function UserManagementPage() {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+  const [selectedFilter, setSelectedFilter] = useState<"all" | "hr" | "hm">("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [usersPerPage] = useState(5); 
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
   const dropdownRef = useRef(null);
 
   const fetchUsers = async () => {
@@ -99,6 +124,31 @@ export default function UserManagementPage() {
 
   const hrUsers = users.filter((u) => u.role === "hr");
   const hmUsers = users.filter((u) => u.role === "hm");
+  // Handle search
+  useEffect(() => {
+    const lowercasedQuery = searchQuery.toLowerCase();
+    const filtered = users.filter(
+      (user) =>
+        user.firstName.toLowerCase().includes(lowercasedQuery) ||
+        user.lastName.toLowerCase().includes(lowercasedQuery) ||
+        user.email.toLowerCase().includes(lowercasedQuery) ||
+        user.role.toLowerCase().includes(lowercasedQuery)
+    );
+    setFilteredUsers(filtered);
+    setCurrentPage(1); 
+  }, [searchQuery, users]);
+
+    // Pagination logic
+    const indexOfLastUser = currentPage * usersPerPage;
+    const indexOfFirstUser = indexOfLastUser - usersPerPage;
+    const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
+  
+    const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+  
+    const handlePageChange = (page: number) => {
+      setCurrentPage(page);
+    };
+  
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-12">
@@ -132,65 +182,143 @@ export default function UserManagementPage() {
         </div>
       </div>
 
-      {/* HR Users */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-[#364957] mb-4">HR Accounts</h2>
-        {hrUsers.length === 0 ? (
-          <p className="text-gray-500">No HR accounts found.</p>
-        ) : (
-          <div className="space-y-4">
-            {hrUsers.map((user) => (
-              <Card
-                key={user._id}
-                className="p-4 shadow-sm border border-gray-100 flex justify-between items-center"
-              >
-                <div>
-                  <p className="font-semibold text-[#364957]">
-                    {user.firstName} {user.lastName}
-                  </p>
-                  <p className="text-sm text-gray-500">{user.email}</p>
-                </div>
-                <Button
-                  onClick={() => confirmRemove(user)}
-                  className="bg-[#FF8A00] hover:bg-[#FF8A00]/90 text-white px-4 py-2 rounded-lg"
-                >
-                  Remove
-                </Button>
-              </Card>
-            ))}
-          </div>
-        )}
+            {/* Search Bar */}
+            <div className="mb-6 flex justify-between items-center">
+      <div>
+      <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline"> {selectedFilter === "all"
+        ? "All Roles"
+        : selectedFilter === "hr"
+        ? "HR"
+        : "Hiring Manager"}
+          <FiFilter className="w-4 h-4 ml-2" />
+</Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-56" align="start">
+          <DropdownMenuItem       onClick={() => {
+        setFilteredUsers(users); 
+        setCurrentPage(1); 
+        setSelectedFilter("all");
+      }}
+>
+            All Roles
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => {
+        setFilteredUsers(users.filter((user) => user.role === "hr")); 
+        setCurrentPage(1); 
+        setSelectedFilter("hr");
+      }}>
+            HR
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => {
+        setFilteredUsers(users.filter((user) => user.role === "hm")); 
+        setCurrentPage(1); 
+        setSelectedFilter("hm");
+      }}>
+            Hiring Manager
+          </DropdownMenuItem>
+          </DropdownMenuContent>
+    </DropdownMenu>
+     </div>
+      <div className="relative w-1/3">
+      <Input
+        type="text"
+        placeholder="Search by name or email"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="w-full pl-10 border border-gray-300 rounded-md"
+      />
+        <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+
+    </div>
+      
+    </div>
+
+
+      {/* User Table */}
+      <div className="flex flex-col">
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Role</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {currentUsers.length > 0 ? (
+            currentUsers.map((user) => (
+              <TableRow key={user._id}>
+                <TableCell>
+                  {user.firstName} {user.lastName}
+                </TableCell>
+                <TableCell>{user.role === "hr"?"HR":"Hiring Manager"}</TableCell>
+                <TableCell>{user.email}</TableCell>
+
+                <TableCell>
+                  <Button
+                    onClick={() => confirmRemove(user)}
+                    className="bg-[#FF8A00] hover:bg-[#FF8A00]/90 text-white px-4 py-2 rounded-lg"
+                  >
+                    Remove
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={3} className="text-center text-gray-500">
+                No users found.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
       </div>
 
-      {/* HM Users */}
-      <div>
-        <h2 className="text-xl font-semibold text-[#364957] mb-4">Hiring Manager Accounts</h2>
-        {hmUsers.length === 0 ? (
-          <p className="text-gray-500">No Hiring Manager accounts found.</p>
-        ) : (
-          <div className="space-y-4">
-            {hmUsers.map((user) => (
-              <Card
-                key={user._id}
-                className="p-4 shadow-sm border border-gray-100 flex justify-between items-center"
-              >
-                <div>
-                  <p className="font-semibold text-[#364957]">
-                    {user.firstName} {user.lastName}
-                  </p>
-                  <p className="text-sm text-gray-500">{user.email}</p>
-                </div>
-                <Button
-                  onClick={() => confirmRemove(user)}
-                  className="bg-[#FF8A00] hover:bg-[#FF8A00]/90 text-white px-4 py-2 rounded-lg"
-                >
-                  Remove
-                </Button>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
+
+{/* Pagination */}
+{totalPages > 1 && (
+  <div className="flex justify-center mt-6">
+    <Pagination>
+      <PaginationContent>
+        {/* Previous Button */}
+        <PaginationItem>
+          <PaginationPrevious
+            href="#"
+            onClick={() => handlePageChange(currentPage > 1 ? currentPage - 1 : 1)}
+          />
+        </PaginationItem>
+
+        {/* Page Numbers */}
+        {Array.from({ length: totalPages }, (_, i) => (
+          <PaginationItem key={i}>
+            <PaginationLink
+              href="#"
+              onClick={() => handlePageChange(i + 1)}
+              className={currentPage === i + 1 ? "font-bold text-[#FF8A00]" : ""}
+            >
+              {i + 1}
+            </PaginationLink>
+          </PaginationItem>
+        ))}
+
+        {/* Next Button */}
+        <PaginationItem>
+          <PaginationNext
+            href="#"
+            onClick={() =>
+              handlePageChange(currentPage < totalPages ? currentPage + 1 : totalPages)
+            }
+          />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
+  </div>
+)} 
 
       {/* Confirm Delete Dialog */}
       {showConfirmDialog && selectedUser && (
@@ -225,6 +353,5 @@ export default function UserManagementPage() {
           </div>
         </Dialog>
       )}
-    </div>
-  );
-}
+ </div>
+);}
