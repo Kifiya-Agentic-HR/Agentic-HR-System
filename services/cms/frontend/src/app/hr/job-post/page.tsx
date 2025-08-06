@@ -221,7 +221,7 @@ export default function JobPostingForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[#364957] text-lg font-semibold">
-                        Job Title
+                        Job Title<span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -241,7 +241,7 @@ export default function JobPostingForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[#364957] text-lg font-semibold">
-                        Job Summary
+                        Job Summary<span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <textarea
@@ -316,7 +316,7 @@ export default function JobPostingForm() {
 
                 <div className="space-y-4">
                   <FormLabel className="text-[#364957] text-lg font-semibold">
-                    Required Skills
+                    Required Skills<span className="text-red-500">*</span>
                   </FormLabel>
                   {form.watch("skills").map((_, index) => (
                     <div
@@ -405,7 +405,7 @@ export default function JobPostingForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[#364957] text-lg font-semibold">
-                        Key Responsibilities
+                        Key Responsibilities<span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                       <textarea
@@ -431,7 +431,7 @@ export default function JobPostingForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[#364957] text-lg font-semibold">
-                        Location
+                        Location<span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
