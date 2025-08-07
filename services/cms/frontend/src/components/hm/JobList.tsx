@@ -33,6 +33,8 @@ export const JobList = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortField, setSortField] = useState("date"); 
   const [selectedFilter, setSelectedFilter] = useState<string | null>("date"); 
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+
 
   useEffect(() => {
     const loadJobs = async () => {
@@ -112,15 +114,17 @@ export const JobList = () => {
 );
 
 // Sorting logic
+
 const sortedJobs = [...filteredJobs].sort((a, b) => {
+  let compare = 0;
   if (sortField === "date") {
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime(); 
+    compare = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
   } else if (sortField === "name") {
-    return a.title.localeCompare(b.title); 
+    compare = a.title.localeCompare(b.title);
   } else if (sortField === "status") {
-    return a.status.localeCompare(b.status); 
+    compare = a.status.localeCompare(b.status);
   }
-  return 0;
+  return sortDirection === "asc" ? compare : -compare;
 });
 
 // Pagination logic
@@ -196,14 +200,44 @@ const handlePageChange = (page: number) => {
           <table className="w-full">
             <thead className="bg-[#364957]">
               <tr className="text-left text-sm font-semibold text-white">
-                <th className="px-6 py-4">Job Title</th>
-                <th className="px-6 py-4">Date Posted</th>
-                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4">Job Title
+      <button
+        className="ml-2"
+        onClick={() => {
+          setSortField("name");
+          setSortDirection(sortField === "name" && sortDirection === "asc" ? "desc" : "asc");
+        }}
+        aria-label="Sort Job Title"
+      >
+        {sortField === "name" && sortDirection === "asc" ? "▲" : "▼"}
+      </button>
+
+                </th>
+                <th className="px-6 py-4">Date Posted       <button
+        className="ml-2"
+        onClick={() => {
+          setSortField("date");
+          setSortDirection(sortField === "date" && sortDirection === "asc" ? "desc" : "asc");
+        }}
+        aria-label="Sort Date"
+      >
+        {sortField === "date" && sortDirection === "asc" ? "▲" : "▼"}
+      </button></th>
+                <th className="px-6 py-4">Status       <button
+        className="ml-2"
+        onClick={() => {
+          setSortField("status");
+          setSortDirection(sortField === "status" && sortDirection === "asc" ? "desc" : "asc");
+        }}
+        aria-label="Sort Status"
+      >
+        {sortField === "status" && sortDirection === "asc" ? "▲" : "▼"}
+      </button></th>
                 <th className="px-6 py-4">Applications</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#364957]/20">
-            {currentJobs.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) 
+            {currentJobs
               .map((job) => (
                 <tr
                   key={job._id}
