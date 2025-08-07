@@ -192,7 +192,7 @@ export default function UserManagementPage() {
                 <FiFilter className="w-4 h-4 ml-2" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="start">
+            <DropdownMenuContent className="bg-white text-black w-56" align="start">
               <DropdownMenuItem onClick={() => {
                 setFilteredUsers(users);
                 setCurrentPage(1);

@@ -273,7 +273,7 @@ export default function JobPostingForm() {
                               <SelectValue placeholder="Select job type" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
+                          <SelectContent className="bg-white text-black">
                             <SelectItem value="inperson">In-Person</SelectItem>
                             <SelectItem value="remote">Remote</SelectItem>
                           </SelectContent>
@@ -300,7 +300,7 @@ export default function JobPostingForm() {
                               <SelectValue placeholder="Select commitment" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
+                          <SelectContent className="bg-white text-black">
                             <SelectItem value="full_time">Full-Time</SelectItem>
                             <SelectItem value="part_time">Part-Time</SelectItem>
                             <SelectItem value="internship">
@@ -353,7 +353,7 @@ export default function JobPostingForm() {
                                   <SelectValue placeholder="Level" />
                                 </SelectTrigger>
                               </FormControl>
-                              <SelectContent>
+                              <SelectContent className="bg-white text-black">
                                 <SelectItem value="beginner">
                                   Beginner
                                 </SelectItem>
