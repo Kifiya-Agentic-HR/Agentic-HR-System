@@ -173,26 +173,27 @@ export const JobList = () => {
       </div>
     );
   }
-  // Filter jobs based on search query
- const filteredJobs = jobs.filter((job) =>
-  job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
- job.created_at.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  job.job_status.toLowerCase().includes(searchQuery.toLowerCase())
-
-);
+  const filteredJobs = jobs.filter((job) => {
+    const titleMatch = job.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const statusMatch = job.job_status.toLowerCase().includes(searchQuery.toLowerCase());
+  
+    const dateString = new Date(job.created_at).toLocaleDateString(); // Or use toISOString(), etc.
+    const dateMatch = dateString.toLowerCase().includes(searchQuery.toLowerCase());
+  
+    return titleMatch || statusMatch || dateMatch;
+  });
+  
 
 // Sorting logic
-
 const sortedJobs = [...filteredJobs].sort((a, b) => {
-  let compare = 0;
   if (sortField === "date") {
-    compare = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime(); 
   } else if (sortField === "name") {
-    compare = a.title.localeCompare(b.title);
+    return a.title.localeCompare(b.title); 
   } else if (sortField === "status") {
-    compare = a.job_status.localeCompare(b.job_status);
+    return a.job_status.localeCompare(b.job_status); 
   }
-  return sortDirection === "asc" ? compare : -compare;
+  return 0;
 });
 
 // Pagination logic
@@ -271,39 +272,9 @@ const handlePageChange = (page: number) => {
         <table className="w-full">
             <thead className="bg-[#364957]">
               <tr className="text-left text-sm font-semibold text-white">
-                <th className="px-6 py-4">Job Title
-      <button
-        className="ml-2"
-        onClick={() => {
-          setSortField("name");
-          setSortDirection(sortField === "name" && sortDirection === "asc" ? "desc" : "asc");
-        }}
-        aria-label="Sort Job Title"
-      >
-        {sortField === "name" && sortDirection === "asc" ? "▲" : "▼"}
-      </button>
-
-                </th>
-                <th className="px-6 py-4">Date Posted       <button
-        className="ml-2"
-        onClick={() => {
-          setSortField("date");
-          setSortDirection(sortField === "date" && sortDirection === "asc" ? "desc" : "asc");
-        }}
-        aria-label="Sort Date"
-      >
-        {sortField === "date" && sortDirection === "asc" ? "▲" : "▼"}
-      </button></th>
-                <th className="px-6 py-4">Status       <button
-        className="ml-2"
-        onClick={() => {
-          setSortField("status");
-          setSortDirection(sortField === "status" && sortDirection === "asc" ? "desc" : "asc");
-        }}
-        aria-label="Sort Status"
-      >
-        {sortField === "status" && sortDirection === "asc" ? "▲" : "▼"}
-      </button></th>
+                <th className="px-6 py-4">Job Title</th>
+                <th className="px-6 py-4">Date Posted </th>
+                <th className="px-6 py-4">Status </th>
                 <th className="px-6 py-4">Applications</th>
               </tr>
             </thead>
