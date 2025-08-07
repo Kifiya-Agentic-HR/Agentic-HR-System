@@ -228,7 +228,7 @@ const handlePageChange = (page: number) => {
                 <FaSort className="w-4 h-4 ml-2" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="start">
+            <DropdownMenuContent className="bg-white text-black w-56" align="start">
               <DropdownMenuItem onClick={() => {
                 setSortField("date");
                 setSelectedFilter("date");
