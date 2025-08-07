@@ -109,7 +109,7 @@ export const JobList = () => {
  const filteredJobs = jobs.filter((job) =>
   job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
  job.created_at.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  job.status.toLowerCase().includes(searchQuery.toLowerCase())
+  job.job_status.toLowerCase().includes(searchQuery.toLowerCase())
 
 );
 
@@ -122,7 +122,7 @@ const sortedJobs = [...filteredJobs].sort((a, b) => {
   } else if (sortField === "name") {
     compare = a.title.localeCompare(b.title);
   } else if (sortField === "status") {
-    compare = a.status.localeCompare(b.status);
+    compare = a.job_status.localeCompare(b.job_status);
   }
   return sortDirection === "asc" ? compare : -compare;
 });
@@ -251,7 +251,7 @@ const handlePageChange = (page: number) => {
                   </td>
                   <td className="px-6 py-4">
                     <span className="px-3 py-1 rounded-full bg-[#FF8A00]/10 text-[#FF8A00] text-sm">
-                      {job.status || "Unknown status"}
+                      {job.job_status || "Unknown status"}
                     </span>
                   </td>
                   <td className="px-6 py-4">
