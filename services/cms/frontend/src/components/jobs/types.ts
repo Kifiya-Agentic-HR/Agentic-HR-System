@@ -4,6 +4,7 @@ export interface Job {
     title: string;
     status: 'ongoing' | 'closed';
     applications: Application[];
+    created_at: string;
   }
 
   export interface Recommendation {
