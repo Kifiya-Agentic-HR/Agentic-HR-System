@@ -15,6 +15,15 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination"
 import { FiSearch } from "react-icons/fi";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button";
+import { FaSort } from "react-icons/fa";
+
 
 export const JobList = () => {
   const router = useRouter();
@@ -74,7 +83,6 @@ export const JobList = () => {
   ) => {
     const originalJobs = [...jobs];
     
-    // Optimistic update
     setJobs(prev =>
       prev.map(job =>
         job._id === jobId ? { ...job, job_status: newStatus } : job
@@ -212,7 +220,7 @@ const handlePageChange = (page: number) => {
       <div className="mb-6 flex justify-between items-center">
         <div>
          {/* Sorting Dropdown */}
-        {/* <div>
+         <div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline"> 
@@ -242,7 +250,7 @@ const handlePageChange = (page: number) => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div> */}
+        </div> 
         </div>
         <div className="relative w-1/3">
           <Input
