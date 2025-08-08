@@ -37,7 +37,7 @@ export const JobList = () => {
     originalStatus: string;
   } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const jobsPerPage = 5;
+  const jobsPerPage = 10;
   const [searchQuery, setSearchQuery] = useState("");
   const [sortField, setSortField] = useState("date"); 
   const [selectedFilter, setSelectedFilter] = useState<string | null>("date"); 
@@ -61,6 +61,10 @@ export const JobList = () => {
     };
     loadJobs();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   const handleStatusChange = async (
     jobId: string,

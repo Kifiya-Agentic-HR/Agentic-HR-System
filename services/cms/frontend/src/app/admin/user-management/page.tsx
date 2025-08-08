@@ -42,7 +42,7 @@ export default function UserManagementPage() {
   const [selectedFilter, setSelectedFilter] = useState<"all" | "hr" | "hm">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [usersPerPage] = useState(5);
+  const [usersPerPage] = useState(10);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -60,6 +60,10 @@ export default function UserManagementPage() {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   useEffect(() => {
     fetchUsers();
@@ -192,7 +196,7 @@ export default function UserManagementPage() {
                 <FiFilter className="w-4 h-4 ml-2" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="start">
+            <DropdownMenuContent className="bg-white text-black w-56" align="start">
               <DropdownMenuItem onClick={() => {
                 setFilteredUsers(users);
                 setCurrentPage(1);
