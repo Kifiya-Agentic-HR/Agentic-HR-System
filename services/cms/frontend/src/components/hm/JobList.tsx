@@ -4,12 +4,37 @@ import { useState, useEffect } from "react";
 import { getShortlist, getJobById } from "@/lib/api";
 import { Job, ShortList, ShortlistResponse } from "@/components/jobs/types";
 import { useRouter } from "next/navigation";
+import { FaSort } from "react-icons/fa";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { FiSearch } from "react-icons/fi";
 
 export const JobList = () => {
   const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const jobsPerPage = 5;
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortField, setSortField] = useState("date"); 
+  const [selectedFilter, setSelectedFilter] = useState<string | null>("date"); 
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+
 
   useEffect(() => {
     const loadJobs = async () => {
@@ -80,6 +105,39 @@ export const JobList = () => {
       </div>
     );
   }
+  const filteredJobs = jobs.filter((job) => {
+    const titleMatch = job.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const statusMatch = job.job_status.toLowerCase().includes(searchQuery.toLowerCase());
+  
+    const dateString = new Date(job.created_at).toLocaleDateString(); // Or use toISOString(), etc.
+    const dateMatch = dateString.toLowerCase().includes(searchQuery.toLowerCase());
+  
+    return titleMatch || statusMatch || dateMatch;
+  });
+  
+
+
+// Sorting logic
+const sortedJobs = [...filteredJobs].sort((a, b) => {
+  if (sortField === "date") {
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime(); 
+  } else if (sortField === "name") {
+    return a.title.localeCompare(b.title); 
+  } else if (sortField === "status") {
+    return a.job_status.localeCompare(b.job_status); 
+  }
+  return 0;
+});
+
+// Pagination logic
+const indexOfLastJob = currentPage * jobsPerPage;
+const indexOfFirstJob = indexOfLastJob - jobsPerPage;
+const currentJobs = sortedJobs.slice(indexOfFirstJob, indexOfLastJob);
+const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
+
+const handlePageChange = (page: number) => {
+  setCurrentPage(page);
+};
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -89,19 +147,70 @@ export const JobList = () => {
         </span>
       </h1>
 
+       {/* Search Bar */}
+       <div className="mb-6 flex justify-between items-center">
+        <div>
+         {/* Sorting Dropdown */}
+        <div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline"> 
+                {selectedFilter === "date" ? "Sort by Date" : selectedFilter === "name" ? "Sort by Job Title" : "Sort by Status"}
+                <FaSort className="w-4 h-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="start">
+              <DropdownMenuItem onClick={() => {
+                setSortField("date");
+                setSelectedFilter("date");
+              }}
+              >
+                Sort by Date
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                setSortField("name");
+                setSelectedFilter("name");
+              }}>
+                Sort by Job Title
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+              setSortField("status");
+              setSelectedFilter("status");
+              }}>
+                Sort by Status
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        </div>
+        <div className="relative w-1/3">
+          <Input
+            type="text"
+            placeholder="Search by job title, date or status"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 border border-gray-300 rounded-md"
+          />
+          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+
+        </div>
+
+      </div>
+
       <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-[#364957]/20">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-[#364957]">
               <tr className="text-left text-sm font-semibold text-white">
-                <th className="px-6 py-4">Job Title</th>
-                <th className="px-6 py-4">Date Posted</th>
-                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4">Job Title </th>
+                <th className="px-6 py-4">Date Posted </th>
+                <th className="px-6 py-4">Status </th>
                 <th className="px-6 py-4">Applications</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#364957]/20">
-              {(jobs || []).map((job) => (
+            {currentJobs
+              .map((job) => (
                 <tr
                   key={job._id}
                   className="hover:bg-[#FF8A00]/5 transition-colors"
@@ -151,6 +260,45 @@ export const JobList = () => {
           </table>
         </div>
       </div>
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-6">
+          <Pagination>
+            <PaginationContent>
+              {/* Previous Button */}
+              <PaginationItem>
+                <PaginationPrevious
+                  href="#"
+                  onClick={() => handlePageChange(currentPage > 1 ? currentPage - 1 : 1)}
+                />
+              </PaginationItem>
+
+              {/* Page Numbers */}
+              {Array.from({ length: totalPages }, (_, i) => (
+                <PaginationItem key={i}>
+                  <PaginationLink
+                    href="#"
+                    onClick={() => handlePageChange(i + 1)}
+                    className={currentPage === i + 1 ? "font-bold text-[#FF8A00]" : ""}
+                  >
+                    {i + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+
+              {/* Next Button */}
+              <PaginationItem>
+                <PaginationNext
+                  href="#"
+                  onClick={() =>
+                    handlePageChange(currentPage < totalPages ? currentPage + 1 : totalPages)
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
     </div>
   );
 };

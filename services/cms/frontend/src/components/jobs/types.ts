@@ -2,8 +2,9 @@ export interface Job {
     _id?: string;
     id: string;
     title: string;
-    status: 'ongoing' | 'closed';
+    job_status: 'ongoing' | 'closed' |string;
     applications: Application[];
+    created_at: string;
   }
 
   export interface Recommendation {
