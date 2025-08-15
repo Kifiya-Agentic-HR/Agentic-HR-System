@@ -296,10 +296,16 @@ const handlePageChange = (page: number) => {
                     {formatDate(job.created_at)}
                   </td>
                   <td className="px-6 py-4">
-                    <span className="px-3 py-1 rounded-full bg-[#FF8A00]/10 text-[#FF8A00] text-sm">
-                      {job.job_status || "Unknown status"}
-                    </span>
-                  </td>
+                  <select
+                      value={job.job_status}
+                      onChange={(e) =>
+                        handleStatusChange(job._id, e.target.value, job.job_status)
+                      }
+                      className="px-3 py-1 rounded-full bg-[#FF8A00]/10 text-[#FF8A00] text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A00] cursor-pointer"
+                    >
+                      <option value="open">Open</option>
+                      <option value="closed">Closed</option> </select>
+                                        </td>
                   <td className="px-6 py-4">
                     <button
                       onClick={() => router.push(`/applications/${job._id}?fromhm=true`)}
